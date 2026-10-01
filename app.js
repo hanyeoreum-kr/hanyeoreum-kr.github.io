@@ -200,6 +200,7 @@ async function onSession(session) {
   if (S.mode === 'pro' && !S.pro) S.mode = 'customer';
   if (prevId !== me()) subscribe();
   if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {});
+  if (S.user) handleTossReturn();
   updateAuthUI(); showView(S.view === 'pros' || S.view === 'market' ? S.view : 'main');
 }
 function updateAuthUI() {
@@ -207,7 +208,7 @@ function updateAuthUI() {
   $('#hdr-auth').textContent = u ? '로그아웃' : '로그인/회원가입';
   $('#hdr-user').style.display = u ? '' : 'none'; $('#hdr-user').textContent = u ? nm + '님' : '';
   const sw = $('#modesw'), on = S.mode === 'pro';
-  sw.style.display = isPro() ? 'inline-flex' : 'none'; sw.setAttribute('aria-checked', on);
+  sw.style.display = isPro() || S.admin ? 'inline-flex' : 'none'; sw.setAttribute('aria-checked', on);
   sw.className = `inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${on ? 'bg-sun text-white' : 'bg-mist'}`;
   sw.querySelector('i').style.left = on ? '1.125rem' : '.125rem';
   const ad = $('#hdr-admin'); ad.style.display = S.admin ? '' : 'none'; ad.textContent = S.mode === 'admin' ? '고객 화면' : '관리자';
@@ -239,8 +240,7 @@ function renderAuth() {
       ${pro ? `${lab('au-field', '대표 전문 분야')}<select id="au-field" class="${inp}">${SPEC.map(f => `<option${au.v.field === f ? ' selected' : ''}>${f}</option>`).join('')}</select>
         ${credBlock(au.certs, 'acert')}${freeToggle(au.free, 'afree')}
         <p class="mt-4 text-sm font-bold">활동 가능 지역 <span class="text-xs font-normal text-sea/60">(1곳 이상)</span></p>${areaGrid(au.areas, 'aarea')}
-        ${lab('au-biz', '사업자 등록번호 (선택)')}<input id="au-biz" inputmode="numeric" maxlength="12" placeholder="000-00-00000" value="${v('biz')}" class="${inp}">
-        <p class="mt-1 text-xs text-sea/60">가입 후 관리자가 확인하고 승인하면 견적을 낼 수 있어요.</p>` : ''}
+        <p class="mt-4 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">📄 <b>사업자등록증</b>은 메일 인증 후 로그인하면 기사 화면에서 바로 올릴 수 있어요. 관리자가 사업자등록증을 확인하고 승인하면 견적을 낼 수 있어요.</p>` : ''}
       ${common}
       <label class="mt-4 flex items-start gap-2 text-sm"><input id="au-agree" type="checkbox" class="mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>${legalLinks()}에 동의해요. (필수)</span></label>
       ${errBox()}${btn('asignup', '', '가입하기', 'a', 'mt-2 w-full')}`));
@@ -258,18 +258,18 @@ async function alogin(el) {
   });
 }
 async function asignup(el) {
-  saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '', biz = (v.biz || '').replace(/\D/g, '');
+  saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '';
   const err = !name ? (pro ? '상호명 또는 기사명을 입력해 주세요.' : '이름을 입력해 주세요.') : !emailOk(email) ? '이메일 형식을 확인해 주세요.' : !pwOk(pw) ? '비밀번호는 8자 이상, 영문과 숫자를 모두 넣어 주세요.'
-    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : pro && biz && biz.length !== 10 ? '사업자 등록번호는 숫자 10자리예요.' : !au.agree ? '이용약관과 개인정보처리방침에 동의해 주세요.' : '';
+    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : !au.agree ? '이용약관과 개인정보처리방침에 동의해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
-    if (pro) Object.assign(data, { fields:[v.field || SPEC[0]], areas:[...au.areas], certs:[...au.certs], free:au.free, biz_no:biz });
+    if (pro) Object.assign(data, { fields:[v.field || SPEC[0]], areas:[...au.areas], certs:[...au.certs], free:au.free });
     const { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
     if (error) return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error));
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false };
-    if (res && res.session) { closeM(); toast(pro ? '가입했어요. 관리자 승인 후 견적을 낼 수 있어요.' : '가입을 환영해요!'); return; }
-    openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 기사 회원은 인증 후 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
+    if (res && res.session) { closeM(); toast(pro ? '가입했어요. 기사 화면에서 사업자등록증을 올려 주세요.' : '가입을 환영해요!'); return; }
+    openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 기사 회원은 인증 후 로그인해서 사업자등록증을 올려 주세요. 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
   });
 }
 async function asocial(p) {
@@ -304,6 +304,31 @@ async function resetConfirm(el) {
 }
 async function logout() { await sb.auth.signOut(); S.mode = 'customer'; toast('로그아웃했어요.'); }
 
+/* 사업자등록증: 비공개 보관함(docs)에 저장 · 본인과 관리자만 열람 */
+const docErr = f => !/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(f.type) ? 'JPG·PNG·WEBP 사진이나 PDF만 올릴 수 있어요.' : f.size > 10 * 1024 * 1024 ? '10MB 이하 파일만 올릴 수 있어요.' : '';
+async function uploadBizDoc(f) {
+  const e = docErr(f); if (e) throw new Error(e);
+  const ext = f.type === 'application/pdf' ? 'pdf' : f.type.split('/')[1].replace('jpeg', 'jpg');
+  const path = `${me()}/bizdoc-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('docs').upload(path, f, { contentType:f.type, upsert:false });
+  if (error) throw error;
+  await rpc('set_biz_doc', { p_path:path });
+}
+async function openBizDoc(path) {
+  const w = window.open('', '_blank');
+  const { data, error } = await sb.storage.from('docs').createSignedUrl(path, 300);
+  if (error || !data) { if (w) w.close(); return toast('파일을 열 수 없어요. ' + errMsg(error)); }
+  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+}
+const bizDocCard = p => `<div class="mt-4 rounded-2xl border-2 ${p.biz_doc ? 'border-cool/40 bg-cool/5' : 'border-sun/50 bg-sun/5'} p-5">
+  <p class="font-bold">${p.biz_doc ? '📄 사업자등록증 제출 완료' : '📄 사업자등록증을 올려 주세요'}</p>
+  <p class="mt-1 text-sm text-sea/70">${p.biz_doc ? `${fmtT(p.biz_doc_at)}에 제출했어요. 다른 파일로 바꾸려면 다시 올리세요.` : '관리자가 사업자등록증을 확인한 뒤 승인해요. 사진이나 PDF(10MB 이하)를 올려 주세요.'}</p>
+  <div class="mt-3 flex flex-wrap items-center gap-2"><input id="bd-file" type="file" accept="image/*,application/pdf" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-sm">${btn('bdsend', '', p.biz_doc ? '다시 올리기' : '올리기', p.biz_doc ? 's' : 'a')}${p.biz_doc ? btn('bdview', '', '내 파일 보기', 's') : ''}</div></div>`;
+async function bdSend(el) {
+  const f = ($('#bd-file').files || [])[0]; if (!f) return toast('올릴 파일을 골라 주세요.');
+  await busy(el, async () => { await uploadBizDoc(f); await load('pro'); render(); if (mmOpen() && menuCur === 'prof') profModal(); toast('사업자등록증을 올렸어요. 관리자가 확인할게요.'); });
+}
+
 /* 일반 회원 → 기사 전환 (간편 가입자 포함) */
 let bp = null;
 function becomeProModal() {
@@ -316,15 +341,23 @@ function becomeProModal() {
     <label for="bp-field" class="block mt-4 text-sm font-bold">대표 전문 분야</label><select id="bp-field" class="${inp}">${SPEC.map(f => `<option>${f}</option>`).join('')}</select>
     ${credBlock(bp.certs, 'bcert')}${freeToggle(bp.free, 'bfree')}
     <p class="mt-4 text-sm font-bold">활동 가능 지역</p>${areaGrid(bp.areas, 'barea')}
-    <label for="bp-biz" class="block mt-4 text-sm font-bold">사업자 등록번호 (선택)</label><input id="bp-biz" inputmode="numeric" maxlength="12" placeholder="000-00-00000" class="${inp}">${errBox()}
+    <label for="bp-doc" class="block mt-4 text-sm font-bold">사업자등록증 <span class="text-xs font-normal text-sea/60">(사진 또는 PDF · 10MB 이하)</span></label><input id="bp-doc" type="file" accept="image/*,application/pdf" class="${inp} text-sm">
+    <p class="mt-1 text-xs text-sea/60">관리자만 볼 수 있는 비공개 보관함에 저장돼요. 사업자가 없는 개인 기사님은 나중에 고객센터로 문의해 주세요.</p>${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('bpsend', '', '등록 신청')}</div>`, true);
 }
 async function bpSend(el) {
-  const name = $('#bp-name').value.trim(), biz = $('#bp-biz').value.replace(/\D/g, '');
+  const name = $('#bp-name').value.trim(), doc = ($('#bp-doc').files || [])[0];
   if (!name) return setErr('상호명 또는 기사명을 입력해 주세요.');
   if (!bp.areas.size) return setErr('활동 가능 지역을 1곳 이상 선택해 주세요.');
-  if (biz && biz.length !== 10) return setErr('사업자 등록번호는 숫자 10자리예요.');
-  await busy(el, async () => { await rpc('become_pro', { p_name:name, p_fields:[$('#bp-field').value], p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:biz }); bp = null; await Promise.all([load('pro'), load('profile')]); closeM(); updateAuthUI(); toast('기사 등록을 신청했어요. 승인되면 알려드릴게요.'); setMode('pro'); });
+  if (doc && docErr(doc)) return setErr(docErr(doc));
+  if (!doc && !S.admin) return setErr('사업자등록증을 올려 주세요.');
+  await busy(el, async () => {
+    await rpc('become_pro', { p_name:name, p_fields:[$('#bp-field').value], p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'' });
+    if (doc) await uploadBizDoc(doc);
+    if (S.admin) await rpc('admin_set_approval', { p_pro:me(), p_approve:true });   // 관리자 본인은 바로 승인
+    bp = null; await Promise.all([load('pro'), load('profile'), load('prosPub')]); closeM(); updateAuthUI();
+    toast(S.admin ? '관리자 계정에 기사 모드를 켰어요.' : '기사 등록을 신청했어요. 사업자등록증을 확인하고 승인해 드릴게요.'); setMode('pro');
+  });
 }
 function toggleIn(set, id, act) {
   set.has(id) ? set.delete(id) : set.add(id);
@@ -895,7 +928,7 @@ function proView() {
     <div class="flex flex-wrap items-center gap-2">${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
   if (!ok) {
     $('#pview').innerHTML = top + (p.approval === 'PENDING'
-      ? `<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">보통 1영업일 안에 확인해요. 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요. 사업자등록증·자격증 확인이 필요하면 고객센터로 연락드려요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>`
+      ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>`
       : `<div class="mt-6 rounded-3xl bg-red-50 p-6"><p class="font-bold text-red-700 text-lg">기사 등록이 승인되지 않았어요</p><p class="mt-2 text-sm text-sea/80">자세한 내용은 고객센터로 문의해 주세요.</p><div class="mt-4">${btn('inqnew', '', '고객센터 문의', 'a')}</div></div>`);
     return;
   }
@@ -967,13 +1000,53 @@ function walletModal(keep) {
   openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p></div>
     <p class="mt-3 text-sm text-sea/75 leading-relaxed">거래가 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
     <h3 class="mt-5 font-bold">충전하기</h3>
-    ${pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
+    ${C.TOSS_CLIENT_KEY ? tossBlock() : pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
     <ol class="mt-2 space-y-1 rounded-xl bg-ice p-4 text-sm"><li>1. 아래 계좌로 충전할 금액을 입금해요.</li><li class="font-bold">${esc(bank.name || '')} ${esc(bank.account || '')} (예금주 ${esc(bank.holder || '')})</li><li>2. 입금한 금액과 입금자명을 적고 충전 신청을 눌러요.</li><li>3. 관리자가 입금을 확인하면 예치금에 반영돼요.</li></ol>
     <fieldset class="mt-3"><legend class="text-sm font-bold">입금 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
     <label for="ch-name" class="block mt-3 text-sm font-bold">입금자명</label><input id="ch-name" maxlength="20" value="${esc(p.name)}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
     <div class="mt-3">${btn('chargego', '', '입금했어요 · 충전 신청', 'a', 'w-full')}</div>`}
     <h3 class="mt-6 font-bold">예치금 내역</h3>${list.map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${fmtT(l.created_at)} · 잔액 ${won(l.balance_after)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-2">${empty('아직 내역이 없어요.')}</div>`}`, keep);
   menuCur = 'wallet';
+}
+/* 토스페이먼츠: 결제가 승인되면 서버가 확인하고 예치금에 바로 넣어요 (관리자 승인 없음) */
+let payMethod = 'CARD', tossBusy = false;
+const PAY = { CARD:'카드 · 간편결제', TRANSFER:'계좌이체' };
+const tossBlock = () => `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
+  <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
+  <fieldset class="mt-3"><legend class="text-sm font-bold">결제 수단</legend><div class="mt-2 grid grid-cols-2 gap-2">${Object.entries(PAY).map(([k, t]) => `<button type="button" data-act="paymeth" data-id="${k}" aria-pressed="${payMethod === k}" class="rounded-xl border-2 px-2 py-3 text-sm font-bold ${payMethod === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>${errBox()}
+  <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.</p>`;
+function loadTossSdk() {
+  if (window.TossPayments) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://js.tosspayments.com/v2/standard'; s.onload = res; s.onerror = () => rej(new Error('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')); document.head.appendChild(s); });
+}
+async function tossPay(el) {
+  const amt = +(document.querySelector('input[name="ch-amt"]:checked') || {}).value;
+  if (!amt) return setErr('충전 금액을 골라 주세요.');
+  await busy(el, async () => {
+    await loadTossSdk();
+    const orderId = await rpc('create_charge_order', { p_amount:amt });
+    const back = (C.SITE_URL || location.href).split(/[?#]/)[0];
+    const req = { method:payMethod, amount:{ currency:'KRW', value:amt }, orderId, orderName:`한여름 예치금 충전 ${won(amt)}`, successUrl:back + '?toss=success', failUrl:back + '?toss=fail', customerEmail:S.user.email, customerName:S.pro.name };
+    if (payMethod === 'CARD') req.card = { useEscrow:false, flowMode:'DEFAULT', useCardPoint:false, useAppCardOnly:false };
+    await window.TossPayments(C.TOSS_CLIENT_KEY).payment({ customerKey:me() }).requestPayment(req);
+  });
+}
+/* 결제창에서 돌아왔을 때: 서버(toss-confirm)가 토스에 승인 요청 → 성공하면 예치금 즉시 반영 */
+async function handleTossReturn() {
+  const q = new URLSearchParams(location.search), t = q.get('toss');
+  if (!t || tossBusy) return; tossBusy = true;
+  const clean = () => history.replaceState(null, '', location.pathname + location.hash);
+  if (t === 'fail') { clean(); return toast(q.get('message') || '결제가 취소됐어요.'); }
+  if (!S.user) { tossBusy = false; return toast('로그인하면 결제 확인을 이어서 할게요.'); }
+  toast('결제를 확인하고 있어요...');
+  const { data, error } = await sb.functions.invoke('toss-confirm', { body:{ paymentKey:q.get('paymentKey'), orderId:q.get('orderId'), amount:+q.get('amount') } });
+  clean();
+  let msg = data && data.message;
+  if (!msg && error && error.context && error.context.json) { try { msg = (await error.context.json()).message; } catch (_) {} }
+  if (error || !data || !data.ok) return toast(msg || '결제 확인에 실패했어요. 고객센터로 문의해 주세요.');
+  await Promise.all([load('pro'), load('led')]);
+  if (S.mode !== 'pro') setMode('pro'); else render();
+  walletModal(); toast(`${won(data.amount)}이 예치금에 충전됐어요.`);
 }
 async function chargeGo(el) {
   const amt = +(document.querySelector('input[name="ch-amt"]:checked') || {}).value, name = $('#ch-name').value.trim();
@@ -1031,8 +1104,9 @@ function profModal() {
     <label for="pe-field" class="block mt-4 text-sm font-bold">대표 전문 분야</label>
     <select id="pe-field" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${SPEC.map(f => `<option${(p.fields || [])[0] === f ? ' selected' : ''}>${f}</option>`).join('')}</select>
     ${credBlock(pe.certs, 'pecert')}${freeToggle(pe.free, 'pefree')}
-    <p class="mt-4 text-sm font-bold">활동 가능 지역</p>${areaGrid(pe.areas, 'pearea')}${errBox()}
+    <p class="mt-4 text-sm font-bold">활동 가능 지역</p>${areaGrid(pe.areas, 'pearea')}${bizDocCard(p)}${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('pesave', '', '저장하기')}</div>`);
+  menuCur = 'prof';
 }
 async function peSave(el) {
   const name = $('#pe-name').value.trim();
@@ -1144,9 +1218,9 @@ function adminView() {
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
         ${chg.map(c => card(`<div class="flex flex-wrap items-start justify-between gap-2"><div><p class="font-bold">${esc(proName(c.pro_id))} · ${won(c.amount)}</p><p class="text-xs text-sea/60">입금자명 ${esc(c.depositor)} · ${fmtT(c.created_at)}</p></div><div class="flex gap-2">${btn('chgok', c.id, '입금 확인 · 승인', 'a')}${btn('chgno', c.id, '반려', 's')}</div></div>`)).join('') || `<div class="mt-3">${empty('확인할 충전 신청이 없어요.')}</div>`}</section>
-      <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">기사 가입 승인</h2><p class="mt-1 text-sm text-sea/70">사업자등록번호는 국세청 홈택스에서 진위를 확인할 수 있어요.</p>
-        ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs text-sea/70">사업자번호 ${p.biz_no ? esc(p.biz_no.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-$3')) : '없음'}${(p.certs || []).length ? ' · 자격/장비 ' + p.certs.map(esc).join(', ') : ''}</p><p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex gap-2">${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
-        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}</span>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}</div>`).join('')}</details></section>
+      <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">기사 가입 승인</h2><p class="mt-1 text-sm text-sea/70">사업자등록증을 열어 상호·대표자를 확인하세요. 사업자 상태(휴·폐업)는 국세청 홈택스에서 조회할 수 있어요.</p>
+        ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs ${p.biz_doc ? 'text-cool font-bold' : 'text-red-600 font-bold'}">${p.biz_doc ? '📄 사업자등록증 제출됨 · ' + fmtT(p.biz_doc_at) : '📄 사업자등록증 미제출'}</p>${(p.certs || []).length ? `<p class="text-xs text-sea/70">자격/장비 ${p.certs.map(esc).join(', ')}</p>` : ''}<p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex flex-wrap gap-2">${p.biz_doc ? btn('pdoc', p.id, '사업자등록증 보기', 'p') : ''}${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
+        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}</div>`).join('')}</details></section>
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
@@ -1217,7 +1291,9 @@ const ACT = {
   gopro: () => S.user ? (isPro() ? setMode('pro') : becomeProModal()) : authModal('signup', 'pro'),
   barea: g => toggleIn(bp.areas, g, 'barea'), bcert: c => toggleIn(bp.certs, c, 'bcert'), bcertadd: () => addCert('bcert', bp.certs),
   bfree: () => { bp.free = !bp.free; const b = document.querySelector('[data-act="bfree"]'); b.setAttribute('aria-pressed', bp.free); b.className = chipCls(bp.free); },
-  bpsend: (id, el) => bpSend(el),
+  bpsend: (id, el) => bpSend(el), bdsend: (id, el) => bdSend(el), bdview: () => S.pro && S.pro.biz_doc && openBizDoc(S.pro.biz_doc),
+  pdoc: id => { const p = S.adminPros.find(x => x.id === id); if (p && p.biz_doc) openBizDoc(p.biz_doc); },
+  tosspay: (id, el) => tossPay(el), paymeth: k => { payMethod = k; walletModal(true); },
   modesw: () => setMode(S.mode === 'pro' ? 'customer' : 'pro'),
   admin: () => setMode(S.mode === 'admin' ? 'customer' : 'admin'),
   menu: () => !S.user ? custMenu() : S.mode === 'pro' ? proMenu() : custMenu(),
