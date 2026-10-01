@@ -1,0 +1,1996 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한여름 | 시원함의 모든 것, 한여름에서 한 번에!</title>
+<meta name="description" content="서울 에어컨 설치·수리·청소, 중고 업소용 냉동고 매매·철거까지. 무료 견적 비교하고 안심하고 맡기세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- 토스페이먼츠 SDK V2 (실결제 연동 시 사용 · 현재 데모에서는 호출하지 않음) -->
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+if (window.tailwind) tailwind.config = {
+  theme: { extend: {
+    colors: { sea:'#0C2D48', ice:'#F2F8FA', mist:'#D9EBF1', cool:'#1AA7C7', sun:'#FF7A2F' },
+    fontFamily: { display:['"Black Han Sans"','sans-serif'], sans:['"Noto Sans KR"','sans-serif'] }
+  } }
+}
+</script>
+<style>
+  :where(.hidden) { display: none; }   /* Tailwind CDN이 막힌 환경 대비 · :where로 우선순위 0 → lg:flex 같은 반응형 클래스가 항상 이김 */
+  html { scroll-behavior: smooth; }
+  section[id] { scroll-margin-top: 7rem; }   /* 고정 헤더에 가리지 않도록 */
+  .heat { background: linear-gradient(180deg,#FFB27A 0%,#F2F8FA 38%,#BFE6F0 100%); }
+  .scale { background: repeating-linear-gradient(180deg,#0C2D48 0 2px,transparent 2px 22px); }
+  :focus-visible { outline: 3px solid #1AA7C7; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  /* 모바일 자동 확대 방지 · 터치감 */
+  input, select, textarea { font-size: 16px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body class="bg-ice text-sea font-sans antialiased pb-20 md:pb-0">
+
+<!-- 상단 내비게이션 -->
+<header class="sticky top-0 z-30 bg-ice/90 backdrop-blur border-b border-mist">
+  <div class="mx-auto max-w-6xl flex items-center justify-between gap-2 px-4 sm:px-5 h-16">
+    <a href="#" data-act="home" class="font-display text-2xl tracking-tight shrink-0">한여름<span class="text-cool">.</span></a>
+    <nav id="nav" class="hidden lg:flex items-center gap-6 text-sm font-medium">
+      <a href="#market" data-act="mkt" class="font-bold text-cool hover:text-sea">냉동·냉장고 장터</a>
+      <a href="#pros" data-act="pros" class="font-bold text-cool hover:text-sea">기사찾기</a>
+      <a href="#pro" class="font-bold text-sun hover:text-sea">기사·업체 등록</a>
+      <a href="#services" class="hover:text-cool">서비스</a>
+      <a href="#process" class="hover:text-cool">이용 방법</a>
+      <a href="#safety" class="hover:text-cool">안심 보장</a>
+      <a href="#" data-act="cs" class="hover:text-cool">고객센터</a>
+    </nav>
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <button id="modesw" type="button" role="switch" aria-checked="false" data-act="modesw" style="display:none" class="inline-flex items-center gap-2 rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold"><span>기사 모드</span><span class="relative h-5 w-9 shrink-0 rounded-full bg-sea/30" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all" style="left:.125rem"></i></span></button>
+      <button id="hdr-bal" type="button" data-act="wallet" style="display:none" class="rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold whitespace-nowrap"></button>
+      <a id="hdr-quote" href="#quote" class="hidden sm:inline-block rounded-full bg-sea text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2.5 hover:bg-cool transition-colors whitespace-nowrap">무료 견적<span class="hidden sm:inline"> 요청</span></a>
+      <span id="hdr-user" style="display:none" class="hidden md:inline text-sm font-bold"></span>
+      <button id="hdr-auth" type="button" data-act="auth" class="rounded-full border-2 border-sea px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold hover:bg-sea hover:text-white whitespace-nowrap">로그인/회원가입</button>
+    </div>
+  </div>
+  <div id="subnav" class="lg:hidden border-t border-mist">
+    <div class="mx-auto max-w-6xl flex gap-4 overflow-x-auto px-4 py-2 text-sm font-bold whitespace-nowrap text-sea/70">
+      <a href="#process" class="text-sea underline decoration-cool decoration-2 underline-offset-4">이용 방법</a>
+      <a href="#market" data-act="mkt" class="text-cool">냉동·냉장고 장터</a>
+      <a href="#pros" data-act="pros" class="text-cool">기사찾기</a>
+      <a href="#pro">기사·업체 등록</a>
+      <a href="#services">서비스</a>
+      <a href="#safety">안심 보장</a>
+      <a href="#" data-act="cs">고객센터</a>
+    </div>
+  </div>
+</header>
+
+<div id="cview">
+<main>
+<!-- 히어로: 폭염에서 시원함으로 내려오는 온도 눈금 -->
+<section class="heat relative overflow-hidden">
+  <div class="mx-auto max-w-6xl px-5 pt-7 pb-10 sm:pt-14 sm:pb-20 md:pt-24 md:pb-28 grid md:grid-cols-[1fr_auto] gap-10 items-center">
+    <div>
+      <p class="inline-block rounded-full bg-white/70 px-3 py-1 text-xs sm:px-4 sm:py-1.5 sm:text-sm font-medium">서울 지역 우선 오픈 · 고객 100% 무료</p>
+      <h1 class="font-display text-[2rem] sm:text-6xl md:text-7xl leading-[1.15] sm:leading-[1.08] mt-4 sm:mt-6">
+        시원함의 모든 것,<br>한여름에서 한 번에!
+      </h1>
+      <p class="mt-3 sm:mt-6 max-w-md text-[15px] sm:text-lg leading-relaxed text-sea/80">
+        에어컨 설치·수리·청소부터 업소용 냉동고 매매·철거까지.<span class="hidden sm:inline"> 견적 한 번 남기면 검증된 기사님들의 가격이 모입니다.</span>
+      </p>
+
+      <!-- 빠른 견적 요청 -->
+      <form id="quick" class="mt-5 grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto] gap-2 max-w-2xl bg-white rounded-2xl p-2.5 shadow-lg" aria-label="빠른 견적 요청">
+        <label class="sr-only" for="svc">서비스 종류</label>
+        <select id="svc" class="rounded-xl bg-ice px-3 py-2.5 text-sm font-medium truncate">
+          <option>에어컨 설치</option><option>에어컨 수리</option><option>에어컨 청소</option>
+          <option>중고 냉동고 매매</option><option>냉장·냉동고 철거</option>
+        </select>
+        <label class="sr-only" for="gu">지역</label>
+        <select id="gu" class="rounded-xl bg-ice px-3 py-2.5 text-sm font-medium truncate"></select>
+        <button type="submit" class="col-span-2 sm:col-span-1 rounded-xl bg-sun text-white font-bold text-sm py-3 px-5 hover:brightness-95">견적 요청하기</button>
+      </form>
+      <p class="mt-2 sm:mt-3 text-xs sm:text-sm text-sea/70">견적 요청은 무료이며, 마음에 드는 기사님을 직접 고르세요.</p>
+      <div class="mt-3 sm:mt-4 flex flex-wrap gap-2">
+        <a href="#process" class="rounded-full bg-sea px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-cool">서비스 이용방법</a>
+        <button type="button" data-act="pros" class="rounded-full bg-white/80 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold hover:bg-white">기사 찾아보기</button>
+        <button type="button" data-act="mkt" class="rounded-full bg-white/80 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold hover:bg-white">중고 장터</button>
+      </div>
+    </div>
+
+    <!-- 온도 눈금 -->
+    <div class="hidden md:flex items-stretch gap-4 h-80 select-none" aria-hidden="true">
+      <div class="flex flex-col justify-between text-right font-display">
+        <span class="text-5xl text-sun">36°</span>
+        <span class="text-5xl text-cool">24°</span>
+      </div>
+      <div class="scale w-6 rounded-full border-2 border-sea/0"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 서비스 카테고리 -->
+<section id="services" class="mx-auto max-w-6xl px-5 py-20">
+  <h2 class="font-display text-3xl md:text-4xl">어떤 시원함이 필요하세요?</h2>
+  <div class="mt-10 grid md:grid-cols-2 gap-6">
+    <article class="rounded-3xl bg-white p-8 border border-mist">
+      <h3 class="text-2xl font-bold">에어컨</h3>
+      <p class="mt-2 text-sea/75">가정·매장 모두 가능해요. 작업 종류만 고르면 견적이 도착합니다.</p>
+      <ul class="mt-6 grid grid-cols-3 gap-3 text-center font-bold">
+        <li><a href="#quote" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">설치</a></li>
+        <li><a href="#quote" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">수리</a></li>
+        <li><a href="#quote" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">청소</a></li>
+      </ul>
+    </article>
+    <article class="rounded-3xl bg-sea text-white p-8">
+      <h3 class="text-2xl font-bold">중고 업소용 냉장·냉동고</h3>
+      <p class="mt-2 text-white/75">폐업·리뉴얼 매장의 설비를 사고팔고, 철거까지 한 번에 연결해요.</p>
+      <ul class="mt-6 grid grid-cols-2 gap-3 text-center font-bold">
+        <li><a href="#quote" class="block rounded-xl bg-white/10 py-5 hover:bg-white hover:text-sea">매매</a></li>
+        <li><a href="#quote" class="block rounded-xl bg-white/10 py-5 hover:bg-white hover:text-sea">철거</a></li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- 중고 냉동고 장터 -->
+<section id="market" class="mx-auto max-w-6xl px-5 pb-20">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div><h2 class="font-display text-3xl md:text-4xl">냉동·냉장고 장터</h2>
+    <p class="mt-2 max-w-xl text-sea/75 leading-relaxed">고객과 매입 업체 모두 자유롭게 직거래 및 매입 제안을 주고받을 수 있는 냉동·냉장고 전문 중고 장터예요. 일반 소비자는 구매·판매·견적 요청 모두 100% 무료예요.</p></div>
+    <div class="flex gap-2">
+      <button type="button" data-act="mkt" class="rounded-full border-2 border-sea font-bold px-6 py-3 hover:bg-sea hover:text-white">장터 전체 보기</button>
+      <button type="button" data-act="sellopen" class="rounded-full bg-sun text-white font-bold px-6 py-3 hover:brightness-95">판매글 올리기</button>
+    </div>
+  </div>
+  <div id="feed" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+  <div id="fpager" class="mt-6 flex items-center justify-center gap-4"></div>
+</section>
+
+<!-- 이용 절차: 실제 순서가 있는 내용 -->
+<section id="process" class="bg-white border-y border-mist">
+  <div class="mx-auto max-w-6xl px-5 py-20">
+    <h2 class="font-display text-3xl md:text-4xl">이용 방법</h2>
+    <div class="mt-10 grid lg:grid-cols-2 gap-6">
+      <div class="rounded-3xl bg-ice p-8">
+        <h3 class="text-2xl font-bold">고객 이용 흐름</h3>
+        <ol class="mt-6 space-y-5">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">1</span><div><p class="font-bold">견적 요청 · 기사 검색</p><p class="mt-1 text-sm opacity-75 leading-relaxed">서비스와 지역을 고르고 무료로 견적을 요청하거나, 기사찾기에서 프로필과 후기를 보고 직접 골라요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">2</span><div><p class="font-bold">안심채팅 상담</p><p class="mt-1 text-sm opacity-75 leading-relaxed">0505 안심번호와 앱 채팅으로 가격과 일정을 조율하고, 마음에 드는 견적을 확정해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">3</span><div><p class="font-bold">작업 완료 확정 · 무상 A/S 보증</p><p class="mt-1 text-sm opacity-75 leading-relaxed">기사님이 작업 완료를 요청하면 확인하고 확정해요. 확인하지 않아도 24시간(또는 48시간) 뒤 자동 확정되고, 무상 A/S 전자 보증서와 14일 재점검, 실거래 후기가 이어져요.</p></div></li>
+        </ol>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <a href="#quote" class="rounded-full bg-sun px-5 py-2.5 text-sm font-bold text-white hover:brightness-95">견적 요청하기</a>
+          <button type="button" data-act="pros" class="rounded-full border-2 border-sea px-5 py-2 text-sm font-bold hover:bg-sea hover:text-white">기사 찾아보기</button>
+          <button type="button" id="demo-confirm-btn" class="rounded-full bg-sea px-5 py-2.5 text-sm font-bold text-white hover:bg-cool">거래 확정 시뮬레이션 (리뷰 팝업)</button>
+        </div>
+      </div>
+      <div class="rounded-3xl bg-sea p-8 text-white">
+        <h3 class="text-2xl font-bold">기사·업체 이용 흐름</h3>
+        <ol class="mt-6 space-y-5">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">1</span><div><p class="font-bold">가입 · 프로필 작성</p><p class="mt-1 text-sm opacity-75 leading-relaxed">대표 전문 분야와 활동 지역을 등록하고, 사업자 등록번호를 넣으면 인증 마크가 붙어요. 마이페이지에서 한 줄 소개·경력·포트폴리오도 채울 수 있어요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">2</span><div><p class="font-bold">맞춤 견적 제출</p><p class="mt-1 text-sm opacity-75 leading-relaxed">들어온 요청을 확인하고 무료로 견적을 제출해요. 계약이 확정될 때만 수수료가 선충전 예치금에서 자동 차감돼요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">3</span><div><p class="font-bold">작업 수행 · 리뷰 관리</p><p class="mt-1 text-sm opacity-75 leading-relaxed">작업을 마무리하면 고객이 실거래 후기를 남기고, 평점이 프로필에 쌓여요.</p></div></li>
+        </ol>
+        <div class="mt-6"><button type="button" data-act="gopro" class="rounded-full bg-sun px-5 py-2.5 text-sm font-bold hover:brightness-95">기사·업체로 가입하기</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 안심 보장 -->
+<section id="safety" class="mx-auto max-w-6xl px-5 py-20">
+  <h2 class="font-display text-3xl md:text-4xl">한여름 안심보장 4대 시스템</h2>
+  <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">🧾</p><h3 class="mt-3 font-bold text-lg">디지털 전자영수증</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">계약이 확정되면 작업 내용과 금액이 담긴 안심 작업 내역서를 바로 발급해요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">🔁</p><h3 class="mt-3 font-bold text-lg">14일 재점검 중개</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">작업 후 14일 이내 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 연결해요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">📞</p><h3 class="mt-3 font-bold text-lg">0505 안심번호 채팅</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">내 전화번호 대신 0505 안심번호와 앱 채팅으로 상담해요. 번호는 공개되지 않아요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">⭐</p><h3 class="mt-3 font-bold text-lg">100% 실거래 리뷰</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">계약이 확정된 거래의 고객만 후기를 남길 수 있어서 후기를 믿고 볼 수 있어요.</p></div>
+  </div>
+</section>
+
+<!-- 기사·업체 안내 -->
+<section id="pro" class="bg-sea text-white">
+  <div class="mx-auto max-w-6xl px-5 py-20">
+    <div class="grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <p class="inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-bold text-sun">기사님 · 업체 모집</p>
+        <h2 class="mt-4 font-display text-3xl md:text-4xl">견적·매입은 <span class="text-sun">0원</span>, 확정될 때만 수수료를 내요</h2>
+        <p class="mt-5 text-white/75 leading-relaxed max-w-md">견적을 아무리 많이 내도, 중고 매입을 제안해도 <b class="text-white">수수료 0원</b>이에요. 에어컨 서비스·철거·재고 매도가 <b class="text-white">확정될 때만</b> 미리 충전한 예치금에서 자동으로 차감돼요.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button type="button" data-act="gopro" class="rounded-full bg-sun font-bold px-7 py-3.5 text-sea hover:brightness-95">무료로 기사·업체 등록하기</button>
+          <a href="#pro-calc" class="rounded-full border-2 border-white/40 font-bold px-6 py-3 hover:bg-white/10">내 수수료 계산해 보기</a>
+        </div>
+        <p class="mt-3 text-sm text-white/60">데모 기준: 가입비·월 이용료 없이 시작해요. 예치금은 확정 수수료로만 쓰여요.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="col-span-2 rounded-2xl bg-sun p-6 text-sea"><p class="text-sm font-bold">견적 제출 · 중고 매입 제안 · 고객 이용</p><p class="font-display text-5xl mt-2">수수료 0원</p><p class="mt-1 text-xs font-medium">확정되기 전까지는 한 푼도 내지 않아요</p></div>
+        <div class="rounded-2xl bg-white/10 p-6"><p class="text-sm text-white/70">에어컨 설치·수리·청소<br>거래 확정 시</p><p class="font-display text-4xl mt-2">3,000원</p><p class="mt-1 text-xs text-white/60">건당 정액</p></div>
+        <div class="rounded-2xl bg-white/10 p-6"><p class="text-sm text-white/70">냉장·냉동고 철거 · 재고 매도<br>확정 시</p><p class="font-display text-4xl mt-2">5%</p><p class="mt-1 text-xs text-white/60">확정 금액 기준 · 건당 최대 10만 원</p></div>
+      </div>
+    </div>
+
+    <ul class="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">🆓</p><h3 class="mt-2 font-bold">견적은 몇 번이든 무료</h3><p class="mt-1 text-sm leading-relaxed text-white/70">낙찰이 안 돼도 비용이 없어요. 부담 없이 여러 요청에 견적을 내 보세요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">🧾</p><h3 class="mt-2 font-bold">차감 내역이 투명해요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">충전·차감 내역이 예치금 화면에 건별로 남고, 잔액은 언제든 확인할 수 있어요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">⭐</p><h3 class="mt-2 font-bold">고객이 직접 골라요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">프로필·경력·포트폴리오·실거래 후기로 선택받아요. 가격 경쟁만 하지 않아도 돼요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">⏱️</p><h3 class="mt-2 font-bold">작업 확정이 늦어지지 않아요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">작업 완료 요청 후 고객 응답이 없으면 24시간 뒤 자동 확정돼요. 분쟁 신고 시에는 잠시 멈춰요.</p></li>
+    </ul>
+
+    <div class="mt-10 grid lg:grid-cols-[1.1fr_1fr] gap-6">
+      <div id="pro-calc" class="rounded-3xl bg-white p-6 text-sea sm:p-8">
+        <h3 class="font-display text-2xl">수수료 미리 계산해 보기</h3>
+        <p class="mt-1 text-sm text-sea/70">예상 거래 금액을 넣으면 확정 시 차감되는 수수료를 바로 알려드려요.</p>
+        <label for="fc-svc" class="mt-5 block text-sm font-bold">서비스 종류</label>
+        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 설치·수리·청소</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 매도</option><option value="freezer_sale">중고 매입</option></select>
+        <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
+        <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+        <div class="mt-5 rounded-2xl bg-ice p-5" aria-live="polite"><p class="text-sm text-sea/70">확정 시 차감 수수료</p><p id="fc-out" class="font-display text-4xl text-sea">3,000원</p><p id="fc-note" class="mt-1 text-sm text-sea/70"></p></div>
+      </div>
+      <div class="rounded-3xl bg-white/10 p-6 sm:p-8">
+        <h3 class="font-display text-2xl">3단계면 바로 시작해요</h3>
+        <ol class="mt-5 space-y-4">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">1</span><div><p class="font-bold">기사·업체로 가입</p><p class="text-sm text-white/70">이메일로 가입하고 한 줄 소개·경력·포트폴리오를 채워요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">2</span><div><p class="font-bold">예치금 충전</p><p class="text-sm text-white/70">확정 수수료로 쓸 만큼만 충전해요. 1만 원부터 가능해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">3</span><div><p class="font-bold">견적 제출</p><p class="text-sm text-white/70">내 지역·분야의 열린 요청에 무료로 견적을 보내요.</p></div></li>
+        </ol>
+        <button type="button" data-act="gopro" class="mt-6 w-full rounded-full bg-sun py-3.5 font-bold text-sea hover:brightness-95">지금 무료로 시작하기</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 하단 CTA -->
+<section id="quote" class="mx-auto max-w-6xl px-5 py-20 text-center">
+  <h2 class="font-display text-4xl md:text-5xl">올여름, 가장 시원한 선택</h2>
+  <p class="mt-4 text-sea/75">지금 견적을 요청하고 서울 기사님들의 가격을 비교해 보세요.</p>
+  <a href="#quote" class="inline-block mt-8 rounded-full bg-sun text-white font-bold text-lg px-10 py-4 hover:brightness-95">무료 견적 요청하기</a>
+</section>
+</main>
+
+<footer class="border-t border-mist">
+  <div class="mx-auto max-w-6xl px-5 py-10 text-sm text-sea/70 flex flex-col md:flex-row justify-between gap-4">
+    <p><span class="font-display text-lg text-sea">한여름</span> Midsummer Cool Service</p>
+    <p>서울 지역 서비스 중 · 수도권 순차 확장 예정</p>
+    <p>&copy; 2026 Midsummer. All rights reserved.</p>
+  </div>
+</footer>
+</div>
+<section id="pview" class="hidden mx-auto max-w-6xl px-5 py-10 pb-28"></section>
+<!-- 독립 장터 화면 (당근마켓 스타일) -->
+<!-- 기사찾기 (숨고 스타일) -->
+<section id="fview" class="hidden">
+  <div class="sm:sticky sm:top-16 z-20 bg-white border-b border-mist">   <!-- 모바일은 고정하지 않아 목록이 넓게 보여요 -->
+    <div class="mx-auto max-w-5xl px-4 sm:px-5 py-2 sm:py-3">
+      <div class="flex items-center gap-1">
+        <button type="button" data-act="back" aria-label="메인 화면으로 돌아가기" class="h-9 w-9 rounded-full hover:bg-ice text-xl">←</button>
+        <h1 class="font-display text-lg sm:text-xl">기사찾기</h1><span id="pcount" class="ml-auto text-sm text-sea/60"></span>
+      </div>
+      <div class="mt-2 grid grid-cols-3 gap-1.5 sm:gap-2">
+        <label for="fs" class="sr-only">전문 분야</label><select id="fs" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"></select>
+        <label for="fg" class="sr-only">활동 지역</label><select id="fg" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"></select>
+        <label for="fsort" class="sr-only">정렬</label><select id="fsort" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"><option value="rating">별점순</option><option value="reviews">리뷰순</option></select>
+      </div>
+      <div id="fchips" class="mt-1.5"></div>
+    </div>
+  </div>
+  <div class="mx-auto max-w-5xl px-4 sm:px-5 pb-28"><div id="prows" class="mt-3 sm:mt-6 grid sm:grid-cols-2 gap-3 sm:gap-4"></div></div>
+</section>
+<section id="mview" class="hidden">
+  <div class="sm:sticky sm:top-16 z-20 bg-white border-b border-mist">   <!-- 모바일은 고정하지 않아 목록이 넓게 보여요 -->
+    <div class="mx-auto max-w-3xl px-4 sm:px-5 py-2 sm:py-3">
+      <div class="flex items-center gap-1">
+        <button type="button" data-act="back" aria-label="메인 화면으로 돌아가기" class="h-9 w-9 rounded-full hover:bg-ice text-xl">←</button>
+        <h1 class="font-display text-lg sm:text-xl">냉동·냉장고 장터</h1>
+        <button type="button" data-act="sellopen" class="ml-auto rounded-full bg-sun text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 hover:brightness-95">+ 판매글</button>
+      </div>
+      <div class="mt-2 flex gap-1.5 sm:gap-2">
+        <label for="mq" class="sr-only">장터 검색</label>
+        <input id="mq" type="search" placeholder="제품명, 지역, 키워드로 검색" class="min-w-0 flex-1 rounded-xl bg-ice px-3 sm:px-4 py-2 sm:py-2.5">
+        <label for="msort" class="sr-only">정렬</label>
+        <select id="msort" class="shrink-0 rounded-xl bg-ice px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium"><option value="new">최신순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option></select>
+      </div>
+      <div class="-mx-4 sm:mx-0 mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap px-4 sm:px-0 pb-0.5 sm:flex-wrap">
+        <div id="mtabs" class="flex shrink-0 gap-1.5"></div><span class="h-5 w-px shrink-0 bg-mist" aria-hidden="true"></span><div id="mchips" class="flex shrink-0 gap-1.5"></div>
+      </div>
+    </div>
+  </div>
+  <div class="mx-auto max-w-3xl px-4 sm:px-5 pb-28"><p id="mcount" class="mt-2 sm:mt-4 text-xs sm:text-sm text-sea/60"></p><div id="mrows"></div></div>
+</section>
+
+<!-- ===== 견적 요청 멀티스텝 모달 ===== -->
+<div id="qm" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="qm-title">
+  <div class="absolute inset-0 bg-sea/60" data-close></div>
+  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl flex flex-col max-h-[92vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl">
+    <div class="px-6 pt-5 pb-4 border-b border-mist">
+      <div class="flex items-center justify-between">
+        <h2 id="qm-title" class="font-display text-2xl">무료 견적 요청</h2>
+        <button type="button" data-close aria-label="닫기" class="h-10 w-10 rounded-full hover:bg-ice text-2xl leading-none">&times;</button>
+      </div>
+      <div id="qm-bar" class="mt-4 grid grid-cols-4 gap-2" aria-hidden="true">
+        <i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i>
+      </div>
+      <p id="qm-label" class="mt-2 text-sm text-sea/70"></p>
+    </div>
+
+    <div class="overflow-y-auto px-6 py-6">
+      <!-- 1단계: 서비스 -->
+      <section data-step="1">
+        <h3 class="text-xl font-bold">어떤 서비스가 필요하세요?</h3>
+        <div id="qm-services" class="mt-5 space-y-5"></div>
+      </section>
+
+      <!-- 2단계: 지역·날짜 -->
+      <section data-step="2" class="hidden">
+        <h3 class="text-xl font-bold">어디에서, 언제 필요하세요?</h3>
+        <label for="qm-gu" class="block mt-5 text-sm font-bold">서울시 구</label>
+        <select id="qm-gu" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">구를 선택하세요</option></select>
+        <label for="qm-date" class="block mt-5 text-sm font-bold">작업 희망일</label>
+        <input id="qm-date" type="date" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+        <p class="mt-2 text-xs text-sea/60">정확한 시간은 기사님과 채팅으로 조율해요.</p>
+      </section>
+
+      <!-- 3단계: 사진·요청사항 -->
+      <section data-step="3" class="hidden">
+        <h3 class="text-xl font-bold">상태를 알려주시면 견적이 더 정확해져요</h3>
+        <p class="mt-1 text-sm text-sea/70">사진과 요청사항은 선택이에요. 사진은 최대 5장, 장당 10MB까지 올릴 수 있어요.</p>
+        <label class="mt-5 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-8 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool">
+          <span class="font-bold">사진 추가하기</span>
+          <span class="text-xs text-sea/60">실외기, 제품 라벨, 설치 장소를 찍어주세요</span>
+          <input id="qm-file" type="file" accept="image/*" multiple class="sr-only">
+        </label>
+        <ul id="qm-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
+        <label for="qm-details" class="block mt-5 text-sm font-bold">세부 요청사항</label>
+        <textarea id="qm-details" rows="4" maxlength="500" placeholder="예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 resize-none"></textarea>
+        <p id="qm-count" class="text-right text-xs text-sea/60">0 / 500</p>
+      </section>
+
+      <!-- 4단계: 완료 -->
+      <section data-step="4" class="hidden text-center py-4">
+        <div class="mx-auto h-16 w-16 rounded-full bg-cool/15 grid place-items-center">
+          <svg viewBox="0 0 24 24" class="h-8 w-8 text-cool" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </div>
+        <h3 class="mt-5 font-display text-3xl">견적 요청이 접수됐어요</h3>
+        <p class="mt-3 inline-flex items-center gap-2 rounded-full bg-sun/15 text-sun font-bold px-4 py-1.5">
+          기사 배정 중<span class="flex gap-1" aria-hidden="true"><i class="h-1.5 w-1.5 rounded-full bg-sun animate-pulse"></i><i class="h-1.5 w-1.5 rounded-full bg-sun animate-pulse [animation-delay:.2s]"></i><i class="h-1.5 w-1.5 rounded-full bg-sun animate-pulse [animation-delay:.4s]"></i></span>
+        </p>
+        <p class="mt-4 text-sea/75 leading-relaxed">우리 동네 기사님들이 요청을 확인하고 있어요.<br>견적이 도착하면 알려드릴게요.</p>
+        <dl id="qm-summary" class="mt-6 rounded-2xl bg-ice p-5 text-left text-sm space-y-2"></dl>
+      </section>
+      <p id="qm-err" role="alert" class="mt-4 text-sm font-bold text-red-600 hidden"></p>
+    </div>
+
+    <div id="qm-foot" class="px-6 py-4 border-t border-mist flex gap-3">
+      <button type="button" id="qm-back" class="rounded-xl border-2 border-mist px-5 py-3 font-bold hover:bg-ice">이전</button>
+      <button type="button" id="qm-next" class="flex-1 rounded-xl bg-sea text-white font-bold px-5 py-3 hover:bg-cool transition-colors disabled:opacity-60">다음</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = s => document.querySelector(s);
+  const GU = ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'];
+  const SVC = { aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', freezer_sale:'중고 냉동고 매매', freezer_removal:'냉장·냉동고 철거' };
+  const SVC_BY_TEXT = { '설치':'aircon_install','수리':'aircon_repair','청소':'aircon_clean','매매':'freezer_sale','철거':'freezer_removal' };
+  const GROUPS = [['에어컨',['aircon_install','aircon_repair','aircon_clean']],['냉장·냉동고 철거',['freezer_removal']]];
+  const opts = GU.map(g => `<option>${g}</option>`).join('');
+  $('#gu').innerHTML = opts;
+  $('#qm-gu').insertAdjacentHTML('beforeend', opts);
+
+  // 1단계 서비스 카드 렌더링
+  $('#qm-services').innerHTML = GROUPS.map(([title, codes]) => `
+    <fieldset><legend class="text-sm font-bold text-sea/70">${title}</legend>
+      <div class="mt-2 grid grid-cols-${codes.length} gap-3">
+        ${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only">
+          <span class="block rounded-2xl border-2 border-mist px-3 py-5 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool">${SVC[c].replace('에어컨 ','')}</span></label>`).join('')}
+      </div></fieldset>`).join('');
+
+  const qm = $('#qm'), err = $('#qm-err');
+  let step = 1, opener = null, photos = [], sending = false;
+  const form = { service:'', district:'', date:'', details:'' };
+  const pad = n => String(n).padStart(2, '0');
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+
+  function showErr(msg) { err.textContent = msg || ''; err.classList.toggle('hidden', !msg); }
+
+  function showStep(n) {
+    step = n; showErr('');
+    document.querySelectorAll('[data-step]').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
+    [...$('#qm-bar').children].forEach((b, i) => b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}`);
+    $('#qm-label').textContent = n < 4 ? `${n} / 3 단계` : '';
+    $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
+    $('#qm-next').textContent = n === 3 ? '견적 요청 보내기' : n === 4 ? '닫기' : '다음';
+    $('#qm-next').disabled = false;
+    qm.querySelector('.overflow-y-auto').scrollTop = 0;
+  }
+
+  function reset() {
+    Object.assign(form, { service:'', district:'', date:'', details:'' });
+    photos.forEach(p => URL.revokeObjectURL(p.url)); photos = []; renderThumbs();
+    document.querySelectorAll('input[name="qm-svc"]').forEach(r => r.checked = false);
+    $('#qm-gu').value = ''; $('#qm-date').value = ''; $('#qm-details').value = ''; $('#qm-count').textContent = '0 / 500';
+  }
+
+  function openQuote(pre = {}, trigger) {
+    if (pre.service === 'freezer_sale') return openMarket();   // 매매는 전용 장터 화면으로
+    if (step === 4) reset();
+    opener = trigger || document.activeElement;
+    if (pre.service) { form.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
+    if (pre.district) { form.district = pre.district; $('#qm-gu').value = pre.district; }
+    $('#qm-date').min = today();
+    qm.classList.remove('hidden'); document.body.classList.add('overflow-hidden');
+    showStep(form.service ? 2 : 1);
+    (qm.querySelector('input:checked, select, button[data-close]') || $('#qm-next')).focus();
+  }
+
+  function closeQuote() {
+    qm.classList.add('hidden'); document.body.classList.remove('overflow-hidden');
+    if (step === 4) { reset(); step = 1; }
+    if (opener) opener.focus();
+  }
+
+  function renderThumbs() {
+    $('#qm-thumbs').innerHTML = photos.map((p, i) => `<li class="relative aspect-square">
+      <img src="${p.url}" alt="첨부 사진 ${i+1}" class="h-full w-full rounded-xl object-cover">
+      <button type="button" data-rm="${i}" aria-label="사진 ${i+1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join('');
+  }
+
+  $('#qm-file').addEventListener('change', e => {
+    showErr('');
+    for (const f of e.target.files) {
+      if (photos.length >= 5) { showErr('사진은 최대 5장까지 올릴 수 있어요.'); break; }
+      if (!f.type.startsWith('image/')) { showErr('이미지 파일만 올릴 수 있어요.'); continue; }
+      if (f.size > 10 * 1024 * 1024) { showErr(`${f.name}: 10MB를 넘어서 올릴 수 없어요.`); continue; }
+      photos.push({ file: f, url: URL.createObjectURL(f) });
+    }
+    e.target.value = ''; renderThumbs();
+  });
+  $('#qm-thumbs').addEventListener('click', e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    URL.revokeObjectURL(photos[+b.dataset.rm].url); photos.splice(+b.dataset.rm, 1); renderThumbs();
+  });
+  $('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / 500`);
+
+  // 데모: 메모리 저장소(D.req = quote_requests)에 저장. Supabase 연결 시 이 함수만 교체하세요.
+  async function submitQuote(p) { return await createRequest(p); }
+
+  async function next() {
+    if (step === 4) return closeQuote();
+    if (step === 1) {
+      const r = document.querySelector('input[name="qm-svc"]:checked');
+      if (!r) return showErr('서비스를 선택해 주세요.');
+      form.service = r.value;
+    }
+    if (step === 2) {
+      form.district = $('#qm-gu').value; form.date = $('#qm-date').value;
+      if (!form.district) return showErr('작업할 구를 선택해 주세요.');
+      if (!form.date) return showErr('작업 희망일을 입력해 주세요.');
+      if (form.date < today()) return showErr('오늘 이후 날짜를 선택해 주세요.');
+    }
+    if (step < 3) return showStep(step + 1);
+    // 3단계 → 제출
+    form.details = $('#qm-details').value.trim();
+    if (sending) return; sending = true;
+    const btn = $('#qm-next'); btn.disabled = true; btn.textContent = '보내는 중...';
+    try {
+      const id = await submitQuote({ ...form, photos });
+      const rows = [['요청 번호', id], ['서비스', SVC[form.service]], ['지역', '서울 ' + form.district], ['희망일', form.date], ['사진', photos.length + '장']];
+      $('#qm-summary').innerHTML = rows.map(([k]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right"></dd></div>`).join('');
+      $('#qm-summary').querySelectorAll('dd').forEach((dd, i) => dd.textContent = rows[i][1]);
+      showStep(4);
+    } catch (e) {
+      showErr('요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); btn.disabled = false; btn.textContent = '견적 요청 보내기';
+    } finally { sending = false; }
+  }
+
+  $('#qm-next').addEventListener('click', next);
+  $('#qm-back').addEventListener('click', () => showStep(step - 1));
+  qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
+  document.addEventListener('keydown', e => {
+    if (qm.classList.contains('hidden')) return;
+    if (e.key === 'Escape') return closeQuote();
+    if (e.key === 'Tab') { // 모달 밖으로 포커스가 나가지 않게
+      const f = [...qm.querySelectorAll('button, input, select, textarea, a[href]')].filter(el => el.offsetParent !== null || el.classList.contains('sr-only'));
+      const vis = f.filter(el => !el.disabled && el.type !== 'file');
+      if (!vis.length) return;
+      if (e.shiftKey && document.activeElement === vis[0]) { e.preventDefault(); vis[vis.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === vis[vis.length - 1]) { e.preventDefault(); vis[0].focus(); }
+    }
+  });
+
+  // 진입점: 모든 '견적 요청' 링크 → 모달 (카테고리 카드는 서비스 미리 선택)
+  document.addEventListener('click', e => {   // 이벤트 위임: 동적으로 바뀌는 화면에서도 항상 동작
+    const a = e.target.closest('a[href="#quote"]'); if (!a) return;
+    e.preventDefault();
+    openQuote({ service: a.closest('#services') ? SVC_BY_TEXT[a.textContent.trim()] : '' }, a);
+  });
+  // 히어로 빠른 견적 폼: 선택한 서비스·구를 채운 채 2단계에서 시작
+  document.addEventListener('submit', e => {
+    if (e.target.id !== 'quick') return;
+    e.preventDefault();
+    const service = Object.keys(SVC).find(k => SVC[k] === $('#svc').value);
+    openQuote({ service, district: $('#gu').value }, e.submitter);
+  });
+</script>
+<!-- ===== 통합 데모: 공용 모달 / 플로팅 메뉴 / 토스트 ===== -->
+<div id="mm" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true" aria-label="한여름 안내">
+  <div class="absolute inset-0 bg-sea/60" data-mclose></div>
+  <div id="mm-body" class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6"></div>
+</div>
+<!-- 모바일 하단 고정 바 -->
+<div id="mbar" class="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center gap-3 border-t border-mist bg-white px-4 py-2.5 shadow-lg">
+  <button id="mbar-bal" type="button" data-act="wallet" style="display:none" class="shrink-0 rounded-xl bg-mist px-3 py-3 text-xs font-bold whitespace-nowrap">기사 예치금</button>
+  <button id="mbar-menu" type="button" data-act="menu" class="shrink-0 rounded-xl border-2 border-mist px-3.5 py-2.5 text-sm font-bold">내 요청</button>
+  <a id="mbar-quote" href="#quote" class="flex-1 rounded-xl bg-sea py-3 text-center text-sm font-bold text-white shadow-md active:bg-cool">⚡ 무료 견적 신청하기</a>
+</div>
+<button id="fab" type="button" data-act="menu" class="hidden md:block fixed bottom-20 md:bottom-5 right-4 md:right-5 z-40 rounded-full bg-sea text-white font-bold px-6 py-4 shadow-xl hover:bg-cool"></button>
+<!-- 리뷰 이벤트 팝업 -->
+<div id="rm" class="fixed inset-0 z-[65] hidden" role="dialog" aria-modal="true" aria-labelledby="rm-title">
+  <div class="absolute inset-0 bg-sea/60" id="rm-overlay"></div>
+  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-sun/20 text-2xl mb-3" aria-hidden="true">⭐</div>
+      <h3 id="rm-title" class="font-display text-2xl">거래가 확정되었습니다!</h3>
+      <p class="mt-2 text-sm text-sea/70">서비스는 만족스러우셨나요?<br>솔직한 후기를 남겨 주세요.</p>
+    </div>
+    <div class="mt-5 flex justify-center gap-2 text-3xl cursor-pointer" id="rm-stars" role="group" aria-label="별점">
+      <span data-star="1" class="text-sun">★</span><span data-star="2" class="text-sun">★</span><span data-star="3" class="text-sun">★</span><span data-star="4" class="text-sun">★</span><span data-star="5" class="text-sun">★</span>
+    </div>
+    <textarea id="rm-text" rows="3" maxlength="200" aria-label="후기" class="mt-4 w-full rounded-xl bg-ice p-3 text-sm" placeholder="기사님의 친절도, 작업 품질에 대한 솔직한 후기를 남겨주세요."></textarea>
+    <div class="mt-5 flex gap-2">
+      <button type="button" id="rm-cancel" class="w-1/3 rounded-xl border border-mist py-3 text-sm font-bold text-sea/60">다음에 하기</button>
+      <button type="button" id="rm-submit" class="w-2/3 rounded-xl bg-sun text-white py-3 text-sm font-bold hover:brightness-95">후기 남기기</button>
+    </div>
+  </div>
+</div>
+<div id="live" role="status" class="hidden md:block fixed left-3 bottom-4 z-30 rounded-full bg-white/90 border border-mist px-3 py-1.5 text-xs font-bold text-sea/70 shadow">로컬 체험 모드</div>
+<div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
+
+<script>
+/* ---------- 데모 데이터 저장소 (DB 테이블과 1:1 대응) ---------- */
+const D = { inc:[], req:[], quo:[], con:[], msg:[], rev:[], rew:[], lst:[], off:[], seq:1, led:[], disp:[], vq:[], inq:[], aud:[], ntf:[] };   // led: 예치금 내역, disp: 분쟁·재점검 신고, vq: 기사 인증 대기
+const HY_ID_OK = s => String(s).replace(/[^A-Za-z0-9_\-.~:@+]/g, '_');   // db 경로에 쓸 수 있는 글자만
+let GUEST = (() => { const mk = () => 'g' + Math.random().toString(36).slice(2, 10); try { let g = localStorage.getItem('hy_guest'); if (!g) { g = mk(); localStorage.setItem('hy_guest', g); } return g; } catch (_) { return mk(); } })();
+const MEC = () => AU.user ? AU.user.email : GUEST;   // 지금 화면을 보는 고객(회원 이메일 또는 비회원 식별자)
+let _uc = 0;   // 여러 사람이 동시에 만들어도 번호가 겹치지 않게
+Object.defineProperty(D, 'seq', { get: () => Number(String(Math.floor(Date.now() / 1000) % 1e5) + String(10 + Math.floor(Math.random() * 90)) + String(10 + _uc++ % 90)), set: () => {} });
+const hpw = s => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909); return 'h' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };   // 데모용 비밀번호 해시 (실서비스는 서버 인증 사용)
+function buyerId() { const id = 'u_' + HY_ID_OK(MEC()); if (!PRO[id]) PRO[id] = { n:AU.user ? AU.user.name : '고객 ' + GUEST.slice(-4), r:0, c:0, buyer:true }; return id; }
+let HY_once = (k, fn) => fn();   // 실시간 연동 시: 여러 화면 중 한 곳에서만 실행 (자동 확정·자동 종결)
+let AUTO_H = 24, SKEW = 0, menuCur = null, cmpCur = null, afterCharge = null, dseq = 13, rpFrom = 'chat';   // AUTO_H: 관리자가 정하는 자동 확정 시간(24/48), SKEW: 데모용 시간 이동(ms)
+const nowT = () => Date.now() + SKEW;            // quote_requests, quotes, contracts, chat_messages, reviews, rework_claims
+const PRO = { p1:{n:'시원냉난방 (내 기사 계정)',r:0,c:0}, p2:{n:'김에어 설비 (데모)',r:4.6,c:12}, p3:{n:'냉기술사 박기사 (데모)',r:4.2,c:8}, b1:{n:'구매자 서준 (데모)',r:0,c:0,buyer:true} };   // b*: 고객 구매자  // pro_profiles: rating_avg / rating_count
+let ME = 'p1';
+let mode = 'customer';
+const BASE = { aircon_install:120000, aircon_repair:80000, aircon_clean:70000, freezer_sale:600000, freezer_removal:150000 };
+const SL = { bad:'🙁 별로예요', good:'🙂 만족해요', great:'😄 최고예요' };
+const TAGS = { bad:['약속 시간 불응','마무리가 지저분함','작업 후 문제 발생'], good:['친절하고 설명이 자세함','약속 시간 준수','깔끔한 작업'], great:['전문성과 완벽한 시공','높은 가성비','친절한 사후 안내'] };
+const SCORE = { bad:1, good:4, great:5 };
+const RWL = { requested:'접수됨', visit_scheduled:'방문 예정', resolved:'해결 완료' };
+const QL = { submitted:'제출됨', selected:'선택됨', rejected:'다른 기사 선택' };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won = n => n.toLocaleString('ko-KR') + '원';
+const stars = p => p.c ? `★ ${p.r.toFixed(1)} (${p.c})` : '신규';
+const rnd4 = () => String(Math.floor(1000 + Math.random() * 9000));
+const B = { p:'rounded-xl bg-sea text-white font-bold px-4 py-2.5 text-sm hover:bg-cool', s:'rounded-xl border-2 border-mist font-bold px-4 py-2.5 text-sm hover:bg-ice', a:'rounded-xl bg-sun text-white font-bold px-4 py-2.5 text-sm hover:brightness-95' };
+const btn = (act, id, label, k = 'p') => `<button type="button" data-act="${act}" data-id="${id}" class="${B[k]}">${label}</button>`;
+const head = t => `<div class="flex items-start justify-between mb-4"><h2 class="font-display text-2xl">${t}</h2><button type="button" data-mclose aria-label="닫기" class="h-10 w-10 rounded-full hover:bg-ice text-2xl leading-none">&times;</button></div>`;
+const card = h => `<div class="rounded-2xl border border-mist p-4 mt-3">${h}</div>`;
+const empty = t => `<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">${t}</p>`;
+/* 수수료 시뮬레이션: DB의 calc_fee()와 동일 규칙
+   · 에어컨 설치·수리·청소 = 거래 확정 시 정액 3,000원
+   · 냉장·냉동고 철거 서비스 확정 = 확정 금액의 5% (건당 최대 10만 원)
+   · 업체의 중고 매입 = 0원
+   · 업체가 보유 재고를 매도(소비자·타 업체에 판매)할 때 = 거래금액의 5% (건당 최대 10만 원)
+   · 일반 소비자 = 구매·판매·견적 요청 모두 무료 */
+const PCT_CODES = ['freezer_stock', 'freezer_removal'];
+const calcFee = (code, price) => PCT_CODES.includes(code)
+  ? { t:'percent', a:Math.min(Math.round(price * 0.05), 100000), label:(code === 'freezer_removal' ? '철거' : '재고 매도') + ' 5% (상한 10만 원)' }
+  : code.startsWith('aircon') ? { t:'flat', a:3000, label:'정액' } : { t:'flat', a:0, label:'매입 수수료 없음' };
+const feeNote = code => { const f = calcFee(code, 1); return f.t === 'percent' ? '거래금액의 5%, 상한 10만 원' : f.a ? '3,000원' : '0원'; };
+const feeLine = code => { const f = calcFee(code, 1); return f.t === 'percent' || f.a ? `거래 확정 시에만 수수료(${feeNote(code)})가 선충전 예치금에서 자동 차감됩니다.` : '이 서비스는 <b>수수료도 0원</b>이에요. (매입 무료)'; };
+
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 2800); }
+function openM(html) { menuCur = null; $('#mm-body').innerHTML = html; $('#mm').classList.remove('hidden'); document.body.classList.add('overflow-hidden'); $('#mm-body').scrollTop = 0; }
+function closeM() { chatCur = null; menuCur = null; $('#mm').classList.add('hidden'); if ($('#qm').classList.contains('hidden')) document.body.classList.remove('overflow-hidden'); }
+
+/* ===================== 예치금 · 자동 확정 · 무상 A/S 보증서 · 신고 · 마이페이지 · 관리자 ===================== */
+const fmtT = t => new Date(t).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+const hms = ms => { const s = Math.ceil(ms / 1000); return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s % 3600 / 60))}:${pad(s % 60)}`; };
+const remain = c => c.paused ? c.remaining : Math.max(0, c.deadline - nowT());
+const pct = c => Math.max(0, Math.min(100, remain(c) / (c.ah * 36e5) * 100));
+const MIN_FEE = 3000;   // 에어컨 서비스 확정 시 수수료(가장 작은 차감 단위)
+
+function custMenu() { custMenuBase(); menuCur = 'cust'; }
+function proMenu() { proMenuBase(); menuCur = 'pro'; }
+
+/* 예치금: 잔액과 내역을 함께 갱신 */
+function chargeFee(c) {   // 수수료는 '거래 확정' 시점에만 차감
+  if (c.feeDone) return; c.feeDone = true;
+  if (c.fee.a) {
+    const nm = `${c.kind === 'stock' ? '재고 매도' : SVC[c.service]} ${c.gu}`;
+    addLed(c.pid, `수수료 자동 차감 · ${nm}`, -c.fee.a);
+    D.inc.push({ t:nowT(), cid:c.id, pid:c.pid, amt:c.fee.a, text:nm });   // 한여름(운영사) 수수료 수입
+  }
+}
+function addLed(pid, text, amt) { PRO[pid].bal = (PRO[pid].bal || 0) + amt; D.led.unshift({ pid, t:nowT(), text, amt, bal:PRO[pid].bal }); }
+function quoteGate(rid) {
+  if (PRO[ME].appr === 'PENDING' || PRO[ME].appr === 'REJECTED') { apprModal(); return false; }
+  const r = D.req.find(x => x.id === rid), need = calcFee(r.service, 1).a;
+  if (need > (PRO[ME].bal || 0)) { lowModal(need, { q:rid }); return false; }
+  return true;
+}
+function lowModal(need, ctx) {
+  afterCharge = ctx || null; const b = PRO[ME].bal || 0, row = (k, v, c = '') => `<div class="flex justify-between gap-4 py-2 border-b border-dashed border-mist"><dt class="text-sea/60">${k}</dt><dd class="font-bold ${c}">${v}</dd></div>`;
+  openM(head('예치금이 부족해요') + `<p class="leading-relaxed">견적은 무료로 낼 수 있지만, 계약이 확정되면 수수료가 <b>선충전 예치금에서 자동 차감</b>돼요. 차감할 수 있는 예치금이 있어야 견적을 제출할 수 있어요.</p>
+    <dl class="mt-4 rounded-2xl bg-ice p-5 text-sm">${row('현재 예치금', won(b))}${row('확정 시 차감액', won(need))}${row('부족한 금액', won(Math.max(0, need - b)), 'text-sun')}</dl>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${btn('charge2', '', '예치금 충전', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function chargeModal() {
+  openM(head('예치금 충전') + `<p class="text-sm text-sea/75 leading-relaxed">선택한 금액은 결제 즉시 예치금에 반영되고, 계약이 확정될 때 수수료로 자동 차감돼요. (데모: 실제 PG 결제는 연결되어 있지 않아요)</p>
+    <fieldset class="mt-4"><legend class="text-sm font-bold">충전 금액 선택</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-5 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool">${won(a)}</span></label>`).join('')}</div></fieldset>
+    <fieldset class="mt-4"><legend class="text-sm font-bold">결제 수단 선택</legend><div class="mt-2 grid grid-cols-3 gap-2">${['토스페이', '카카오페이', '신용/체크카드'].map((m, i) => `<label class="relative"><input type="radio" name="ch-pay" value="${m}" class="peer sr-only"${i === 0 ? ' checked' : ''}><span class="block rounded-xl border-2 border-mist px-2 py-3 text-center text-xs font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool">${m}</span></label>`).join('')}</div></fieldset>
+    <p class="mt-4 text-sm">현재 예치금 <b>${won(PRO[ME].bal || 0)}</b></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('chargego', '', '결제 진행하기 (데모)', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function walletModal() {
+  const p = PRO[ME], b = p.bal || 0, list = D.led.filter(l => l.pid === ME).slice(0, 10);
+  openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(b)}</p>${b < MIN_FEE ? '<p class="mt-2 inline-block rounded-full bg-sun px-3 py-1 text-xs font-bold">잔액 부족 · 에어컨 서비스 견적을 낼 수 없어요</p>' : ''}</div>
+    <p class="mt-3 text-sm text-sea/75 leading-relaxed">계약이 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
+    <div class="mt-4">${btn('charge', '', '예치금 충전', 'a')}</div>
+    <h3 class="mt-6 font-bold">예치금 내역</h3>${list.map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${fmtT(l.t)} · 잔액 ${won(l.bal)}</p></div><p class="font-bold ${l.amt < 0 ? 'text-sun' : 'text-cool'}">${l.amt < 0 ? '−' : '+'}${won(Math.abs(l.amt))}</p></div>`)).join('') || `<div class="mt-2">${empty('아직 내역이 없어요.')}</div>`}`);
+}
+const walletStrip = () => { const b = PRO[ME].bal || 0;
+  return `<div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-sea p-6 text-white">
+    <div><p class="text-sm text-white/70">선충전 예치금${b < MIN_FEE ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(b)}</p><p class="mt-1 text-xs text-white/60">계약이 확정되면 수수료가 자동으로 차감돼요. 에어컨 서비스는 건당 3,000원이에요.</p></div>
+    <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20">예치금 내역</button>${btn('charge', '', '예치금 충전', 'a')}</div></div>
+    ${PRO[ME].low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 확정하지 못한 견적이 있어요. 충전하면 고객이 바로 확정할 수 있어요.</p>' : ''}`; };
+
+/* 작업 완료 요청 → 자동 확정 타이머 → 무상 A/S 전자 보증서 */
+function finishDeal(cid) {   // 고객·기사 중 한 쪽이 거래 확정을 누르면 완료 + 수수료 입금
+  const c = D.con.find(x => x.id === cid); if (!c) return;
+  if (c.status === 'completed') { toast('이미 거래가 완료됐어요.'); return mode === 'customer' && !D.rev.some(r => r.cid === cid) ? (warrModal(cid, true), rmAfterConfirm(cid)) : receipt(cid, false); }
+  if (c.kind && mode === 'customer') return toast('판매자가 거래 완료 처리를 하면 후기를 남길 수 있어요.');
+  completeCon(c, mode === 'pro' ? '기사 확정' : '고객 확정'); render();
+  if (mode === 'customer') { warrModal(cid, true); toast('거래가 완료됐어요. 후기를 남겨 주세요.'); rmAfterConfirm(cid); }
+  else { chatModal(cid); toast(c.fee.a ? `거래가 확정됐어요. 수수료 ${won(c.fee.a)}가 예치금에서 차감됐어요.` : '거래가 확정됐어요. 수수료는 0원이에요.'); }
+}
+function completeCon(c, method) {
+  chargeFee(c); c.status = 'completed'; c.doneAt = nowT(); c.method = method; c.paused = false;
+  const d = new Date(c.doneAt);
+  c.warranty = { no:`WR-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${c.receipt.slice(-6)}`, until:c.doneAt + 14 * 864e5 };
+  D.msg.push({ cid:c.id, from:'sys', text:`계약이 확정됐어요 (${method}). 무상 A/S 전자 보증서가 발급됐어요.` });
+}
+function autoConfirm(c) {
+  completeCon(c, '자동 확정'); render();
+  if (menuCur === 'cust') custMenu(); else if (menuCur === 'pro') proMenu();
+  toast(`${c.ah}시간이 지나 작업이 자동 확정됐어요. 무상 A/S 보증이 시작돼요.`);
+}
+function tick() {
+  autoCloseInq(); otpTick();
+  D.con.forEach(c => { if (c.status === 'pending' && !c.paused && nowT() >= c.deadline) HY_once('ac-' + c.id, () => { const x = D.con.find(y => y.id === c.id); if (x && x.status === 'pending' && !x.paused && nowT() >= x.deadline) autoConfirm(x); }); });
+  document.querySelectorAll('[data-timer]').forEach(el => { const c = D.con.find(x => x.id === el.dataset.timer); if (c && c.status === 'pending') el.textContent = hms(remain(c)); });
+  document.querySelectorAll('[data-bar]').forEach(el => { const c = D.con.find(x => x.id === el.dataset.bar); if (c && c.status === 'pending') el.style.width = pct(c) + '%'; });
+}
+setInterval(tick, 1000);
+const pendBlock = c => `<div class="w-full rounded-2xl border border-sun/30 bg-sun/10 p-4">
+  <p class="text-sm font-bold text-sun">기사님이 작업 완료를 요청했어요</p>
+  <p class="mt-2 text-xs text-sea/70">${c.paused ? '신고가 접수되어 자동 확정이 일시 정지됐어요.' : `자동 확정까지 남은 시간 (${c.ah}시간 기준)`}</p>
+  <p class="font-display text-4xl mt-1 tabular-nums" data-timer="${c.id}">${hms(remain(c))}</p>
+  <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white"><i class="block h-full bg-sun" data-bar="${c.id}" style="width:${pct(c)}%"></i></div>
+  <p class="mt-2 text-xs leading-relaxed text-sea/70">결과가 괜찮다면 계약을 확정해 주세요. 확인하지 않으면 남은 시간이 지난 뒤 자동으로 확정되고, 무상 A/S 보증이 시작돼요.</p>
+  <div class="mt-3 flex flex-wrap gap-2">${btn('cfin', c.id, '✅ 거래 확정하기', 'a')}${btn('creport', c.id, '🚨 문제가 있어요', 's')}</div>
+  <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-sun/30 pt-3 text-xs text-sea/60"><span>데모 시간 이동</span>${btn('skew12', c.id, '+12시간', 's')}${btn('skewend', c.id, '자동 확정 시점으로', 's')}</div></div>`;
+const proPend = c => `<div class="mt-2 rounded-xl bg-sun/10 p-3 text-sm"><p class="font-bold text-sun">${c.paused ? '신고 접수 · 자동 확정 일시 정지' : '고객 확인 대기 중'}</p><p class="mt-1 text-xs text-sea/70">자동 확정까지 (${c.ah}시간 기준)</p><p class="font-display text-3xl tabular-nums" data-timer="${c.id}">${hms(remain(c))}</p><div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white"><i class="block h-full bg-sun" data-bar="${c.id}" style="width:${pct(c)}%"></i></div></div>`;
+function warrModal(cid, fresh) {
+  const c = D.con.find(x => x.id === cid), w = c.warranty, left = Math.max(0, 14 - Math.floor((nowT() - c.doneAt) / 864e5)), rw = D.rew.find(x => x.cid === cid), v = D.rev.find(x => x.cid === cid);
+  const row = (k, val) => `<div class="flex justify-between gap-4 py-2 border-b border-dashed border-mist"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${val}</dd></div>`;
+  openM(head('한여름 무상 A/S 전자 보증서') + `<div class="relative rounded-2xl border-2 border-sea/15 bg-ice p-5">
+    <span class="absolute right-4 top-4 grid h-20 w-20 -rotate-12 place-items-center rounded-full border-2 border-sun text-center font-display text-sm leading-tight text-sun" aria-hidden="true">한여름<br>안심보증</span>
+    <p class="font-display text-xl text-cool pr-24">${w.no}</p>
+    <dl class="mt-3 text-sm">${row('발급일', new Date(c.doneAt).toLocaleDateString('ko-KR'))}${row('서비스', SVC[c.service])}${row('지역', '서울 ' + c.gu)}${row('담당 기사', esc(PRO[c.pid].n))}${row('작업 금액', won(c.price))}${row('확정 방식', c.method)}${row('보증 기간', `${new Date(c.doneAt).toLocaleDateString('ko-KR')} ~ ${new Date(w.until).toLocaleDateString('ko-KR')} (14일)`)}${row('연결된 작업 내역서', c.receipt)}</dl></div>
+    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">보증 기간 안에 <b>같은 증상</b>이 다시 생기면 담당 기사님이 <b>우선 방문해 무상으로 재점검</b>해요. <span class="font-bold text-cool">남은 기간 ${left}일</span><br><span class="text-xs text-sea/60">보증 범위는 안심 작업 내역서에 적힌 작업과 같은 증상에 한해요.</span></p>
+    ${rw ? `<p class="mt-3 text-sm font-bold text-cool">재점검: ${RWL[rw.status]}</p>` : ''}
+    <div class="mt-4 flex flex-wrap gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${fresh && !v ? btn('rev', cid, '후기 남기기', 's') : ''}${!rw && left > 0 ? btn('rew', cid, '무상 재점검 신청', 'a') : ''}</div>`);
+}
+
+/* 채팅 [🚨 분쟁/재점검 신고] */
+function rpModal(cid, pre, from) {
+  rpFrom = from || 'chat';
+  const c = D.con.find(x => x.id === cid), room = D.rooms.find(x => x.id === cid), cust = mode === 'customer', canRw = cust && c && !c.kind;
+  const def = pre || (c && c.status === 'completed' && canRw ? '재점검' : '분쟁');
+  const reasons = cust ? ['작업 결과가 요청과 달라요', '같은 증상이 다시 생겼어요', '약속한 금액보다 더 요구해요', '연락이 되지 않아요', '기타'] : ['고객과 연락이 되지 않아요', '작업 범위 밖의 추가 작업을 요구해요', '방문 일정 변경이 반복돼요', '기타'];
+  const radio = (v, t) => `<label class="relative"><input type="radio" name="rp-type" value="${v}" class="peer sr-only"${def === v ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center text-sm font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool">${t}</span></label>`;
+  openM(head('분쟁·재점검 신고') + `<p class="text-sm text-sea/70">${cust ? esc(PRO[(c || room).pid].n) + ' 기사님' : '고객'}과의 거래에 대한 신고예요. 접수하면 관리자가 확인하고 채팅으로 안내해요.</p>
+    ${canRw ? `<fieldset class="mt-4"><legend class="text-sm font-bold">신고 유형</legend><div class="mt-2 grid grid-cols-2 gap-3">${radio('분쟁', '분쟁 신고')}${radio('재점검', '재점검 신청')}</div></fieldset>` : ''}
+    <label for="rp-reason" class="block mt-4 text-sm font-bold">사유</label><select id="rp-reason" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">${reasons.map(r => `<option>${r}</option>`).join('')}</select>
+    <label for="rp-detail" class="block mt-4 text-sm font-bold">상세 내용</label><textarea id="rp-detail" rows="3" maxlength="300" placeholder="상황을 구체적으로 적어 주세요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none"></textarea>
+    ${cust && c && c.status === 'pending' ? '<p class="mt-2 text-xs text-sea/60">분쟁으로 접수하면 자동 확정 타이머가 일시 정지돼요.</p>' : ''}
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('rpsend', cid, '신고 접수', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function rpsend(cid) {
+  const c = D.con.find(x => x.id === cid), room = D.rooms.find(x => x.id === cid), cust = mode === 'customer';
+  const type = cust && c && !c.kind ? (document.querySelector('input[name="rp-type"]:checked')?.value || '분쟁') : '분쟁';
+  const reason = $('#rp-reason').value, detail = $('#rp-detail').value.trim();
+  if (type === '재점검') {
+    if (!c.doneAt || nowT() > c.doneAt + 14 * 864e5) return $('#merr').textContent = '재점검은 작업이 확정된 뒤 14일 이내에만 신청할 수 있어요. 분쟁 신고를 선택해 주세요.';
+    if (D.rew.some(x => x.cid === cid)) return $('#merr').textContent = '이미 재점검을 신청한 거래예요.';
+    D.rew.push({ cid, pid:c.pid, sym:detail || reason, status:'requested' });
+  }
+  const cat = type === '재점검' ? 'AS_REINSPECT' : 'PRO_ISSUE';
+  const inq = newInq({ uid:AU.user ? AU.user.email : 'guest', cat, issue:cat === 'PRO_ISSUE' ? 'OTHER' : '', cid, pid:(c || room).pid, title:`${type} 신고 · ${reason}`, body:detail || reason, by:cust ? '고객' : '기사' });
+  let msg = type === '재점검' ? '재점검을 신청했어요. 담당 기사님께 우선 방문 요청이 전달돼요.' : '신고가 접수됐어요. 관리자가 확인한 뒤 채팅으로 안내드려요.';
+  if (type === '분쟁' && c && c.status === 'pending' && !c.paused) { c.paused = true; c.remaining = Math.max(0, c.deadline - nowT()); inq.live = true; inq.prio = 'HIGH'; audit('TIMER_PAUSE', inq, { paused:false }, { paused:true }, '분쟁 신고로 자동 확정 일시 정지', true); msg = '신고가 접수돼 자동 확정이 잠시 멈췄어요. 관리자가 확인한 뒤 채팅으로 안내드려요.'; }
+  D.msg.push({ cid, from:'sys', text:msg + ` (접수번호 ${inq.code})` });
+  render(); toast(`${type === '재점검' ? '재점검 신청' : '신고'}을 접수했어요 (${inq.code})`);
+  if (rpFrom === 'chat') chatModal(cid); else if (mode === 'customer') custMenu(); else closeM();
+}
+
+/* 기사 마이페이지 (한 줄 소개 · 경력 · 포트폴리오) */
+const careerHtml = p => `<h3 class="mt-5 font-bold">경력 <span class="text-xs font-normal text-sea/60">(자가 등록 · 데모 데이터)</span></h3><ul class="mt-2 space-y-2">${(p.career || []).map(c => `<li class="flex gap-3 rounded-xl bg-ice px-4 py-3 text-sm"><span class="w-24 shrink-0 font-bold text-cool">${esc(c.y)}</span><span class="min-w-0 flex-1">${esc(c.t)}</span></li>`).join('') || '<li class="text-sm text-sea/60">등록된 경력이 없어요.</li>'}</ul>`;
+const portCard = (p, x, extra = '') => `<li class="relative overflow-hidden rounded-xl border border-mist bg-white">${x.img ? `<img src="${x.img}" alt="${esc(x.t)}" class="aspect-[4/3] w-full object-cover">` : `<div class="aspect-[4/3] grid place-items-center bg-mist text-4xl" aria-hidden="true">${emo(p.f[0])}</div>`}<div class="p-3"><p class="text-sm font-bold">${esc(x.t)}</p>${x.n ? `<p class="mt-0.5 text-xs text-sea/70">${esc(x.n)}</p>` : ''}<p class="mt-1 text-xs text-sea/50">${esc(x.d || '')}</p></div>${extra}</li>`;
+const portTiles = p => p.port.map(x => portCard(p, x)).join('');
+function mypageModal(keep) {
+  const p = PRO[ME], st = keep ? $('#mm-body').scrollTop : 0, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3';
+  openM(head('마이페이지') + `<p class="text-sm text-sea/70">고객이 받은 견적에서 내 프로필을 열면 여기에 적은 내용이 보여요.</p>
+    <h3 class="mt-5 font-bold">한 줄 소개</h3>
+    <label for="mp-bio" class="sr-only">한 줄 소개</label><input id="mp-bio" maxlength="60" value="${esc(p.bio || '')}" placeholder="고객에게 가장 먼저 보이는 한 문장" class="${inp}">
+    <div class="mt-2">${btn('mpbio', '', '한 줄 소개 저장', 's')}</div>
+    <h3 class="mt-6 font-bold">경력</h3>
+    <ul class="mt-2 space-y-2">${(p.career || []).map((c, i) => `<li class="flex items-start gap-3 rounded-xl bg-ice px-4 py-3 text-sm"><span class="w-24 shrink-0 font-bold text-cool">${esc(c.y)}</span><span class="min-w-0 flex-1">${esc(c.t)}</span><button type="button" data-act="mpcrm" data-id="${i}" aria-label="경력 삭제" class="h-6 w-6 shrink-0 rounded-full text-lg leading-none hover:bg-white">&times;</button></li>`).join('') || '<li class="text-sm text-sea/60">아직 등록한 경력이 없어요.</li>'}</ul>
+    <div class="mt-2 grid grid-cols-[6.5rem_1fr_auto] gap-2"><input id="mp-cy" maxlength="16" aria-label="경력 기간" placeholder="기간" class="min-w-0 rounded-xl bg-ice px-3 py-3"><input id="mp-ct" maxlength="60" aria-label="경력 내용" placeholder="한 일, 근무처" class="min-w-0 rounded-xl bg-ice px-3 py-3">${btn('mpcadd', '', '+ 추가', 's')}</div>
+    <h3 class="mt-6 font-bold">포트폴리오</h3>
+    <ul class="mt-2 grid grid-cols-2 gap-3">${(p.port || []).map((x, i) => portCard(p, x, `<button type="button" data-act="mpprm" data-id="${i}" aria-label="포트폴리오 삭제" class="absolute right-1.5 top-1.5 h-6 w-6 rounded-full bg-white text-lg leading-none">&times;</button>`)).join('') || '<li class="col-span-2 text-sm text-sea/60">아직 등록한 작업이 없어요.</li>'}</ul>
+    <input id="mp-pt" maxlength="40" aria-label="작업 제목" placeholder="작업 제목" class="${inp}"><input id="mp-pn" maxlength="60" aria-label="작업 설명" placeholder="설명 (선택)" class="${inp}">
+    <div class="mt-2 flex gap-2"><input id="mp-pf" type="file" accept="image/*" aria-label="작업 사진 (선택)" class="min-w-0 flex-1 rounded-xl bg-ice px-3 py-2.5 text-sm">${btn('mppadd', '', '+ 추가', 's')}</div>
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('pdetme', '', '고객에게 보이는 프로필', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+  $('#mm-body').scrollTop = st;
+}
+
+/* 관리자(Admin) 모드 */
+function adminView() {
+  const open = D.inq.filter(i => i.status === 'RECEIVED' || i.status === 'IN_PROGRESS').length, over = D.inq.filter(slaOver).length, wait = D.con.filter(c => c.status === 'pending').length, vq = D.vq.filter(v => v.st === '대기').length;
+  const day = new Date(nowT()).toDateString(), fee = D.inc.filter(l => new Date(l.t).toDateString() === day).reduce((s, l) => s + l.amt, 0), feeAll = D.inc.reduce((s, l) => s + l.amt, 0);
+  const stat = (k, v) => `<div class="rounded-2xl bg-white border border-mist p-4"><p class="text-sm text-sea/70">${k}</p><p class="font-display text-3xl mt-1">${v}</p></div>`;
+  const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remain(c))}</span>${c.paused ? ' (정지)' : ''}` : '작업 예정';
+  $('#pview').innerHTML = `
+    <div><h1 class="font-display text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · 데모 데이터</p></div>
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3">${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('자동 확정 대기', wait + '건')}${stat('오늘 수수료 수입', won(fee))}${stat('인증 대기 기사', vq + '건')}</div>
+    <div class="mt-8 grid lg:grid-cols-2 gap-6">
+      <div class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">자동 확정 시간</h2><p class="mt-2 text-sm leading-relaxed text-sea/75">기사님이 작업 완료를 요청한 뒤 고객이 확인하지 않으면 이 시간이 지나 자동으로 확정돼요. 진행 중인 요청에는 적용되지 않고, 다음 요청부터 바뀌어요.</p>
+        <div class="mt-4 flex gap-2" role="group" aria-label="자동 확정 시간">${[24, 48].map(h => `<button type="button" data-act="aauto" data-id="${h}" aria-pressed="${AUTO_H === h}" class="${chipCls(AUTO_H === h)}">${h}시간</button>`).join('')}</div></div>
+      <div class="rounded-3xl bg-sea p-6 text-white"><h2 class="text-xl font-bold">수수료 기준</h2><ul class="mt-4 space-y-2 text-sm"><li class="flex justify-between gap-3"><span>견적 제출 · 매입 제안</span><b>무료</b></li><li class="flex justify-between gap-3"><span>에어컨 설치·수리·청소 (확정 시)</span><b>건당 3,000원</b></li><li class="flex justify-between gap-3"><span>냉장·냉동고 철거 (확정 시)</span><b>5% (최대 10만 원)</b></li><li class="flex justify-between gap-3"><span>중고 매입</span><b>0원</b></li><li class="flex justify-between gap-3"><span>기사·업체 재고 매도</span><b>5% (최대 10만 원)</b></li><li class="flex justify-between gap-3"><span>일반 소비자</span><b>무료</b></li></ul><p class="mt-3 text-xs text-white/60">수수료는 기사·업체의 선충전 예치금에서 자동 차감돼요.</p></div></div>
+    <div class="mt-8 rounded-3xl bg-white border border-mist p-6"><div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-xl font-bold">수수료 수입 (한여름)</h2><p class="font-display text-3xl text-cool">누적 ${won(feeAll)}</p></div>
+      <p class="mt-1 text-xs text-sea/60">거래가 확정되면(고객·기사 중 한 쪽이 눌러도) 기사 예치금에서 차감된 수수료가 여기로 들어와요.</p>
+      <div class="mt-3">${D.inc.slice().reverse().slice(0, 8).map(l => `<div class="flex justify-between gap-3 border-b border-dashed border-mist py-2 text-sm"><span>${fmtT(l.t)} · ${esc(l.text)} · ${esc(PRO[l.pid].n)}</span><b class="text-cool">+${won(l.amt)}</b></div>`).join('') || empty('아직 입금된 수수료가 없어요.')}</div></div>
+    ${adminSupport()}
+    <h2 class="mt-10 text-2xl font-bold">확정 계약</h2>
+    <div class="mt-1">${D.con.map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${SVC[c.service]} · ${c.gu} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(PRO[c.pid].n)} · ${c.receipt}${c.warranty ? ' · 보증 ' + c.warranty.no : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 확정된 계약이 없어요. 고객 모드에서 견적을 확정해 보세요.')}</div>`}</div>
+    <div class="mt-10 grid lg:grid-cols-2 gap-6">
+      <section><h2 class="text-2xl font-bold">기사 인증 대기</h2>${D.vq.map(v => card(`<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(v.n)} · ${esc(v.who)}</p><p class="text-xs text-sea/60">제출 서류: ${esc(v.doc)}</p></div><span class="h-fit rounded-full bg-mist px-2 py-1 text-xs font-bold">${v.st}</span></div>${v.st === '대기' ? `<div class="mt-3 flex gap-2">${btn('vset', v.id + '|승인', '승인', 'a')}${btn('vset', v.id + '|반려', '반려', 's')}</div>` : ''}`)).join('')}</section>
+      <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${D.led.slice(0, 8).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(PRO[l.pid].n)} · ${fmtT(l.t)}</p></div><p class="font-bold ${l.amt < 0 ? 'text-sun' : 'text-cool'}">${l.amt < 0 ? '−' : '+'}${won(Math.abs(l.amt))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section></div>`;
+}
+
+/* ===== 고객센터 · 1:1 문의 · 관리자 민원 처리 · 알림 · 감사 로그 (데모: 브라우저 메모리) ===== */
+const CAT = { PAYMENT:'결제/수수료', PRO_ISSUE:'기사 불친절/노쇼', AS_REINSPECT:'A/S 재점검', ETC:'기타' };
+const CAT_ICON = { PAYMENT:'💳', PRO_ISSUE:'🙅', AS_REINSPECT:'🔁', ETC:'💬' };
+const ISSUE = { RUDE:'불친절', NO_SHOW:'노쇼', BAD_WORK:'작업 불만', OTHER:'기타' };
+const IST = { RECEIVED:'접수', IN_PROGRESS:'처리 중', ANSWERED:'답변 완료', CLOSED:'종결' };
+const IST_CLS = { RECEIVED:'bg-mist text-sea', IN_PROGRESS:'bg-cool/15 text-cool', ANSWERED:'bg-sun/15 text-sun', CLOSED:'bg-sea/10 text-sea/60' };
+const DAY = 864e5, SLA_START = 6 * 36e5, SLA_ANS = 24 * 36e5, FOLLOW = 7 * DAY;
+const CHN = { PUSH:'앱 푸시', ALIMTALK:'알림톡', EMAIL:'메일' };
+let inqSeq = 120, ntfSeq = 9000, audSeq = 700, csTab = 'list', AF = 'ALL', admDet = null, iq = { cat:'PAYMENT', cid:'', issue:'NO_SHOW', title:'', body:'' };
+const NTF = { pushFail:false, alimOk:false };   // 데모 스위치: 푸시 실패 시뮬레이션 / 알림톡 템플릿 승인 여부
+const d2 = n => String(n).padStart(2, '0');
+const stBadge = s => `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${IST_CLS[s]}">${IST[s]}</span>`;
+const myInq = () => AU.user ? D.inq.filter(i => i.uid === AU.user.email && i.by !== '기사') : [];
+const unreadN = () => myInq().filter(i => i.status === 'ANSWERED' && !i.read).length;
+const slaOver = i => { const t = nowT(); return (i.status === 'RECEIVED' && t - i.t > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - i.t > SLA_ANS); };
+const owned = c => c.buyer === buyerId() || ((D.req.find(r => r.id === c.rid) || {}).owner === MEC());
+const conLabel = c => `${SVC[c.service]} · ${c.gu} · ${PRO[c.pid].n} (${c.status === 'completed' ? '완료' : c.status === 'pending' ? '확인 대기' : '예정'})`;
+function eligibleCons(cat) {
+  const mine = D.con.filter(c => !c.kind && owned(c));
+  return cat === 'AS_REINSPECT' ? mine.filter(c => c.status === 'completed' && c.doneAt && nowT() - c.doneAt <= 14 * DAY) : mine;
+}
+
+/* 감사 로그 (INSERT만 · 수정/삭제 없음) */
+function audit(action, i, before, after, reason, sys) {
+  D.aud.unshift({ id:audSeq++, t:nowT(), admin:!sys && AU.user && AU.user.role === 'admin' ? AU.user.name : '시스템', action, target:i ? i.code : '-', before, after, reason:reason || '', ip:'203.0.113.24' });
+}
+function newInq(o) {
+  const i = Object.assign({ id:(inqSeq = Math.max(inqSeq, ...D.inq.map(x => +x.id || 0)) + 1 + Math.floor(Math.random() * 5)), status:'RECEIVED', prio:'NORMAL', assignee:'', t:nowT(), read:true, live:false, by:'고객', issue:'', cid:'', pid:'', photos:[], msgs:[], hist:[] }, o);
+  i.code = 'INQ-' + String(i.id).padStart(6, '0');
+  if (i.live || i.issue === 'NO_SHOW' || i.issue === 'BAD_WORK') i.prio = 'HIGH';
+  i.msgs.push({ kind:'QUESTION', body:o.body, t:i.t, photos:i.photos }); i.hist.push({ to:'RECEIVED', t:i.t });
+  D.inq.unshift(i); return i;
+}
+function releaseTimer(i) {
+  const c = i.cid && D.con.find(x => x.id === i.cid);
+  if (!i.live || !c || c.status !== 'pending' || !c.paused) return;
+  if (D.inq.some(x => x !== i && x.cid === c.id && x.live && x.status !== 'CLOSED')) return;
+  c.paused = false; c.deadline = nowT() + c.remaining; D.msg.push({ cid:c.id, from:'sys', text:'신고 처리가 끝나 자동 확정 타이머가 다시 시작됐어요.' });
+}
+function moveSt(i, to) {
+  const from = i.status; i.status = to; i.hist.push({ to, t:nowT() });
+  if (to === 'IN_PROGRESS' && !i.tIn) i.tIn = nowT();
+  if (to === 'ANSWERED') i.tAns = nowT();
+  if (to === 'CLOSED') { i.tClose = nowT(); releaseTimer(i); }
+  return from;
+}
+
+/* 알림: 앱 푸시 → 알림톡 → 메일 순서, 앞 채널이 성공하면 뒤 채널은 보내지 않음 */
+function deliver(n) {
+  const u = D.users.find(x => x.email === n.uid), pf = Object.assign({ push:true, alim:true, email:true }, u && u.pref);
+  const chans = [['PUSH', pf.push, NTF.pushFail ? '푸시 토큰 만료 (3회 재시도 실패)' : ''], ['ALIMTALK', pf.alim, NTF.alimOk ? '' : '알림톡 템플릿 승인 전'], ['EMAIL', pf.email, '']];
+  n.dl = []; let done = false;
+  chans.forEach(([ch, on, err]) => {
+    if (done) return n.dl.push({ ch, st:'SKIPPED', note:'앞 채널 발송 성공' });
+    if (!on) return n.dl.push({ ch, st:'SKIPPED', note:'고객이 수신을 끔' });
+    if (err) return n.dl.push({ ch, st:'FAILED', note:err });
+    n.dl.push({ ch, st:'SENT', note:'' }); done = true;
+  });
+  n.ok = done; return n;
+}
+function sendNtf(i) {
+  const key = i.code + ':' + i.msgs.filter(m => m.kind === 'ANSWER').length;
+  if (D.ntf.some(n => n.key === key)) return null;   // 같은 답변에 알림 중복 방지 (dedupe_key)
+  const n = { id:++ntfSeq, key, uid:i.uid, iid:i.id, code:i.code, title:'문의하신 내용에 답변이 등록되었어요', summary:`${i.code} · ${CAT[i.cat]} — 답변 전문은 앱·웹에서 확인해 주세요.`, t:nowT(), read:false };
+  D.ntf.unshift(n); return deliver(n);
+}
+const ntfSummary = n => n.ok ? `${CHN[n.dl.find(d => d.st === 'SENT').ch]}로 알림을 보냈어요.` : '모든 채널 발송에 실패했어요. 알림 발송 로그에서 재발송해 주세요.';
+
+/* ---------- 고객: 고객센터 ---------- */
+function csModal(tab) {
+  if (tab) csTab = tab;
+  if (!AU.user) return openM(head('고객센터') + `<p class="leading-relaxed text-sea/80">1:1 문의와 처리 상태 조회는 로그인 후 이용할 수 있어요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('auth', '', '로그인 / 회원가입', 'a')}${btn('democ', '', '일반 회원으로 체험', 's')}</div>`);
+  const list = myInq(), nts = D.ntf.filter(n => n.uid === AU.user.email), unread = unreadN(), st = keepScroll();
+  const tabB = (k, t, n) => `<button type="button" data-act="cstab" data-id="${k}" aria-pressed="${csTab === k}" class="${chipCls(csTab === k)}">${t}${n ? ` <span class="ml-1 rounded-full bg-sun px-1.5 text-white">${n}</span>` : ''}</button>`;
+  const pf = Object.assign({ push:true, alim:true, email:true }, AU.user.pref);
+  const tog = (k, t, sub) => `<div class="flex items-center justify-between gap-4 rounded-2xl border border-mist p-4"><div><p class="font-bold">${t}</p><p class="text-xs text-sea/60">${sub}</p></div><button type="button" role="switch" aria-checked="${pf[k]}" aria-label="${t}" data-act="pref" data-id="${k}" class="relative h-7 w-12 shrink-0 rounded-full ${pf[k] ? 'bg-cool' : 'bg-sea/25'}"><i class="absolute top-1 h-5 w-5 rounded-full bg-white transition-all" style="left:${pf[k] ? '1.5rem' : '.25rem'}"></i></button></div>`;
+  const body = csTab === 'list'
+    ? (list.length ? list.map(i => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${CAT_ICON[i.cat]} ${esc(i.title)}</p>${stBadge(i.status)}</div>
+        <p class="mt-1 text-xs text-sea/60">${i.code} · ${CAT[i.cat]} · ${fmtT(i.t)}${i.status === 'ANSWERED' && !i.read ? ' · <b class="text-sun">새 답변</b>' : ''}</p><div class="mt-3">${btn('inqdet', i.id, '상세 보기', 's')}</div>`)).join('') : `<div class="mt-3">${empty('아직 문의 내역이 없어요. 궁금한 점을 1:1로 남겨 보세요.')}</div>`)
+    : csTab === 'ntf'
+      ? (nts.length ? nts.map(n => card(`<p class="text-sm font-bold">${n.read ? '' : '<span class="mr-1 text-sun">●</span>'}${esc(n.title)}</p><p class="mt-1 text-xs text-sea/70">${esc(n.summary)}</p><p class="mt-1 text-xs text-sea/50">${fmtT(n.t)} · ${n.ok ? CHN[n.dl.find(d => d.st === 'SENT').ch] + ' 발송' : '발송 실패'}</p><div class="mt-2">${btn('inqdet', n.iid, '문의 보기', 's')}</div>`)).join('') : `<div class="mt-3">${empty('받은 알림이 없어요.')}</div>`)
+      : `<div class="mt-3 space-y-3">${tog('push', '앱 푸시', '가장 먼저 시도해요')}${tog('alim', '카카오 알림톡', '푸시가 실패하면 시도해요 (템플릿 승인 후 동작)')}${tog('email', '이메일', '마지막으로 시도해요')}</div><p class="mt-3 text-xs text-sea/60">답변 알림은 서비스 안내라서 마케팅 수신 동의와 관계없이 발송돼요. 채널을 모두 꺼도 고객센터에서는 확인할 수 있어요.</p>`;
+  openM(head('고객센터') + `<div class="rounded-2xl bg-ice p-4"><p class="font-bold">무엇을 도와드릴까요?</p><p class="mt-1 text-sm text-sea/70">결제·기사·A/S 관련 궁금한 점을 남겨 주시면 <b>하루 안에</b> 담당자가 직접 답변드려요.</p><div class="mt-3">${btn('inqnew', '', '✏️ 1:1 문의하기', 'a')}</div></div>
+    <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="고객센터 메뉴">${tabB('list', '내 문의 내역', unread)}${tabB('ntf', '알림', nts.filter(n => !n.read).length)}${tabB('pref', '알림 설정', 0)}</div>${body}`);
+  $('#mm-body').scrollTop = st; menuCur = 'cs';
+}
+const keepScroll = () => ($('#mm').classList.contains('hidden') ? 0 : $('#mm-body').scrollTop);
+
+function saveIq() { [['cid', 'iq-cid'], ['issue', 'iq-issue'], ['title', 'iq-title'], ['body', 'iq-body']].forEach(([k, id]) => { const el = $('#' + id); if (el) iq[k] = el.value; }); }
+function inqForm(reset) {
+  if (!AU.user) return csModal();
+  if (reset) iq = { cat:'PAYMENT', cid:'', issue:'NO_SHOW', title:'', body:'' };
+  const needC = iq.cat !== 'ETC', cons = eligibleCons(iq.cat), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
+  const catB = k => `<button type="button" data-act="iqcat" data-id="${k}" aria-pressed="${iq.cat === k}" class="rounded-2xl border-2 px-3 py-4 text-sm font-bold ${iq.cat === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}"><span aria-hidden="true">${CAT_ICON[k]}</span> ${CAT[k]}</button>`;
+  if (needC && !cons.some(c => c.id === iq.cid)) iq.cid = cons[0] ? cons[0].id : '';
+  openM(head('1:1 문의하기') + `<fieldset><legend class="text-sm font-bold">문의 유형</legend><div class="mt-2 grid grid-cols-2 gap-3">${Object.keys(CAT).map(catB).join('')}</div></fieldset>
+    ${needC ? `${lab('iq-cid', '관련 계약')}${cons.length ? `<select id="iq-cid" class="${inp}">${cons.map(c => `<option value="${c.id}"${iq.cid === c.id ? ' selected' : ''}>${esc(conLabel(c))}</option>`).join('')}</select>` : `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm text-sea/80">${iq.cat === 'AS_REINSPECT' ? '작업 완료 후 14일 이내의 계약이 없어요. 기간이 지났다면 “기타”로 문의해 주세요.' : '문의할 수 있는 계약이 없어요. 계약과 무관한 내용은 “기타”로 남겨 주세요.'}</p>`}` : ''}
+    ${iq.cat === 'PRO_ISSUE' ? `${lab('iq-issue', '어떤 문제가 있었나요?')}<select id="iq-issue" class="${inp}">${Object.entries(ISSUE).map(([k, t]) => `<option value="${k}"${iq.issue === k ? ' selected' : ''}>${t}</option>`).join('')}</select>` : ''}
+    ${lab('iq-title', '제목 (5~100자)')}<input id="iq-title" maxlength="100" value="${esc(iq.title)}" class="${inp}">
+    ${lab('iq-body', '내용 (10~2,000자)')}<textarea id="iq-body" rows="5" maxlength="2000" class="${inp} resize-none" placeholder="상황을 구체적으로 적어 주세요. 날짜와 시간, 금액이 있으면 함께 알려 주세요.">${esc(iq.body)}</textarea>
+    ${lab('iq-f', '사진 첨부 (선택 · 최대 5장, 장당 5MB, JPG/PNG)')}<input id="iq-f" type="file" accept="image/jpeg,image/png" multiple class="${inp} text-sm">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-act="cs" class="${B.s}">취소</button>${btn('inqsend', '', '문의 접수하기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+async function inqSend() {
+  saveIq(); const needC = iq.cat !== 'ETC', title = iq.title.trim(), body = iq.body.trim(), err = m => $('#merr').textContent = m;
+  if (needC && !iq.cid) return err('관련 계약을 선택해 주세요.');
+  if (needC && !eligibleCons(iq.cat).some(c => c.id === iq.cid)) return err('선택할 수 없는 계약이에요.');
+  if (title.length < 5) return err('제목은 5자 이상 입력해 주세요.');
+  if (body.length < 10) return err('내용은 10자 이상 입력해 주세요.');
+  const dup = D.inq.find(x => x.uid === AU.user.email && x.cat === iq.cat && x.status !== 'CLOSED' && ((needC && x.cid === iq.cid) || (!needC && false)));
+  if (dup) return err(`같은 계약으로 진행 중인 문의가 있어요 (${dup.code}). 내 문의 내역에서 추가 문의를 남겨 주세요.`);
+  const files = [...($('#iq-f').files || [])];
+  if (files.length > 5) return err('사진은 최대 5장까지 올릴 수 있어요.');
+  if (files.some(f => !/^image\/(jpeg|png)$/.test(f.type))) return err('JPG, PNG 사진만 올릴 수 있어요.');
+  if (files.some(f => f.size > 5 * 1024 * 1024)) return err('사진은 장당 5MB 이하만 올릴 수 있어요.');
+  const photos = await Promise.all(files.map(readURL)), c = needC && D.con.find(x => x.id === iq.cid);
+  const i = newInq({ uid:AU.user.email, cat:iq.cat, issue:iq.cat === 'PRO_ISSUE' ? iq.issue : '', cid:needC ? iq.cid : '', pid:c ? c.pid : '', title, body, photos });
+  render();
+  openM(head('문의가 접수됐어요') + `<div class="rounded-2xl bg-ice p-5 text-center"><p class="text-sm text-sea/70">문의 번호</p><p class="font-display text-3xl mt-1">${i.code}</p>${stBadge(i.status)}</div>
+    <p class="mt-4 text-sm leading-relaxed text-sea/80">담당자가 내용을 확인하고 <b>하루(24시간) 안에</b> 답변드려요. 노쇼·분쟁처럼 급한 건은 먼저 처리해요. 답변이 등록되면 앱 푸시 → 알림톡 → 메일 순서로 알려드리고, 고객센터에서도 상태를 확인할 수 있어요.</p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('inqdet', i.id, '접수 내역 보기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function inqDetail(id) {
+  const i = D.inq.find(x => x.id === +id); if (!i) return csModal();
+  const admin = AU.user && AU.user.role === 'admin';
+  if (!admin && AU.user && i.uid === AU.user.email) { i.read = true; D.ntf.filter(n => n.iid === i.id).forEach(n => n.read = true); render(); }
+  const at = s => { const h = [...i.hist].reverse().find(x => x.to === s); return h ? fmtT(h.t) : ''; }, steps = ['RECEIVED', 'IN_PROGRESS', 'ANSWERED', 'CLOSED'], idx = steps.indexOf(i.status);
+  const bar = `<ol class="grid grid-cols-4 gap-1 text-center text-xs">${steps.map((s, k) => `<li><span class="mx-auto grid h-7 w-7 place-items-center rounded-full font-bold ${k <= idx ? 'bg-cool text-white' : 'bg-mist text-sea/50'}">${k + 1}</span><p class="mt-1 font-bold ${k <= idx ? '' : 'text-sea/50'}">${IST[s]}</p><p class="text-sea/50">${k <= idx ? at(s) : ''}</p></li>`).join('')}</ol>`;
+  const msgs = i.msgs.filter(m => m.kind !== 'INTERNAL_NOTE').map(m => m.kind === 'ANSWER'
+    ? `<div class="mr-8 rounded-2xl rounded-tl-sm bg-sea p-4 text-white"><p class="text-xs text-white/70">한여름 고객센터 · ${fmtT(m.t)}</p><p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">${esc(m.body)}</p></div>`
+    : `<div class="ml-8 rounded-2xl rounded-tr-sm bg-mist p-4"><p class="text-xs text-sea/60">${m.kind === 'FOLLOWUP' ? '추가 문의' : '내 문의'} · ${fmtT(m.t)}</p><p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">${esc(m.body)}</p>${(m.photos || []).length ? `<div class="mt-2 flex flex-wrap gap-2">${m.photos.map(p => `<img src="${p}" alt="첨부 사진" class="h-16 w-16 rounded-lg object-cover">`).join('')}</div>` : ''}</div>`).join('');
+  const canFu = i.status === 'ANSWERED' && nowT() - i.tAns <= FOLLOW;
+  openM(head(`${i.code}`) + `<div class="flex flex-wrap items-center gap-2"><span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT_ICON[i.cat]} ${CAT[i.cat]}${i.issue ? ' · ' + ISSUE[i.issue] : ''}</span>${stBadge(i.status)}</div>
+    <p class="mt-2 font-bold">${esc(i.title)}</p>${i.cid ? `<p class="text-xs text-sea/60">관련 계약: ${esc(conLabel(D.con.find(c => c.id === i.cid) || { service:'aircon_install', gu:'-', pid:i.pid, status:'' }))}</p>` : ''}
+    <div class="mt-4">${bar}</div><div class="mt-4 space-y-3">${msgs}</div>
+    ${canFu ? `<label for="fu-body" class="block mt-4 text-sm font-bold">추가 문의 <span class="font-normal text-sea/60">(답변 후 7일 이내)</span></label><textarea id="fu-body" rows="3" maxlength="2000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none"></textarea><p id="merr" role="alert" class="mt-2 text-sm font-bold text-red-600"></p><div class="mt-2">${btn('inqfu', i.id, '추가 문의 보내기', 'a')}</div>` : ''}
+    ${i.status === 'ANSWERED' && !canFu ? '<p class="mt-4 rounded-xl bg-ice p-3 text-sm">추가 문의 기간(7일)이 지났어요. 새 문의로 접수해 주세요.</p>' : ''}
+    ${i.status === 'CLOSED' ? '<p class="mt-4 rounded-xl bg-ice p-3 text-sm">종결된 문의예요. 이어서 궁금한 점은 새 문의로 접수해 주세요.</p>' : ''}
+    <div class="mt-4 flex flex-wrap gap-3"><button type="button" data-act="cs" class="${B.s}">목록으로</button>${i.status === 'CLOSED' ? btn('inqnew', '', '새 문의하기', 'a') : ''}${i.status === 'RECEIVED' ? btn('inqdel', i.id, '문의 취소', 's') : ''}</div>`);
+  menuCur = null;
+}
+function inqFollow(id) {
+  const i = D.inq.find(x => x.id === +id), body = ($('#fu-body').value || '').trim();
+  if (!i || i.status !== 'ANSWERED' || nowT() - i.tAns > FOLLOW) return $('#merr').textContent = '추가 문의 기간이 지났어요. 새 문의로 접수해 주세요.';
+  if (body.length < 5) return $('#merr').textContent = '내용을 5자 이상 입력해 주세요.';
+  i.msgs.push({ kind:'FOLLOWUP', body, t:nowT() }); moveSt(i, 'IN_PROGRESS'); i.read = true; render(); inqDetail(i.id); toast('추가 문의를 보냈어요. 상태가 “처리 중”으로 돌아갔어요.');
+}
+
+/* ---------- 관리자: 민원 처리 ---------- */
+function adminSupport() {
+  const all = D.inq, cnt = s => all.filter(i => i.status === s).length, list = AF === 'ALL' ? all : all.filter(i => i.status === AF);
+  const fchip = (k, t, n) => `<button type="button" data-act="ifilt" data-id="${k}" aria-pressed="${AF === k}" class="${chipCls(AF === k)}">${t} ${n}</button>`;
+  const row = i => card(`<div class="flex flex-wrap items-center gap-2"><span class="font-display text-lg">${i.code}</span>${stBadge(i.status)}<span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT[i.cat]}</span>${i.prio === 'HIGH' ? '<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">긴급</span>' : ''}${slaOver(i) ? '<span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">응답 기한 초과</span>' : ''}${i.by === '기사' ? '<span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-bold">기사 신고</span>' : ''}</div>
+    <p class="mt-2 text-sm font-bold">${esc(i.title)}</p><p class="text-xs text-sea/60">${esc(i.uid)} · ${fmtT(i.t)}${i.assignee ? ' · 담당 ' + esc(i.assignee) : ' · 담당자 없음'}${i.live && i.status !== 'CLOSED' ? ' · <b class="text-sun">자동 확정 타이머 정지 중</b>' : ''}</p>
+    <div class="mt-3 flex flex-wrap gap-2">${i.status === 'RECEIVED' ? btn('iassign', i.id, '처리 시작', 'a') : ''}${btn('iadm', i.id, i.status === 'CLOSED' ? '이력 보기' : '상세·답변', 's')}${i.status === 'ANSWERED' ? btn('iclose', i.id, '종결', 's') : ''}</div>`);
+  const nrow = n => card(`<div class="flex flex-wrap items-start justify-between gap-2"><div><p class="text-sm font-bold">${n.code} · ${esc(n.uid)}</p><p class="text-xs text-sea/60">${fmtT(n.t)}</p></div>${n.ok ? '' : btn('nretry', n.id, '재발송', 'a')}</div><div class="mt-2 flex flex-wrap gap-1.5">${n.dl.map(d => `<span title="${esc(d.note)}" class="rounded-full px-2.5 py-1 text-xs font-bold ${d.st === 'SENT' ? 'bg-cool text-white' : d.st === 'FAILED' ? 'bg-red-100 text-red-700' : 'bg-mist text-sea/60'}">${CHN[d.ch]} ${{ SENT:'성공', FAILED:'실패', SKIPPED:'건너뜀' }[d.st]}</span>`).join('')}</div>${n.ok ? '' : `<p class="mt-2 text-xs font-bold text-red-700">${n.dl.filter(d => d.st === 'FAILED').map(d => esc(CHN[d.ch] + ': ' + d.note)).join(' · ')}</p>`}`);
+  const arow = a => `<li class="rounded-xl bg-ice px-4 py-3 text-sm"><div class="flex flex-wrap justify-between gap-2"><b>${esc(a.admin)} · ${a.action}</b><span class="text-xs text-sea/60">${fmtT(a.t)}</span></div><p class="text-xs text-sea/70">${a.target} · ${esc(JSON.stringify(a.before || {}))} → ${esc(JSON.stringify(a.after || {}))}${a.reason ? ' · ' + esc(a.reason) : ''} · IP ${a.ip}</p></li>`;
+  const sw = (k, t, sub) => `<div class="flex items-center justify-between gap-4 rounded-2xl border border-mist p-4"><div><p class="font-bold">${t}</p><p class="text-xs text-sea/60">${sub}</p></div><button type="button" role="switch" aria-checked="${NTF[k]}" aria-label="${t}" data-act="ntfsw" data-id="${k}" class="relative h-7 w-12 shrink-0 rounded-full ${NTF[k] ? 'bg-cool' : 'bg-sea/25'}"><i class="absolute top-1 h-5 w-5 rounded-full bg-white transition-all" style="left:${NTF[k] ? '1.5rem' : '.25rem'}"></i></button></div>`;
+  return `<h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
+    <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="상태 필터">${fchip('ALL', '전체', all.length)}${Object.keys(IST).map(s => fchip(s, IST[s], cnt(s))).join('')}</div>
+    <div class="mt-1">${list.map(row).join('') || `<div class="mt-3">${empty('해당 상태의 문의가 없어요.')}</div>`}</div>
+    <div class="mt-10 grid lg:grid-cols-2 gap-6">
+      <section><h2 class="text-2xl font-bold">알림 발송 로그</h2>${D.ntf.slice(0, 6).map(nrow).join('') || `<div class="mt-3">${empty('아직 발송한 알림이 없어요. 문의에 답변하면 여기에 기록돼요.')}</div>`}</section>
+      <section><h2 class="text-2xl font-bold">데모 스위치</h2><div class="mt-3 space-y-3">${sw('pushFail', '푸시 실패 시뮬레이션', '켜면 푸시가 실패해 알림톡 → 메일로 넘어가는 흐름을 볼 수 있어요')}${sw('alimOk', '알림톡 템플릿 승인됨', '꺼져 있으면 알림톡은 실패 처리돼요 (실제로는 카카오 승인 필요)')}<div class="rounded-2xl border border-mist p-4"><p class="font-bold">답변 후 7일 경과</p><p class="text-xs text-sea/60">답변 완료 문의가 자동 종결되는 흐름을 확인해요 (전체 데모 시간이 7일 이동해요)</p><div class="mt-2">${btn('skew7', '', '7일 뒤로 이동', 's')}</div></div></div></section></div>
+    <h2 class="mt-10 text-2xl font-bold">처리 이력 <span class="text-base font-normal text-sea/60">Audit Log · 수정·삭제 불가</span></h2>
+    <ul class="mt-3 space-y-2">${D.aud.slice(0, 10).map(arow).join('') || '<li class="text-sm text-sea/60">아직 처리 이력이 없어요.</li>'}</ul>`;
+}
+function inqAdmin(id) {
+  const i = D.inq.find(x => x.id === +id); if (!i) return; admDet = i.id; const st = keepScroll();
+  const msgs = i.msgs.map(m => `<div class="rounded-2xl p-4 ${m.kind === 'ANSWER' ? 'bg-sea text-white mr-8' : m.kind === 'INTERNAL_NOTE' ? 'border-2 border-dashed border-sun/50 bg-sun/5' : 'bg-mist ml-8'}"><p class="text-xs ${m.kind === 'ANSWER' ? 'text-white/70' : 'text-sea/60'}">${{ QUESTION:'고객 문의', FOLLOWUP:'고객 추가 문의', ANSWER:'최종 답변', INTERNAL_NOTE:'내부 메모 (고객에게 안 보임)' }[m.kind]} · ${fmtT(m.t)}</p><p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">${esc(m.body)}</p>${(m.photos || []).length ? `<div class="mt-2 flex flex-wrap gap-2">${m.photos.map(p => `<img src="${p}" alt="첨부 사진" class="h-16 w-16 rounded-lg object-cover">`).join('')}</div>` : ''}</div>`).join('');
+  const logs = D.aud.filter(a => a.target === i.code);
+  const c = i.cid && D.con.find(x => x.id === i.cid), n = D.ntf.find(x => x.iid === i.id);
+  openM(head(i.code) + `<div class="flex flex-wrap items-center gap-2">${stBadge(i.status)}<span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT[i.cat]}${i.issue ? ' · ' + ISSUE[i.issue] : ''}</span>${i.prio === 'HIGH' ? '<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">긴급</span>' : ''}</div>
+    <p class="mt-2 font-bold">${esc(i.title)}</p><p class="text-xs text-sea/60">${esc(i.uid)} · ${fmtT(i.t)} 접수${i.assignee ? ' · 담당 ' + esc(i.assignee) : ''}${c ? ' · 계약 ' + esc(conLabel(c)) : ''}</p>
+    ${i.live && i.status !== 'CLOSED' ? '<p class="mt-2 rounded-xl bg-sun/10 p-3 text-xs font-bold text-sun">이 신고는 계약의 자동 확정 타이머를 멈추고 있어요. 종결하면 남은 시간부터 다시 시작돼요.</p>' : ''}
+    <div class="mt-4 space-y-3">${msgs}</div>
+    ${i.status === 'CLOSED' ? '' : `<label for="ia-body" class="block mt-5 text-sm font-bold">${i.status === 'ANSWERED' ? '내부 메모' : '최종 답변 / 내부 메모'}</label><textarea id="ia-body" rows="4" maxlength="2000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none" placeholder="${i.status === 'ANSWERED' ? '내부 메모는 고객에게 보이지 않아요.' : '“최종 답변 등록”을 누르면 고객에게 알림이 자동 발송돼요.'}"></textarea>
+    <p id="merr" role="alert" class="mt-2 text-sm font-bold text-red-600"></p>
+    <div class="mt-2 flex flex-wrap gap-2">${btn('inote', i.id, '내부 메모 저장', 's')}${i.status !== 'ANSWERED' ? btn('ianswer', i.id, '최종 답변 등록 · 고객 알림 발송', 'a') : btn('iclose', i.id, '종결', 'a')}${i.status === 'RECEIVED' ? btn('iassign', i.id, '처리 시작', 's') : ''}</div>`}
+    ${n ? `<h3 class="mt-6 font-bold">알림 발송 결과</h3><div class="mt-2 flex flex-wrap gap-1.5">${n.dl.map(d => `<span class="rounded-full px-2.5 py-1 text-xs font-bold ${d.st === 'SENT' ? 'bg-cool text-white' : d.st === 'FAILED' ? 'bg-red-100 text-red-700' : 'bg-mist text-sea/60'}">${CHN[d.ch]} ${{ SENT:'성공', FAILED:'실패', SKIPPED:'건너뜀' }[d.st]}</span>`).join('')}</div>` : ''}
+    <h3 class="mt-6 font-bold">이 민원의 처리 이력</h3><ul class="mt-2 space-y-2">${logs.map(a => `<li class="rounded-xl bg-ice px-4 py-3 text-xs"><b>${esc(a.admin)} · ${a.action}</b> · ${fmtT(a.t)}<br>${esc(JSON.stringify(a.before || {}))} → ${esc(JSON.stringify(a.after || {}))}${a.reason ? ' · ' + esc(a.reason) : ''}</li>`).join('') || '<li class="text-sm text-sea/60">아직 처리 이력이 없어요.</li>'}</ul>
+    <div class="mt-4"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
+  $('#mm-body').scrollTop = st;
+}
+function iAssign(id) {
+  const i = D.inq.find(x => x.id === +id);
+  if (!i || i.status !== 'RECEIVED') return toast('이미 처리 중인 문의예요. 목록을 새로 확인해 주세요.');
+  i.assignee = AU.user.name; const b = moveSt(i, 'IN_PROGRESS'); audit('INQUIRY_ASSIGN', i, { status:b }, { status:'IN_PROGRESS', assignee:i.assignee });
+  render(); if (admDet === i.id && !$('#mm').classList.contains('hidden')) inqAdmin(i.id); toast(`${i.code} 처리를 시작했어요.`);
+}
+function iNote(id) {
+  const i = D.inq.find(x => x.id === +id), body = ($('#ia-body').value || '').trim();
+  if (body.length < 2) return $('#merr').textContent = '메모 내용을 입력해 주세요.';
+  i.msgs.push({ kind:'INTERNAL_NOTE', body, t:nowT() }); audit('NOTE_CREATE', i, null, { note:body.slice(0, 30) }); inqAdmin(id); toast('내부 메모를 저장했어요. 고객에게는 보이지 않아요.');
+}
+function iAnswer(id) {
+  const i = D.inq.find(x => x.id === +id), body = ($('#ia-body').value || '').trim();
+  if (!i || i.status === 'CLOSED' || i.status === 'ANSWERED') return $('#merr').textContent = '이미 답변이 등록됐거나 종결된 문의예요.';
+  if (body.length < 5) return $('#merr').textContent = '답변 내용을 5자 이상 입력해 주세요.';
+  if (i.status === 'RECEIVED') { i.assignee = AU.user.name; const b0 = moveSt(i, 'IN_PROGRESS'); audit('INQUIRY_ASSIGN', i, { status:b0 }, { status:'IN_PROGRESS', assignee:i.assignee }); }
+  i.msgs.push({ kind:'ANSWER', body, t:nowT(), final:true }); const b = moveSt(i, 'ANSWERED'); i.read = false;
+  audit('ANSWER_CREATE', i, { status:b }, { status:'ANSWERED' });
+  const n = sendNtf(i); render(); inqAdmin(i.id);
+  toast(n ? '답변을 등록했어요. ' + ntfSummary(n) : '답변을 등록했어요.');
+}
+function iClose(id) {
+  const i = D.inq.find(x => x.id === +id); if (!i || i.status === 'CLOSED') return;
+  const b = moveSt(i, 'CLOSED'); i.closedReason = 'ADMIN'; audit('INQUIRY_CLOSE', i, { status:b }, { status:'CLOSED' }, '관리자 종결');
+  render(); if (admDet === i.id && !$('#mm').classList.contains('hidden')) inqAdmin(i.id); toast(`${i.code}를 종결했어요.`);
+}
+function autoCloseInq() {
+  D.inq.forEach(i => { if (i.status === 'ANSWERED' && nowT() - i.tAns > FOLLOW) HY_once('cl-' + i.id, () => {
+    const x = D.inq.find(y => y.id === i.id); if (!x || x.status !== 'ANSWERED' || nowT() - x.tAns <= FOLLOW) return;
+    const b = moveSt(x, 'CLOSED'); x.closedReason = 'AUTO_7D'; audit('INQUIRY_CLOSE', x, { status:b }, { status:'CLOSED' }, '답변 후 7일 무응답 자동 종결', true); render(); if (menuCur === 'cs') csModal(); }); });
+}
+
+/* ---------- 고객 견적 요청 저장 (기존 모달의 submitQuote가 호출) ---------- */
+async function createRequest(p) {
+  const urls = await Promise.all(p.photos.map(ph => readURL(ph.file)));
+  const id = 'REQ-' + (1000 + D.seq++);
+  D.req.unshift({ id, owner:MEC(), service:p.service, gu:p.district, date:p.date, details:p.details, photos:urls, status:'open' });
+  setTimeout(() => {   // 다른 기사 견적이 도착하는 상황을 흉내냄
+    [['p2', .95, '방문 전에 사진으로 먼저 확인해 드릴게요.'], ['p3', 1.1, '자재 포함 가격이에요. 당일 작업 가능해요.']].forEach(([pid, k, msg]) =>
+      D.quo.push({ id:'Q' + D.seq++, rid:id, pid, price:Math.round(BASE[p.service] * k / 1000) * 1000, visit:p.date, msg, status:'submitted' }));
+    toast('새 견적 2건이 도착했어요 (데모 기사)'); render();
+  }, 1500);
+  render(); return id;
+}
+D.req.push(
+  { id:'REQ-0901', owner:'other', service:'aircon_clean', gu:'마포구', date:'2026-10-05', details:'벽걸이 2대, 곰팡이 냄새가 나요.', photos:[], status:'open' },
+  { id:'REQ-0902', owner:'other', service:'freezer_removal', gu:'송파구', date:'2026-10-08', details:'폐업 예정이라 업소용 냉동고 2대를 철거하고 싶어요. 엘리베이터 있어요.', photos:[], status:'open' });
+
+/* ---------- 모드 전환 / 화면 렌더링 ---------- */
+function setMode(m) {
+  mode = m; closeM();
+  showView('main');
+  $('#hdr-quote').style.display = m === 'customer' ? '' : 'none';
+  updateAuthUI();
+  window.scrollTo(0, 0); render();
+}
+function render() {
+  const n = mode === 'customer' ? D.req.filter(r => r.owner === MEC()).length : D.con.filter(c => c.pid === ME).length;
+  { const mc = mode === 'customer' ? D.req.filter(r => r.owner === MEC()).length : D.con.filter(c => c.pid === ME).length; $('#mbar-menu').innerHTML = (mode === 'customer' ? '내 요청' : '견적·계약') + (mc ? ` <span class="ml-0.5 rounded-full bg-sun px-1.5 text-xs text-white">${mc}</span>` : ''); }
+  $('#fab').innerHTML = (mode === 'customer' ? '내 요청 관리' : '내 견적·계약 관리') + (n ? ` <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">${n}</span>` : '') + (mode === 'customer' && D.con.some(c => c.status === 'pending') ? ' <span class="ml-1 rounded-full bg-white px-2 py-0.5 text-xs text-sea">확인 필요</span>' : '') + (mode === 'customer' && unreadN() ? ' <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">새 답변</span>' : '');
+  renderFeed(); if (view === 'market' && mode === 'customer') renderMarket(); if (view === 'pros' && mode === 'customer') renderPros(); if (mode === 'pro') proView(); if (mode === 'admin') adminView();
+  $('#fab').style.display = mode === 'admin' ? 'none' : '';
+  const hb = $('#hdr-bal'); hb.style.display = mode === 'pro' ? '' : 'none'; hb.textContent = '예치금 ' + won(PRO[ME].bal || 0);
+  $('#mbar').style.display = mode === 'admin' ? 'none' : ''; $('#mbar-bal').style.display = mode === 'pro' ? '' : 'none'; $('#mbar-quote').style.display = mode === 'customer' ? '' : 'none'; $('#mbar-bal').className = 'rounded-xl bg-mist px-3 py-3 text-sm font-bold whitespace-nowrap' + (mode === 'pro' ? ' flex-1' : '');
+}
+function proView() {
+  const open = D.req.filter(r => r.status === 'open'), mine = D.quo.filter(q => q.pid === ME), cons = D.con.filter(c => c.pid === ME);
+  const stat = (k, v) => `<div class="rounded-2xl bg-white border border-mist p-4"><p class="text-sm text-sea/70">${k}</p><p class="font-display text-3xl mt-1">${v}</p></div>`;
+  $('#pview').innerHTML = `
+    ${onlineBar()}
+    <p class="mt-2 text-sea/75">견적 제출은 100% 무료예요. 에어컨 서비스는 거래 확정 시 3,000원, 냉장·냉동고 철거는 확정 금액의 5%, 보유 재고를 매도할 때는 거래금액의 5%(둘 다 건당 최대 10만 원), 중고 매입은 수수료 0원으로 각각 선충전 예치금에서 자동 차감돼요.</p>
+    ${walletStrip()}
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mine.length + '건')}${stat('확정 계약', cons.length + '건')}${stat('차감 수수료', won(cons.reduce((s, c) => s + (c.feeDone ? c.fee.a : 0), 0)))}</div>
+    <h2 class="mt-10 text-2xl font-bold">들어온 견적 요청</h2>
+    <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 고객 모드에서 견적을 요청해 보세요.')}</div>
+    <h2 class="mt-10 text-2xl font-bold">중고 냉동고 매입 게시글</h2>
+    <p class="mt-1 text-sm text-sea/70">매입 제안은 무료이며 매입 수수료도 0원이에요. 다른 업체의 재고는 “구매 제안”으로 살 수 있어요.</p>
+    <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${D.lst.filter(l => l.status === 'open' && l.seller !== ME).map(proListing).join('') || empty('열린 판매글이 없어요.')}</div>${stockBlock()}`;
+}
+function proReq(r) {
+  const my = D.quo.find(q => q.rid === r.id && q.pid === ME), f = calcFee(r.service, BASE[r.service]);
+  return `<article class="rounded-2xl bg-white border border-mist p-5">
+    <div class="flex flex-wrap items-center gap-2"><span class="rounded-full bg-mist px-3 py-1 text-sm font-bold">${SVC[r.service]}</span><span class="text-sm font-medium">서울 ${r.gu}</span><span class="text-sm text-sea/70">희망일 ${esc(r.date)}</span></div>
+    <p class="mt-3 leading-relaxed line-clamp-3">${esc(r.details) || '<span class="text-sea/50">세부 요청사항 없음</span>'}</p>
+    ${r.photos.length ? `<div class="mt-3 flex gap-2">${r.photos.slice(0, 4).map(u => `<img src="${u}" alt="고객 첨부 사진" class="h-16 w-16 rounded-xl object-cover">`).join('')}</div>` : ''}
+    <p class="mt-3 text-xs text-sea/60">확정 시 수수료 ${feeNote(r.service)} · 제출은 무료</p>
+    <div class="mt-3">${my ? `<span class="font-bold text-cool">내 견적 ${won(my.price)} 제출 완료</span>` : btn('qopen', r.id, '무료 견적 제출', 'a')}</div></article>`;
+}
+
+/* ---------- 기사: 무료 견적 제출 ---------- */
+function quoteModal(rid) {
+  const r = D.req.find(x => x.id === rid);
+  openM(head('무료 견적 제출') + `<p class="text-sm"><b>${SVC[r.service]}</b> · 서울 ${r.gu} · 희망일 ${esc(r.date)}</p>
+    <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">견적 제출은 <b>100% 무료</b>이며, ${feeLine(r.service)}</p>
+    <p class="mt-2 text-xs text-sea/60">현재 예치금 ${won(PRO[ME].bal || 0)}</p>
+    <label for="qp" class="block mt-4 text-sm font-bold">제시 견적 금액(원)</label>
+    <input id="qp" type="number" min="0" step="1000" inputmode="numeric" placeholder="예) 90000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+    <label for="qd" class="block mt-4 text-sm font-bold">작업 가능일</label>
+    <input id="qd" type="date" min="${today()}" value="${esc(r.date)}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+    <label for="qmsg" class="block mt-4 text-sm font-bold">한 줄 메시지</label>
+    <input id="qmsg" maxlength="100" placeholder="예) 자재 포함 가격이고 당일 작업 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('qsend', rid, '무료로 견적 제출하기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function qsend(rid) {
+  const price = +$('#qp').value, visit = $('#qd').value, msg = $('#qmsg').value.trim();
+  if (!(price > 0)) return $('#merr').textContent = '견적 금액을 입력해 주세요.';
+  if (!visit || visit < today()) return $('#merr').textContent = '오늘 이후의 작업 가능일을 선택해 주세요.';
+  if (D.quo.some(q => q.rid === rid && q.pid === ME)) return $('#merr').textContent = '이미 견적을 제출한 요청이에요.';   // unique(request_id, pro_id)
+  const need0 = calcFee(D.req.find(x => x.id === rid).service, 1).a;
+  if (need0 > (PRO[ME].bal || 0)) return lowModal(need0, { q:rid });
+  D.quo.push({ id:'Q' + D.seq++, rid, pid:ME, price, visit, msg, status:'submitted' });
+  closeM(); render(); toast('견적을 제출했어요. 계약이 확정되면 수수료가 예치금에서 자동 차감돼요.');
+}
+
+/* ---------- 고객: 견적 비교 / 거래 확정 ---------- */
+function compare(rid) {
+  cmpCur = rid;
+  const r = D.req.find(x => x.id === rid), qs = D.quo.filter(q => q.rid === rid).sort((a, b) => a.price - b.price);
+  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${SVC[r.service]} · 서울 ${r.gu} · 계약하면 다른 견적은 자동 마감돼요.</p>` +
+    qs.map(q => card(`<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(PRO[q.pid].n)}</p><p class="text-sm text-cool font-bold">${stars(PRO[q.pid])}</p>${PRO[q.pid].bio ? `<p class="mt-1 text-xs text-sea/70">${esc(PRO[q.pid].bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(PRO[q.pid])}</div>${PRO[q.pid].free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
+      <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}</p>
+      <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pid, '프로필 보기', 's')}${btn('pick', q.id, '계약하기', 'a')}</div>`)).join(''));
+}
+function pick(qid) {
+  const q = D.quo.find(x => x.id === qid), r = D.req.find(x => x.id === q.rid), d = new Date();
+  const fee0 = calcFee(r.service, q.price);
+  if (fee0.a > (PRO[q.pid].bal || 0)) { PRO[q.pid].low = true; render(); return toast('기사님의 예치금이 부족해 지금은 계약할 수 없어요. 기사님께 충전 안내를 보냈어요.'); }
+  const c = { id:'C' + D.seq++, rid:r.id, qid:q.id, pid:q.pid, service:r.service, gu:r.gu, price:q.price, status:'confirmed', fee:calcFee(r.service, q.price),
+    proxy:`0505-${rnd4()}-${rnd4()}`, receipt:`HY-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${r.id.slice(-4)}${rnd4().slice(0, 2)}`, at:d.getTime(), doneAt:null };
+  D.con.push(c); q.status = 'selected'; r.status = 'matched';
+  D.quo.filter(o => o.rid === r.id && o !== q).forEach(o => o.status = 'rejected');
+  D.msg.push({ cid:c.id, from:'sys', text:'안심번호 채팅방이 열렸어요. 개인 전화번호는 서로에게 공개되지 않아요.' });
+  render(); receipt(c.id, true); toast('계약이 체결됐어요. 안심번호 채팅방에서 기사님과 일정을 조율해 보세요.');
+}
+function receipt(cid, fresh) {
+  const c = D.con.find(x => x.id === cid);
+  const row = (k, v) => `<div class="flex justify-between gap-4 py-2 border-b border-dashed border-mist"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${v}</dd></div>`;
+  openM(head('한여름 안심 작업 내역서') + `<div class="rounded-2xl bg-ice p-5"><p class="font-display text-xl text-cool">${c.receipt}</p>
+    <dl class="mt-3 text-sm">${row('발급일', new Date(c.at).toLocaleDateString('ko-KR'))}${row('서비스', SVC[c.service])}${row('지역', '서울 ' + c.gu)}${row(c.kind === 'stock' ? '판매 업체' : c.kind === 'sale' ? (PRO[c.pid].buyer ? '구매자' : '매입 업체') : '담당 기사', esc(PRO[c.pid].n))}${row(c.kind === 'stock' ? '판매 금액' : c.kind === 'sale' ? '매입 금액(판매자 수령)' : '확정 금액', won(c.price))}${mode === 'customer' ? '' : row(c.kind === 'stock' ? '판매 업체 수수료(업체에 차감)' : c.kind === 'sale' ? '수수료' : '기사 수수료(기사에게 차감)', `${won(c.fee.a)} · ${c.fee.label}`)}</dl></div>
+    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">📞 전화번호는 <b>010-****-4821</b>처럼 가려서 보여드려요. 통화와 문자는 안심번호 <b>${c.proxy}</b>로 연결돼요.${c.kind ? '' : '<br>작업 후 <b>14일 이내</b> 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 신청할 수 있어요.'}</p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('chat', c.id, fresh ? '안심번호 채팅방 열기' : '채팅방 열기').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+
+/* ---------- 안심번호 채팅 (chat_rooms / chat_messages) ---------- */
+function chatModal(cid) {
+  const c = D.con.find(x => x.id === cid) || D.rooms.find(x => x.id === cid), ms = D.msg.filter(m => m.cid === cid); chatCur = cid;
+  openM(head('안심번호 채팅') + `<p class="text-xs text-sea/60">안심번호 ${c.proxy} · 상대: ${mode === 'customer' ? esc(PRO[c.pid].n) : '고객 010-****-3390'}</p>
+    <div id="chatbox" class="mt-3 h-64 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${ms.map(m => m.from === 'sys'
+      ? `<p class="text-center text-xs text-sea/60">${esc(m.text)}</p>`
+      : `<div class="flex ${m.from === mode ? 'justify-end' : ''}"><p class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.from === mode ? 'bg-sea text-white' : 'bg-white'}">${m.img ? `<img src="${m.img}" alt="전송한 현장 사진" class="mb-2 block max-h-40 rounded-xl">` : ''}${esc(m.text)}</p></div>`).join('')}</div>
+    <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${qa('qphoto', cid, '📷 현장 사진 전송')}${qa('qsched', cid, '📅 일정 변경 요청')}${(() => { const k = D.con.find(x => x.id === cid); return k ? (k.status === 'completed' ? '' : qa('qcontract', cid, '✅ 거래 완료')) : qa('qcontract', cid, '📝 거래 등록'); })()}${qa('qreport', cid, '🚨 분쟁/재점검 신고')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"></div>
+    <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="200" aria-label="메시지" placeholder="메시지를 입력하세요" class="flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', cid, '보내기')}</div>`);
+  const b = $('#chatbox'); b.scrollTop = b.scrollHeight; $('#chat-in').focus();
+}
+
+/* ---------- 고객: 감정 태그 리뷰 (reviews + guard_review_tags) ---------- */
+let rv = null;
+function revModal(cid) {
+  if (!rv || rv.cid !== cid) rv = { cid, s:null, tags:[], other:'' };
+  const list = rv.s ? [...TAGS[rv.s], '기타'] : [];
+  openM(head('거래는 어떠셨나요?') + `<div class="grid grid-cols-3 gap-3">${Object.keys(SL).map(k => `<button type="button" data-act="rvs" data-id="${k}" aria-pressed="${rv.s === k}" class="rounded-2xl border-2 px-2 py-5 font-bold text-sm ${rv.s === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${SL[k]}</button>`).join('')}</div>
+    ${rv.s ? `<p class="mt-5 text-sm font-bold">어떤 점이 그랬나요? (최대 3개)</p><div class="mt-2 flex flex-wrap gap-2">${list.map(t => `<button type="button" data-act="rvt" data-id="${esc(t)}" aria-pressed="${rv.tags.includes(t)}" class="rounded-full border-2 px-4 py-2 text-sm font-medium ${rv.tags.includes(t) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div>` : '<p class="mt-5 text-sm text-sea/60">먼저 감정을 선택해 주세요.</p>'}
+    ${rv.tags.includes('기타') ? `<input id="rv-other" maxlength="50" value="${esc(rv.other)}" aria-label="기타 한 줄평" placeholder="한 줄로 알려주세요 (50자 이내)" class="mt-3 w-full rounded-xl bg-ice px-4 py-3">` : ''}
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${btn('rvsend', cid, '후기 남기기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function rvsend(cid) {
+  const other = ($('#rv-other')?.value || '').trim();
+  if (!rv.s) return $('#merr').textContent = '감정을 선택해 주세요.';
+  if (!rv.tags.length) return $('#merr').textContent = '태그를 1개 이상 선택해 주세요.';
+  if (rv.tags.includes('기타') && !other) return $('#merr').textContent = "'기타'를 선택하면 한 줄평을 입력해야 해요.";
+  const c = D.con.find(x => x.id === cid), p = PRO[c.pid], old = p.r;
+  D.rev.push({ cid, s:rv.s, tags:[...rv.tags], other });
+  p.r = (p.r * p.c + SCORE[rv.s]) / (p.c + 1); p.c++;      // 별로예요 1 / 만족해요 4 / 최고예요 5 환산
+  const bad = rv.s === 'bad' && !c.kind; rv = null; render();
+  toast(`후기를 남겼어요. ${p.n.split(' (')[0]} 평점 ${old ? old.toFixed(1) : '신규'} → ${p.r.toFixed(1)}`);
+  bad ? rewModal(cid) : closeM();
+}
+
+/* ---------- 재점검 중개 (rework_claims, 작업 완료 후 14일) ---------- */
+function rewModal(cid) {
+  const c = D.con.find(x => x.id === cid), left = Math.max(0, 14 - Math.floor((nowT() - c.doneAt) / 864e5));
+  openM(head('죄송해요. 재점검을 도와드릴게요') + `<p class="leading-relaxed">작업 후 <b>14일 이내</b> 같은 증상이 있으면 담당 기사님(${esc(PRO[c.pid].n)})이 <b>우선 방문해 재점검</b>하도록 한여름이 중개해 드려요. <span class="text-cool font-bold">남은 기간 ${left}일</span></p>
+    <label for="rw-sym" class="block mt-4 text-sm font-bold">어떤 문제가 있나요?</label>
+    <textarea id="rw-sym" rows="3" maxlength="300" placeholder="예) 작업 후 실외기에서 소음이 나요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none"></textarea>
+    <p id="merr" role="alert" class="mt-2 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">괜찮아요</button>${btn('rwsend', cid, '우선 방문 재점검 신청', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function rwsend(cid) {
+  const sym = $('#rw-sym').value.trim(), c = D.con.find(x => x.id === cid);
+  if (!sym) return $('#merr').textContent = '증상을 적어 주세요.';
+  if (nowT() > c.doneAt + 14 * 864e5) return $('#merr').textContent = '재점검 보장 기간(14일)이 지났어요.';   // guard_rework
+  D.rew.push({ cid, pid:c.pid, sym, status:'requested' });
+  closeM(); render(); toast('재점검을 신청했어요. 기사 모드에서 담당 기사에게 전달돼요.');
+}
+
+/* ---------- 관리 메뉴 (플로팅 버튼) ---------- */
+function conBlock(c) {
+  const v = D.rev.find(x => x.cid === c.id), w = D.rew.find(x => x.cid === c.id), sale = !!c.kind, wd = wdOf(c);
+  return `<span class="text-sm font-bold w-full">${esc(PRO[c.pid].n)} · ${won(c.price)} · ${wd} ${c.status === 'completed' ? '거래 확정 완료' : c.status === 'pending' ? '거래 확정 대기' : '계약 체결 · 작업 예정'}</span>
+    ${btn('rcpt', c.id, '안심 작업 내역서', 's')}${btn('chat', c.id, '채팅방', 's')}${c.warranty ? btn('warr', c.id, '무상 A/S 보증서', 's') : ''}${c.status === 'pending' ? pendBlock(c) : ''}
+    ${c.status === 'completed' && !v ? btn('rev', c.id, '후기 작성', 'a') : ''}
+    ${c.status === 'confirmed' ? `<span class="text-xs text-sea/60 w-full">${wd} 후 “거래 확정”을 하면 후기를 남길 수 있어요 (기사 모드에서 “${sale ? wd + ' 완료 처리' : '작업 완료 요청'}”)</span>` : ''}
+    ${v ? `<span class="text-sm w-full">내 후기: ${SL[v.s]} · ${v.tags.map(esc).join(', ')}${v.other ? ' — ' + esc(v.other) : ''}</span>` : ''}
+    ${v && v.s === 'bad' && !w && !sale ? btn('rew', c.id, '재점검 신청') : ''}${w ? `<span class="text-sm font-bold text-cool w-full">재점검: ${RWL[w.status]}</span>` : ''}`;
+}
+function custMenuBase() {
+  const my = D.req.filter(r => r.owner === MEC()), ml = D.lst.filter(l => l.owner === MEC()), bys = D.con.filter(c => c.buyer === buyerId());
+  openM(head('내 요청 관리') + (my.length || ml.length || bys.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
+    my.map(r => {
+      const qs = D.quo.filter(q => q.rid === r.id), c = D.con.find(x => x.rid === r.id);
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${SVC[r.service]} · ${r.gu}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit">${r.status === 'open' ? '견적 받는 중' : '거래 확정'}</span></div>
+        <p class="text-xs text-sea/60 mt-1">${r.id} · 희망일 ${esc(r.date)} · 사진 ${r.photos.length}장</p>
+        <div class="mt-3 flex flex-wrap gap-2 items-center">${r.status === 'open' ? (qs.length ? btn('cmp', r.id, `받은 견적 ${qs.length}건 비교`) : '<span class="text-sm text-sea/60">기사님 견적을 기다리는 중이에요</span>') : conBlock(c)}</div>`);
+    }).join('') +
+    (ml.length ? '<h3 class="mt-6 font-bold">내 판매글</h3>' + ml.map(l => {
+      const c = D.con.find(x => x.lid === l.id), n = D.off.filter(o => o.lid === l.id).length;
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${esc(l.title)} · ${won(l.price)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit">${l.status === 'open' ? '판매 중' : '거래 확정'}</span></div>
+        <div class="mt-3 flex flex-wrap gap-2 items-center">${l.status === 'open' ? (n ? btn('ldet', l.id, `받은 매입 제안 ${n}건 보기`) : '<span class="text-sm text-sea/60">매입 제안을 기다리는 중이에요</span>') : conBlock(c)}</div>`);
+    }).join('') : '') +
+    (bys.length ? '<h3 class="mt-6 font-bold">내 구매</h3>' + bys.map(c => card(`<p class="font-bold">${SVC[c.service]} · ${c.gu}</p><div class="mt-3 flex flex-wrap gap-2 items-center">${conBlock(c)}</div>`)).join('') : '') +
+    `<h3 class="mt-6 font-bold">고객센터</h3>` + card(`<p class="text-sm text-sea/75">결제·기사·A/S 관련 궁금한 점을 1:1로 문의하고 처리 상태를 확인해요.</p><div class="mt-3 flex flex-wrap gap-2">${btn('inqnew', '', '✏️ 1:1 문의하기', 'a')}${btn('cs', '', `내 문의 내역${unreadN() ? ' · 새 답변 ' + unreadN() : ''}`, 's')}</div>`));
+}
+function proMenuBase() {
+  const me = PRO[ME], qs = D.quo.filter(q => q.pid === ME), cs = D.con.filter(c => c.pid === ME);
+  openM(head('내 견적·계약 관리') + `<p class="font-bold">${esc(me.n)} <span class="text-cool">${stars(me)}</span></p>
+    ${inqBlock()}<h3 class="mt-4 font-bold">제출한 견적</h3>${qs.length ? qs.map(q => { const r = D.req.find(x => x.id === q.rid); return card(`<p class="font-bold">${SVC[r.service]} · ${r.gu} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]}</p>`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
+    <h3 class="mt-6 font-bold">내 매입 제안</h3>${D.off.filter(o => o.pid === ME).map(o => { const l = D.lst.find(x => x.id === o.lid); return card(`<p class="font-bold">${esc(l.title)} · ${won(o.price)}</p><p class="text-xs text-sea/60">${QL[o.status]}</p>`); }).join('') || `<div class="mt-2">${empty('제출한 매입 제안이 없어요.')}</div>`}
+    <h3 class="mt-6 font-bold">확정 계약 · 정산</h3>${cs.length ? cs.map(c => { const w = D.rew.find(x => x.cid === c.id), v = D.rev.find(x => x.cid === c.id);
+      return card(`<p class="font-bold">${SVC[c.service]} · ${c.gu} · ${won(c.price)}</p>
+        <p class="text-xs text-sea/60">${wdOf(c)} ${c.status === 'completed' ? '완료' : c.status === 'pending' ? '확인 대기' : '예정'} · 수수료 ${c.fee.a ? won(c.fee.a) + (c.feeDone ? ' 예치금 차감 완료' : ' · 거래 확정 시 차감 예정') : '0원'} (${c.fee.label})</p>
+        ${v ? `<p class="mt-1 text-sm">받은 후기: ${SL[v.s]} · ${v.tags.map(esc).join(', ')}${v.other ? ' — ' + esc(v.other) : ''}</p>` : ''}
+        ${c.status === 'pending' ? proPend(c) : ''}${c.warranty ? `<p class="mt-1 text-xs text-sea/60">무상 A/S 보증번호 ${c.warranty.no}</p>` : ''}<div class="mt-2 flex flex-wrap gap-2">${btn('chat', c.id, '채팅방', 's')}${c.status === 'confirmed' ? btn('done', c.id, c.kind ? wdOf(c) + ' 완료 처리' : '작업 완료 요청') : ''}${!c.kind && c.status !== 'completed' ? btn('qcontract', c.id, '✅ 거래 확정', 'a') : ''}
+        ${w && w.status !== 'resolved' ? btn('rwstep', c.id, `재점검: ${w.status === 'requested' ? '방문 일정 확정' : '재점검 완료'}`, 'a') : ''}${w && w.status === 'resolved' ? '<span class="text-sm font-bold text-cool">재점검 해결 완료</span>' : ''}</div>`); }).join('') : `<div class="mt-2">${empty('확정된 계약이 없어요.')}</div>`}`);
+}
+
+/* ---------- 중고 업소용 냉장·냉동고 장터 (used_listings / listing_offers) ---------- */
+const GR = { A:['A급', '거의 새것'], B:['B급', '사용감 있음'], C:['C급', '수리 필요'] };
+const GC = { A:'bg-cool text-white', B:'bg-mist', C:'bg-sun/20 text-sun' };
+const yn = v => v ? '있음' : '없음';
+const readURL = f => new Promise(r => { const x = new FileReader(); x.onload = () => {   // 사진은 실시간 저장 용량에 맞게 줄여서 저장 (긴 변 640px)
+  const img = new Image(); img.onload = () => { try { const k = Math.min(1, 640 / Math.max(img.width, img.height)), cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); r(cv.toDataURL('image/jpeg', 0.6)); } catch (_) { r(x.result); } }; img.onerror = () => r(x.result); img.src = x.result; }; x.readAsDataURL(f); });
+let sp = [];
+D.lst.push(
+  { id:'L-0801', owner:'other', t:Date.now() - 1 * 36e5, title:'4도어 업소용 냉장고 (스테인리스)', price:350000, grade:'B', years:3, gu:'서초구', loc:'양재역 인근 1층 매장', elev:false, ladder:true, desc:'폐업 정리로 내놓아요. 작동은 정상입니다.', photos:[], status:'open' },
+  { id:'L-0802', owner:'other', t:Date.now() - 4 * 36e5, title:'업소용 수직 냉동고 1도어', price:280000, grade:'A', years:1, gu:'성동구', loc:'성수동 카페 지하 1층', elev:true, ladder:false, desc:'', photos:[], status:'open' },
+  { id:'L-0803', owner:'other', t:Date.now() - 7 * 36e5, title:'테이블 냉장고 4자 (올스텐)', price:320000, grade:'B', years:4, gu:'마포구', loc:'홍대입구역 인근 지하 매장', elev:false, ladder:false, desc:'주방 리뉴얼로 교체했어요.', photos:[], status:'open' },
+  { id:'L-0804', owner:'other', t:Date.now() - 10 * 36e5, title:'음료 쇼케이스 냉장고', price:180000, grade:'B', years:2, gu:'송파구', loc:'잠실 상가 1층', elev:true, ladder:true, desc:'', photos:[], status:'open' },
+  { id:'L-0805', owner:'other', t:Date.now() - 13 * 36e5, title:'업소용 김치냉장고 스탠드형', price:150000, grade:'C', years:6, gu:'강서구', loc:'화곡동 식당', elev:false, ladder:true, desc:'컴프레서 소음이 있어요. 부품용으로도 좋아요.', photos:[], status:'open' },
+  { id:'L-0806', owner:'other', t:Date.now() - 16 * 36e5, title:'급속 냉동고 (블라스트 칠러)', price:1200000, grade:'A', years:1, gu:'영등포구', loc:'여의도 매장 2층', elev:true, ladder:false, desc:'거의 새것입니다.', photos:[], status:'open' },
+  { id:'L-0807', owner:'other', t:Date.now() - 19 * 36e5, title:'아이스크림 쇼케이스 냉동고', price:260000, grade:'B', years:3, gu:'노원구', loc:'노원역 상가', elev:true, ladder:true, desc:'', photos:[], status:'open' },
+  { id:'L-0808', owner:'other', t:Date.now() - 22 * 36e5, title:'45박스 냉장고 (올스텐)', price:450000, grade:'A', years:2, gu:'은평구', loc:'불광동 매장 1층', elev:false, ladder:true, desc:'', photos:[], status:'open' });
+const thumb = l => l.photos[0] ? `<img src="${l.photos[0]}" alt="${esc(l.title)}" class="aspect-[4/3] w-full object-cover">` : '<div class="aspect-[4/3] grid place-items-center bg-mist text-5xl" aria-hidden="true">❄️</div>';
+const badge = l => `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${hasFree(l) ? FREE_CHIP : ''}`;
+const lcard = l => `<button type="button" data-act="ldet" data-id="${l.id}" class="text-left overflow-hidden rounded-2xl bg-white border border-mist hover:border-cool ${l.status !== 'open' ? 'opacity-60' : ''}">${thumb(l)}
+  <div class="p-4"><div class="flex flex-wrap items-center gap-2">${badge(l)}<span class="text-xs text-sea/60">서울 ${l.gu} · ${l.years}년 사용</span></div>
+  <p class="mt-2 font-bold line-clamp-1">${esc(l.title)}</p><p class="font-display text-xl md:text-2xl mt-1">${won(l.price)}</p>
+  <p class="mt-1 text-xs text-sea/60">${l.status === 'open' ? `제안 ${D.off.filter(o => o.lid === l.id).length}건` : l.status === 'sold' ? '거래 확정' : '판매 종료'}</p></div></button>`;
+function proListing(l) {
+  const my = D.off.find(o => o.lid === l.id && o.pid === ME);
+  return `<article class="overflow-hidden rounded-2xl bg-white border border-mist">${thumb(l)}<div class="p-4">
+    <div class="flex flex-wrap items-center gap-2">${badge(l)}<span class="text-xs text-sea/60">서울 ${l.gu} · ${l.years}년 사용</span></div>
+    <p class="mt-2 font-bold">${esc(l.title)}</p><p class="font-display text-2xl">${won(l.price)}</p>
+    <p class="text-xs text-sea/60 mt-1">엘리베이터 ${yn(l.elev)} · 사다리차 ${yn(l.ladder)}</p>
+    <div class="mt-3">${my ? `<span class="font-bold text-cool">내 제안 ${won(my.price)} 제출 완료</span>` : btn('oopen', l.id, l.kind === 'stock' ? '구매 제안하기' : '매입 제안하기', 'a')}</div></div></article>`;
+}
+function sellModal(kind) {
+  sellKind = kind === 'stock' ? 'stock' : 'customer'; sp = [];
+  const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
+  openM(head(kind === 'stock' ? '중고 재고 판매글 올리기' : '중고 냉동고 판매글 올리기') + `${kind === 'stock' ? '<p class="mb-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">보유 재고를 소비자나 타 업체에 팔 수 있어요. 거래 확정 시 <b>거래금액의 5%(건당 최대 10만 원)</b>만 차감되고, 구매하는 쪽은 수수료가 없어요.</p>' : ''}
+    <label class="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool"><span class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
+    <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
+    ${lab('sl-title', '제품명')}<input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
+    ${lab('sl-price', '희망 판매 가격(원)')}<input id="sl-price" type="number" min="0" step="1000" inputmode="numeric" class="${inp}">
+    <fieldset class="mt-4"><legend class="text-sm font-bold">제품 상태</legend><div class="mt-2 grid grid-cols-3 gap-2">${Object.keys(GR).map(k => `<label class="relative"><input type="radio" name="sg" value="${k}" class="peer sr-only"><span class="block rounded-xl border-2 border-mist py-3 text-center cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool"><b>${GR[k][0]}</b><br><span class="text-xs text-sea/60">${GR[k][1]}</span></span></label>`).join('')}</div></fieldset>
+    ${lab('sl-years', '사용 연식(년)')}<input id="sl-years" type="number" min="0" max="40" inputmode="numeric" placeholder="예) 3" class="${inp}">
+    ${lab('sl-gu', '매장 위치 (서울시 구)')}<select id="sl-gu" class="${inp}"><option value="">구를 선택하세요</option>${GU.map(g => `<option>${g}</option>`).join('')}</select>
+    <input id="sl-loc" maxlength="40" aria-label="상세 위치" placeholder="상세 위치 예) 삼성역 인근 1층 매장" class="${inp}">
+    <div class="mt-4 grid grid-cols-2 gap-3"><div><label for="sl-elev" class="text-sm font-bold">엘리베이터</label><select id="sl-elev" class="${inp}"><option value="">선택</option><option value="y">있음</option><option value="n">없음</option></select></div>
+    <div><label for="sl-lad" class="text-sm font-bold">사다리차 이용</label><select id="sl-lad" class="${inp}"><option value="">선택</option><option value="y">가능</option><option value="n">불가</option></select></div></div>
+    ${lab('sl-desc', '설명 (선택)')}<textarea id="sl-desc" rows="3" maxlength="300" class="${inp} resize-none"></textarea>
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('ssend', '', '판매글 올리기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function spThumbs() {
+  $('#sp-thumbs').innerHTML = sp.map((u, i) => `<li class="relative aspect-square"><img src="${u}" alt="판매 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-act="sprm" data-id="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join('');
+}
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'sp-file') return;
+  for (const f of e.target.files) {
+    if (sp.length >= 5) { $('#merr').textContent = '사진은 최대 5장까지 올릴 수 있어요.'; break; }
+    if (!f.type.startsWith('image/') || f.size > 10 * 1024 * 1024) { $('#merr').textContent = '10MB 이하의 이미지 파일만 올릴 수 있어요.'; continue; }
+    sp.push(await readURL(f));
+  }
+  e.target.value = ''; spThumbs();
+});
+function ssend() {
+  const g = id => $(id).value.trim(), grade = document.querySelector('input[name="sg"]:checked')?.value, price = +$('#sl-price').value, years = $('#sl-years').value;
+  const err = !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price > 0) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
+    : years === '' || +years < 0 ? '사용 연식을 입력해 주세요.' : !g('#sl-gu') ? '매장 위치(구)를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
+  if (err) return $('#merr').textContent = err;
+  const id = 'L-' + (1000 + D.seq++);
+  D.lst.unshift({ id, owner:sellKind === 'stock' ? ME : MEC(), kind:sellKind === 'stock' ? 'stock' : undefined, seller:sellKind === 'stock' ? ME : undefined, t:Date.now(), title:g('#sl-title'), price, grade, years:+years, gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', desc:g('#sl-desc'), photos:[...sp], status:'open' });
+  const d3 = new Date(Date.now() + 3 * 864e5), day = `${d3.getFullYear()}-${String(d3.getMonth() + 1).padStart(2, '0')}-${String(d3.getDate()).padStart(2, '0')}`;
+  setTimeout(() => {   // 다른 매입 업체의 제안이 도착하는 상황을 흉내냄
+    (sellKind === 'stock' ? [['p2', .92, '재고 확인 후 방문 수령할게요.'], ['b1', .97, '개업 준비 중이라 구매하고 싶어요.']] : [['p2', .85, '현장 확인 후 바로 현금 결제해요.'], ['p3', .95, '사다리차 비용은 저희가 부담할게요.'], ['b1', .9, '직접 가지러 갈게요. 현금 직거래 원해요.']]).forEach(([pid, k, msg]) =>
+      D.off.push({ id:'O' + D.seq++, lid:id, pid, price:Math.round(price * k / 1000) * 1000, pickup:day, msg, status:'submitted' }));
+    toast('새 제안이 도착했어요 (데모)'); render();
+  }, 1500);
+  fp = 0; closeM(); render(); toast('판매글을 올렸어요. 업체와 고객의 제안이 곧 도착해요.');
+  if (mode === 'customer' && view === 'main') $('#market').scrollIntoView({ behavior:'smooth' });
+}
+function ldet(id) {
+  const l = D.lst.find(x => x.id === id), offs = D.off.filter(o => o.lid === id).sort((a, b) => b.price - a.price), mine = l.owner === MEC() || (l.kind === 'stock' && l.seller === ME && mode === 'pro'), chip = t => `<span class="rounded-full bg-ice px-2.5 py-1">${t}</span>`;
+  openM(head(esc(l.title)) + (l.photos.length ? `<div class="flex gap-2 overflow-x-auto">${l.photos.map(u => `<img src="${u}" alt="판매 사진" class="h-40 rounded-xl object-cover">`).join('')}</div>` : thumb(l)) + `
+    <div class="mt-3 flex items-center justify-between"><p class="font-display text-3xl">${won(l.price)}</p>${favBtn(l.id)}</div>
+    <div class="mt-2 flex flex-wrap gap-2 text-xs">${badge(l)}${chip(GR[l.grade][1])}${chip(l.years + '년 사용')}${chip('엘리베이터 ' + yn(l.elev))}${chip('사다리차 ' + (l.ladder ? '가능' : '불가'))}</div>
+    <p class="mt-3 text-sm text-sea/70">서울 ${l.gu} · ${esc(l.loc)}</p>${l.desc ? `<p class="mt-2 leading-relaxed">${esc(l.desc)}</p>` : ''}
+    <h3 class="mt-6 font-bold">받은 매입 제안 ${offs.length}건</h3>` + (mine
+      ? (offs.map(o => card(`<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(PRO[o.pid].n)}</p><p class="text-sm text-cool font-bold">${PRO[o.pid].buyer ? '고객 · 직거래' : stars(PRO[o.pid])}</p>${PRO[o.pid].free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(o.price)}</p></div>
+          <p class="mt-2 text-sm">${esc(o.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">${l.kind === 'stock' ? '인도 희망일' : PRO[o.pid].buyer ? '거래 희망일' : '철거/수거 가능일'} ${esc(o.pickup)}</p>
+          <div class="mt-3">${l.status === 'open' ? btn('lpick', o.id, '거래하기', 'a') : `<span class="text-sm font-bold">${QL[o.status]}</span>`}</div>`)).join('') || `<div class="mt-2">${empty('아직 제안이 없어요.')}</div>`) + '<p class="mt-3 text-xs text-sea/60">' + (l.kind === 'stock' ? '거래하기를 누르면 안심 영수증이 발급되고, 거래가 최종 확정될 때 판매 업체(나)에게 거래금액의 5%(건당 최대 10만 원)가 차감돼요. 구매자는 수수료가 없어요.' : '거래하기를 누르면 안심 영수증이 발급돼요.') + '</p>' + (l.status === 'open' ? '<div class="mt-4">' + btn('lclose', l.id, '판매글 내리기', 's') + '</div>' : '')
+      : (() => { const mb = D.off.find(o => o.lid === l.id && o.pid === buyerId());
+        return '<p class="mt-2 rounded-xl bg-ice p-4 text-sm text-sea/70">제안 내역은 판매자만 볼 수 있어요.</p><div class="mt-3">' + (mb ? '<span class="font-bold text-cool">내 구매 제안 ' + won(mb.price) + ' 제출 완료 · 판매자 응답 대기 (데모)</span>' : l.status === 'open' ? btn('boffer', l.id, '구매 제안하기', 'a') : '') + '</div><p class="mt-2 text-xs text-sea/60">' + '거래 조건은 판매자와 채팅으로 조율해요.</p>'; })()));
+}
+function lpick(oid) {   // 판매자가 제안을 선택해 거래 확정
+  const o = D.off.find(x => x.id === oid), l = D.lst.find(x => x.id === o.lid), d = new Date(), stock = l.kind === 'stock', code = stock ? 'freezer_stock' : 'freezer_sale';
+  if (stock && calcFee(code, o.price).a > (PRO[l.seller].bal || 0)) return lowModal(calcFee(code, o.price).a, null);
+  const c = { id:'C' + D.seq++, kind:stock ? 'stock' : 'sale', lid:l.id, oid:o.id, pid:stock ? l.seller : o.pid, buyer:o.pid, service:code, gu:l.gu, price:o.price, status:'confirmed', fee:calcFee(code, o.price),
+    proxy:`0505-${rnd4()}-${rnd4()}`, receipt:`HY-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${l.id.slice(-4)}${rnd4().slice(0, 2)}`, at:d.getTime(), doneAt:null };
+  D.con.push(c); o.status = 'selected'; l.status = 'sold';
+  D.off.filter(x => x.lid === l.id && x !== o).forEach(x => x.status = 'rejected');
+  D.msg.push({ cid:c.id, from:'sys', text:'안심번호 채팅방이 열렸어요. 개인 전화번호는 서로에게 공개되지 않아요.' });
+  render(); receipt(c.id, true); toast(stock ? `거래가 체결됐어요. 판매 수수료 ${won(c.fee.a)}는 거래 확정 시 차감돼요.` : '거래가 체결됐어요. 매입 수수료는 0원이에요.');
+}
+function offerModal(lid) {
+  const l = D.lst.find(x => x.id === lid);
+  openM(head(l.kind === 'stock' ? '구매 제안하기' : '매입 제안하기') + `<p class="text-sm"><b>${esc(l.title)}</b> · ${badge(l)} · 희망가 ${won(l.price)}</p>
+    <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">${l.kind === 'stock' ? '재고를 사는 쪽에는 수수료가 표시되지 않아요.' : '매입 제안은 <b>100% 무료</b>이며 <b>매입 수수료도 0원</b>이에요.'}</p>
+    <label for="op" class="block mt-4 text-sm font-bold">${l.kind === 'stock' ? '구매 제안 금액(원)' : '매수/매입 제안 금액(원)'}</label><input id="op" type="number" min="0" step="1000" inputmode="numeric" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label for="od" class="block mt-4 text-sm font-bold">${l.kind === 'stock' ? '인도(수령) 희망일' : '철거/수거 가능일'}</label><input id="od" type="date" min="${today()}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label for="om" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="om" maxlength="100" placeholder="예) 현장 확인 후 당일 수거해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('osend', lid, '무료로 제안하기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function osend(lid) {
+  const price = +$('#op').value, pickup = $('#od').value, msg = $('#om').value.trim();
+  if (!(price > 0)) return $('#merr').textContent = '매입 제안 금액을 입력해 주세요.';
+  if (!pickup || pickup < today()) return $('#merr').textContent = '오늘 이후의 수거 가능일을 선택해 주세요.';
+  if (D.off.some(o => o.lid === lid && o.pid === ME)) return $('#merr').textContent = '이미 제안한 판매글이에요.';   // unique(listing_id, pro_id)
+  D.off.push({ id:'O' + D.seq++, lid, pid:ME, price, pickup, msg, status:'submitted' });
+  closeM(); render(); toast('매입 제안을 제출했어요. 판매자에게 바로 전달돼요.');
+}
+
+/* ---------- 회원가입 · 로그인 (데모: 브라우저 메모리에만 저장) ---------- */
+const SPEC = ['에어컨 설치', '에어컨 수리', '에어컨 청소', '업소용 수리', '이전설치', '냉동고 매매·철거'];
+D.users = [{ email:'demo@hanyeoreum.kr', pw:hpw('demo1234'), name:'데모 고객', role:'customer' }, { email:'pro@hanyeoreum.kr', pw:hpw('demo1234'), name:'시원냉난방', role:'pro', proId:'p1' }, { email:'admin@hanyeoreum.kr', pw:hpw('demo1234'), name:'한여름 관리자', role:'admin' }];
+D.rooms = [];
+const AU = { user:null };
+let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(), free:false }, chatCur = null;
+Object.assign(PRO.p1, { f:['에어컨 수리'], a:['강남구', '송파구'], v:true, online:true });
+Object.assign(PRO.p2, { f:['에어컨 설치', '업소용 수리'], a:['마포구', '서초구', '성동구'], v:true, online:true });
+Object.assign(PRO.p3, { f:['냉동고 매매·철거'], a:['송파구', '강동구', '광진구'], v:true, online:true });
+Object.assign(PRO, {
+  p4:{ n:'한강냉난방 이기사', r:4.9, c:128, f:['에어컨 설치', '에어컨 청소'], a:['마포구', '서대문구', '용산구', '은평구'], v:true, online:true },
+  p5:{ n:'주방냉동 서비스', r:4.8, c:86, f:['업소용 수리'], a:['강남구', '서초구', '송파구', '강동구'], v:true, online:true },
+  p6:{ n:'이사에어 설치팀', r:4.7, c:64, f:['이전설치', '에어컨 설치'], a:['노원구', '도봉구', '강북구', '성북구'], v:true, online:true },
+  p7:{ n:'클린쿨 에어컨케어', r:4.9, c:203, f:['에어컨 청소'], a:['영등포구', '구로구', '금천구', '양천구', '강서구'], v:true, online:false },
+  p8:{ n:'대성 중고설비', r:4.5, c:41, f:['냉동고 매매·철거'], a:['성동구', '광진구', '동대문구', '중랑구'], v:false, online:true } });
+
+function updateAuthUI() {
+  const u = AU.user, adm = u && u.role === 'admin', pro = u && (u.role === 'pro' || adm), on = mode === (adm ? 'admin' : 'pro');
+  $('#hdr-auth').textContent = u ? '로그아웃' : '로그인/회원가입';
+  $('#hdr-user').style.display = u ? '' : 'none'; if (u) $('#hdr-user').textContent = u.name + '님';
+  const sw = $('#modesw'); sw.style.display = pro ? 'inline-flex' : 'none'; sw.setAttribute('aria-checked', on); sw.querySelector('span').textContent = adm ? '관리자 모드' : '기사 모드';
+  sw.className = `inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${on ? 'bg-sun text-white' : 'bg-mist'}`;
+  sw.querySelector('i').style.left = on ? '1.125rem' : '.125rem';
+}
+function setUser(u) { AU.user = u; if (u.role === 'pro') ME = u.proId; else if (mode === 'pro' || mode === 'admin') setMode('customer'); updateAuthUI(); render(); }
+function logout() { AU.user = null; if (mode !== 'customer') setMode('customer'); updateAuthUI(); render(); toast('로그아웃했어요.'); }
+function loginAs(email) { const u = D.users.find(x => x.email === email); closeM(); setUser(u); if (u.role === 'admin') { setMode('admin'); return toast('관리자로 로그인했어요. 신고와 정책을 관리할 수 있어요.'); } toast(u.role === 'pro' ? `${u.name} 기사 계정으로 로그인했어요. 상단 “기사 모드” 스위치를 켜 보세요.` : `${u.name} 계정으로 로그인했어요.`); }
+function saveAuth() { ['name', 'email', 'pw', 'biz', 'field'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); }
+function authModal(tab, type) { if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); }
+function renderAuth() {
+  const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
+  const tab = (k, t) => `<button type="button" data-act="atab" data-id="${k}" aria-pressed="${au.tab === k}" class="flex-1 rounded-full py-2.5 text-sm font-bold ${au.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`;
+  const common = `${lab('au-email', '이메일')}<input id="au-email" type="email" autocomplete="email" value="${v('email')}" class="${inp}">
+    ${lab('au-pw', login ? '비밀번호' : '비밀번호 (8자 이상, 영문+숫자)')}<input id="au-pw" type="password" autocomplete="${login ? 'current-password' : 'new-password'}" value="${v('pw')}" class="${inp}">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>`;
+  const social = `<div class="mt-5"><p class="text-xs font-bold text-sea/60">${login ? '간편 로그인' : '간편 가입 (이메일 인증 없이)'}</p><div class="mt-2 grid grid-cols-3 gap-2">${Object.entries(PROV).map(([k, t]) => `<button type="button" data-act="asocial" data-id="${k}" class="rounded-xl border-2 border-mist px-2 py-3 text-xs font-bold hover:bg-ice">${t}${login ? '' : '로 시작'}</button>`).join('')}</div><p class="mt-1 text-xs text-sea/50">데모: 실제 소셜 연동 없이 가상 계정이 만들어져요.</p></div>
+    <div class="my-4 flex items-center gap-3 text-xs text-sea/50"><i class="h-px flex-1 bg-mist"></i>또는 이메일로<i class="h-px flex-1 bg-mist"></i></div>`;
+  const full = t => btn(t === '로그인' ? 'alogin' : 'asignup', '', t, 'a').replace('rounded-xl', 'mt-2 w-full rounded-xl');
+  openM(head('로그인 / 회원가입') + `<div class="flex gap-2">${tab('login', '로그인')}${tab('signup', '회원가입')}</div>` + (login ? `${social}${common}${full('로그인')}<button type="button" data-act="pwreset" class="mt-3 text-sm font-bold text-cool underline">비밀번호를 잊으셨나요?</button>
+    <div class="mt-5 border-t border-mist pt-4"><p class="text-xs text-sea/60">테스트용 데모 계정 (비밀번호 demo1234)</p><div class="mt-2 flex flex-wrap gap-2">${btn('democ', '', '일반 회원으로 체험', 's')}${btn('demop', '', '기사·업체로 체험', 's')}${btn('demoa', '', '관리자로 체험', 's')}</div></div>` : `
+    <fieldset class="mt-5"><legend class="text-sm font-bold">회원 유형</legend><div class="mt-2 grid grid-cols-2 gap-3">${[['customer', '일반 회원'], ['pro', '기사·업체 회원']].map(([k, t]) => `<button type="button" data-act="autype" data-id="${k}" aria-pressed="${au.type === k}" class="rounded-2xl border-2 px-3 py-4 text-sm font-bold ${au.type === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>
+    ${lab('au-name', pro ? '상호명 / 기사명' : '이름')}<input id="au-name" maxlength="30" value="${v('name')}" class="${inp}">
+    ${pro ? `${lab('au-field', '대표 전문 분야')}<select id="au-field" class="${inp}">${SPEC.map(f => `<option${au.v.field === f ? ' selected' : ''}>${f}</option>`).join('')}</select>
+      ${credBlock(au.certs, 'acert')}${freeToggle(au.free, 'afree')}
+      <p class="mt-4 text-sm font-bold">활동 가능 지역 <span class="text-xs font-normal text-sea/60">(1곳 이상 선택)</span></p>
+      <div class="mt-2 grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto rounded-xl bg-ice p-2">${GU.map(g => `<button type="button" data-act="aarea" data-id="${g}" aria-pressed="${au.areas.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${au.areas.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`).join('')}</div>
+      ${lab('au-biz', '사업자 등록번호 (선택)')}<input id="au-biz" inputmode="numeric" maxlength="12" placeholder="000-00-00000" value="${v('biz')}" class="${inp}">
+      <p class="mt-1 text-xs text-sea/60">입력하면 프로필에 “사업자 인증” 표시가 붙어요. (데모: 형식만 확인해요)</p>` : ''}
+    ${social}${common}${full('가입하기')}`));
+}
+function alogin() {
+  saveAuth(); const email = (au.v.email || '').trim().toLowerCase(), f = LOGIN_FAIL[email] || (LOGIN_FAIL[email] = { n:0, until:0 }), t = nowT();
+  if (f.until > t) return $('#merr').textContent = `로그인 시도가 너무 많아 잠겼어요. ${Math.ceil((f.until - t) / 60000)}분 뒤에 다시 시도하거나 비밀번호를 재설정해 주세요.`;
+  const u = D.users.find(x => x.email === email && x.pw && x.pw === hpw(au.v.pw || ''));
+  if (!u) { f.n++; if (f.n >= 5) { f.until = t + OTP_LOCK; f.n = 0; return $('#merr').textContent = '5번 틀려 15분 동안 잠겼어요.'; } return $('#merr').textContent = `이메일 또는 비밀번호가 맞지 않아요. (${f.n}/5)`; }
+  f.n = 0; au.v = {}; loginAs(u.email);
+}
+function asignup() {
+  saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '', biz = (v.biz || '').replace(/\D/g, '');
+  const err = !name ? (pro ? '상호명 또는 기사명을 입력해 주세요.' : '이름을 입력해 주세요.') : !emailOk(email) ? '이메일 형식을 확인해 주세요.' : !pwOk(pw) ? '비밀번호는 8자 이상, 영문과 숫자를 모두 포함해 주세요.'
+    : D.users.some(u => u.email === email) ? '이미 가입된 이메일이에요.' : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : pro && biz && biz.length !== 10 ? '사업자 등록번호는 숫자 10자리예요.' : '';
+  if (err) return $('#merr').textContent = err;
+  flow = { kind:'signup', email, u:{ email, pw:hpw(pw), name, role:au.type }, pro:pro ? { field:v.field, areas:au.areas, certs:au.certs, free:au.free, biz } : null };
+  const r = otpSend(email, 'signup'); if (r.err) return $('#merr').textContent = r.err;
+  otpModal();
+}
+/* ---------- 이메일 6자리 인증 · 소셜 로그인 · 비밀번호 재설정 (데모: 실제 메일·OAuth 없음) ---------- */
+const OTP_TTL = 5 * 60000, OTP_GAP = 60000, OTP_MAX = 5, OTP_LOCK = 15 * 60000;
+const OTPS = {}, LOGIN_FAIL = {}, PROV = { KAKAO:'카카오', NAVER:'네이버', GOOGLE:'구글' };
+let flow = null;   // { kind:'signup' | 'reset', email, u?, pro? }
+const emailOk = e => /^\S+@\S+\.\S+$/.test(e);
+const pwOk = p => p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
+const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${d2(s % 60)}`; };
+function otpSend(email, purpose) {
+  const o = OTPS[email] || (OTPS[email] = { sent:[], fails:0, lockUntil:0 }), t = nowT();
+  if (o.lockUntil > t) return { err:`인증번호를 여러 번 잘못 입력해 잠겼어요. ${Math.ceil((o.lockUntil - t) / 60000)}분 뒤에 다시 시도해 주세요.` };
+  o.sent = o.sent.filter(x => t - x < 36e5);
+  if (o.sent.length && t - o.sent[o.sent.length - 1] < OTP_GAP) return { err:`${Math.ceil((OTP_GAP - (t - o.sent[o.sent.length - 1])) / 1000)}초 뒤에 다시 받을 수 있어요.` };
+  if (o.sent.length >= 5) return { err:'인증번호는 한 시간에 5번까지 받을 수 있어요.' };
+  o.code = String(Math.floor(100000 + Math.random() * 900000)); o.exp = t + OTP_TTL; o.purpose = purpose; o.fails = 0; o.sent.push(t); o.mailed = true;   // 실서비스: 번호는 해시로만 저장
+  return {};
+}
+function otpModal(msg) {
+  const o = OTPS[flow.email], t = nowT();
+  openM(head('이메일 인증') + `<p class="text-sm leading-relaxed text-sea/80"><b>${esc(flow.email)}</b>로 6자리 인증번호를 보냈어요. (${flow.kind === 'signup' ? '회원가입' : '비밀번호 재설정'})</p>
+    <div class="mt-3 rounded-2xl border-2 border-dashed border-sun/50 bg-sun/5 p-4"><p class="text-xs font-bold text-sun">데모 메일함</p>${o.mailed ? `<p class="mt-1 text-sm">실제 메일은 발송되지 않아요. 인증번호는 <b class="font-display text-xl tracking-widest">${o.code}</b></p>` : '<p class="mt-1 text-sm">가입되지 않은 이메일이라 메일이 발송되지 않았어요. (실서비스에서는 가입 여부를 화면에 알려주지 않아요)</p>'}</div>
+    <label for="otp-code" class="block mt-4 text-sm font-bold">인증번호 6자리</label>
+    <input id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 text-center font-display text-2xl tracking-[.4em]">
+    <p class="mt-2 text-xs text-sea/60">유효시간 <b class="tabular-nums" data-otp="exp">${mmss(o.exp - t)}</b> · <span data-otp="gap">${t - o.sent[o.sent.length - 1] < OTP_GAP ? mmss(OTP_GAP - (t - o.sent[o.sent.length - 1])) + ' 뒤 다시 받기 가능' : '지금 다시 받을 수 있어요'}</span></p>
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600">${msg || ''}</p>
+    <div class="mt-4 flex gap-3">${btn('otpresend', '', '다시 받기', 's')}${btn('otpok', '', '인증하기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function otpTick() {
+  if (!flow) return; const o = OTPS[flow.email], e = document.querySelector('[data-otp="exp"]'), g = document.querySelector('[data-otp="gap"]'); if (!o || !e) return;
+  const t = nowT(); e.textContent = t > o.exp ? '만료됨' : mmss(o.exp - t);
+  const last = o.sent[o.sent.length - 1]; g.textContent = t - last < OTP_GAP ? mmss(OTP_GAP - (t - last)) + ' 뒤 다시 받기 가능' : '지금 다시 받을 수 있어요';
+}
+function otpResend() {
+  const r = otpSend(flow.email, flow.kind); if (r.err) return $('#merr').textContent = r.err;
+  if (flow.kind === 'reset' && !D.users.find(x => x.email === flow.email)) OTPS[flow.email].mailed = false;
+  otpModal('새 인증번호를 보냈어요.'); $('#merr').classList.replace('text-red-600', 'text-cool');
+}
+function otpVerify() {
+  const o = OTPS[flow.email], t = nowT(), code = ($('#otp-code').value || '').trim(), err = m => $('#merr').textContent = m;
+  if (o.lockUntil > t) return err(`잠긴 상태예요. ${Math.ceil((o.lockUntil - t) / 60000)}분 뒤에 다시 시도해 주세요.`);
+  if (t > o.exp) return err('인증번호 유효시간(5분)이 지났어요. “다시 받기”를 눌러 주세요.');
+  if (!/^\d{6}$/.test(code)) return err('숫자 6자리를 입력해 주세요.');
+  if (!o.mailed || code !== o.code) { o.fails++; if (o.fails >= OTP_MAX) { o.lockUntil = t + OTP_LOCK; o.code = ''; return err('5번 잘못 입력해 15분 동안 잠겼어요.'); } return err(`인증번호가 달라요. (남은 기회 ${OTP_MAX - o.fails}회)`); }
+  o.code = ''; o.verifiedAt = t;
+  flow.kind === 'signup' ? finishSignup() : resetNewPw();
+}
+function createUser(u, pro) {
+  if (pro) {
+    u.proId = 'p' + (10 + D.seq++);
+    PRO[u.proId] = { n:u.name, r:0, c:0, f:[pro.field || SPEC[0]], a:[...pro.areas], v:pro.biz.length === 10, online:true, q:[...pro.certs], free:pro.free, bal:0, appr:'PENDING' };
+    D.vq.unshift({ id:'V' + D.seq++, n:u.name, who:pro.field || SPEC[0], doc:pro.biz.length === 10 ? '사업자등록증 (가입 시 제출 · 데모)' : '자격증 사진 (가입 시 제출 · 데모)', st:'대기', pid:u.proId });
+  }
+  D.users.push(u); au.v = {}; au.areas = new Set(); au.certs = new Set(); au.free = false; flow = null; closeM(); setUser(u);
+  toast(pro ? '가입 완료! 관리자 승인 후 견적을 낼 수 있어요. (데모: 관리자 모드에서 승인해 보세요)' : '가입을 환영해요!');
+}
+function finishSignup() { const { u, pro } = flow; createUser(Object.assign(u, { verified:true }), pro); }
+function asocial(p) {
+  saveAuth(); const pro = au.type === 'pro', ex = D.users.find(u => u.provider === p);
+  if (au.tab === 'login') { if (ex) { au.v = {}; return loginAs(ex.email); } au.tab = 'signup'; renderAuth(); return toast(`${PROV[p]}로 가입한 계정이 없어요. 회원 유형을 고르고 다시 눌러 주세요.`); }
+  if (ex) { au.v = {}; return loginAs(ex.email); }
+  const biz = (au.v.biz || '').replace(/\D/g, '');
+  if (pro && !au.areas.size) return $('#merr').textContent = '활동 가능 지역을 1곳 이상 선택해 주세요.';
+  if (pro && biz && biz.length !== 10) return $('#merr').textContent = '사업자 등록번호는 숫자 10자리예요.';
+  const name = (au.v.name || '').trim() || `${PROV[p]} 사용자`, email = `${p.toLowerCase()}.user${D.seq}@social.demo`;
+  createUser({ email, pw:'', name, role:au.type, provider:p, verified:true }, pro ? { field:au.v.field, areas:au.areas, certs:au.certs, free:au.free, biz } : null);
+}
+/* 비밀번호 재설정: 이메일 → 6자리 → 새 비밀번호 */
+function resetStart() {
+  openM(head('비밀번호 찾기') + `<p class="text-sm leading-relaxed text-sea/80">가입한 이메일을 입력하면 6자리 인증번호를 보내드려요.</p>
+    <label for="rs-email" class="block mt-4 text-sm font-bold">이메일</label><input id="rs-email" type="email" autocomplete="email" value="${esc(au.v.email || '')}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-act="auth" class="${B.s}">로그인으로</button>${btn('rssend', '', '인증번호 받기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function resetSend() {
+  const email = ($('#rs-email').value || '').trim().toLowerCase(), u = D.users.find(x => x.email === email);
+  if (!emailOk(email)) return $('#merr').textContent = '이메일 형식을 확인해 주세요.';
+  if (u && u.provider && !u.pw) return openM(head('비밀번호 찾기') + `<p class="leading-relaxed">${PROV[u.provider]}로 가입한 계정이에요. 비밀번호 없이 ${PROV[u.provider]} 로그인으로 들어올 수 있어요.</p><div class="mt-4 flex gap-3">${btn('auth', '', '로그인 화면으로', 'a')}</div>`);
+  flow = { kind:'reset', email }; const r = otpSend(email, 'reset'); if (r.err) return $('#merr').textContent = r.err;
+  OTPS[email].mailed = !!u; otpModal();
+}
+function resetNewPw() {
+  openM(head('새 비밀번호 설정') + `<p class="text-sm text-sea/80">인증이 끝났어요. 새 비밀번호를 입력해 주세요. (8자 이상, 영문+숫자)</p>
+    <label for="rs-pw" class="block mt-4 text-sm font-bold">새 비밀번호</label><input id="rs-pw" type="password" autocomplete="new-password" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label for="rs-pw2" class="block mt-4 text-sm font-bold">새 비밀번호 확인</label><input id="rs-pw2" type="password" autocomplete="new-password" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p><div class="mt-4">${btn('rsconfirm', '', '비밀번호 변경', 'a').replace('rounded-xl', 'w-full rounded-xl')}</div>`);
+}
+function resetConfirm() {
+  const p1 = $('#rs-pw').value, p2 = $('#rs-pw2').value, u = D.users.find(x => x.email === flow.email);
+  if (!pwOk(p1)) return $('#merr').textContent = '비밀번호는 8자 이상, 영문과 숫자를 모두 포함해 주세요.';
+  if (p1 !== p2) return $('#merr').textContent = '두 비밀번호가 달라요.';
+  if (!u || !OTPS[flow.email].verifiedAt || nowT() - OTPS[flow.email].verifiedAt > 10 * 60000) return $('#merr').textContent = '인증 유효시간(10분)이 지났어요. 처음부터 다시 진행해 주세요.';
+  u.pw = hpw(p1); delete LOGIN_FAIL[flow.email]; flow = null;
+  if (AU.user && AU.user.email === u.email) logout();   // 모든 기기 로그아웃
+  authModal('login'); toast('비밀번호를 바꿨어요. 새 비밀번호로 로그인해 주세요. (다른 기기는 모두 로그아웃돼요)');
+}
+function apprModal() {
+  const rej = PRO[ME].appr === 'REJECTED';
+  openM(head(rej ? '가입 승인이 반려됐어요' : '승인 대기 중이에요') + `<p class="leading-relaxed text-sea/80">${rej ? '제출하신 서류를 확인하지 못했어요. 고객센터로 문의해 주시면 다시 확인해 드려요.' : '관리자가 서류를 확인하는 중이에요. 승인되면 견적 제출과 예치금 충전을 할 수 있어요.'}</p><div class="mt-4"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
+}
+
+const onlineBar = () => { const on = PRO[ME].online !== false;
+  return `<div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="font-display text-4xl">기사/업체 대시보드</h1><p class="mt-1 text-sm text-sea/70">${esc(PRO[ME].n)}</p></div>
+    <div class="flex flex-wrap items-center gap-2">${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>
+    ${PRO[ME].appr === 'PENDING' ? '<p class="mt-4 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">관리자 승인 대기 중이에요. 승인되면 견적을 낼 수 있어요.</p>' : PRO[ME].appr === 'REJECTED' ? '<p class="mt-4 rounded-xl bg-red-100 p-3 text-sm font-bold text-red-700">가입 승인이 반려됐어요. 서류를 확인해 주세요.</p>' : ''}${on ? '' : '<p class="mt-4 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">휴무 중에는 새 견적·매입 제안을 제출할 수 없어요. “영업중”으로 바꾸면 다시 응답할 수 있어요.</p>'}`; };
+const inqBlock = () => { const rs = D.rooms.filter(r => r.pid === ME);
+  return rs.length ? `<h3 class="mt-4 font-bold">문의 채팅</h3>` + rs.map(r => card(`<p class="text-sm">고객 010-****-3390 · ${D.msg.filter(m => m.cid === r.id && m.from !== 'sys').length}개 메시지</p><div class="mt-2">${btn('chat', r.id, '채팅방 열기', 's')}</div>`)).join('') : ''; };
+
+/* ---------- 기사찾기 (숨고 스타일) ---------- */
+const FS = { spec:'', gu:'', sort:'rating', free:false };
+const EMO = { '에어컨':'❄️', '업소용':'🔧', '이전':'🚚', '냉동':'🧊' };
+const emo = f => (Object.entries(EMO).find(([k]) => f.includes(k)) || [])[1] || '🛠️';
+const SEEDREV = [{ s:'great', tags:['전문성과 완벽한 시공'], text:'설명을 꼼꼼히 해 주셔서 믿고 맡겼어요.', who:'김*진 고객' }, { s:'good', tags:['약속 시간 준수', '깔끔한 작업'], text:'', who:'박*영 고객' }, { s:'great', tags:['친절한 사후 안내'], text:'다음 날 안부 문자까지 주셨어요.', who:'이*호 고객' }];
+$('#fs').innerHTML = '<option value="">전문 분야 전체</option>' + SPEC.map(f => `<option>${f}</option>`).join('');
+$('#fg').innerHTML = '<option value="">활동 지역 전체</option>' + GU.map(g => `<option>${g}</option>`).join('');
+const pbadges = p => `${p.v ? '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">✔ 사업자 인증</span>' : ''}${p.free ? FREE_CHIP : ''}${p.online === false ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">휴무</span>' : ''}`;
+const prate = p => p.c ? `★ ${p.r.toFixed(1)} · 리뷰 ${p.c}` : '신규 · 아직 리뷰가 없어요';
+const ptags = p => p.f.map(f => `<span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-bold">${esc(f)}</span>`).join('');
+function renderPros() {
+  let ids = Object.keys(PRO).filter(id => !PRO[id].buyer);
+  if (FS.free) ids = ids.filter(id => PRO[id].free);
+  $('#fchips').innerHTML = freeChipHtml(FS.free, 'ffree');
+  if (FS.spec) ids = ids.filter(id => PRO[id].f.includes(FS.spec));
+  if (FS.gu) ids = ids.filter(id => PRO[id].a.includes(FS.gu));
+  ids.sort((a, b) => FS.sort === 'reviews' ? PRO[b].c - PRO[a].c : PRO[b].r - PRO[a].r || PRO[b].c - PRO[a].c);
+  $('#pcount').textContent = `${ids.length}명`;
+  $('#prows').innerHTML = ids.map(id => { const p = PRO[id]; return `<article class="rounded-2xl border border-mist bg-white p-4 sm:p-5">
+    <button type="button" data-act="pdet" data-id="${id}" class="flex w-full items-start gap-3 sm:gap-4 text-left">
+      <span class="grid h-11 w-11 sm:h-14 sm:w-14 shrink-0 place-items-center rounded-full bg-sea font-display text-xl text-white" aria-hidden="true">${esc(p.n.trim()[0])}</span>
+      <span class="min-w-0 flex-1"><span class="flex flex-wrap items-center gap-2"><span class="text-lg font-bold">${esc(p.n)}</span>${pbadges(p)}</span>
+        <span class="mt-1 block text-sm font-bold text-cool">${prate(p)}</span>${p.bio ? `<span class="mt-1 block text-sm text-sea/75 line-clamp-1">${esc(p.bio)}</span>` : ''}<span class="mt-2 flex flex-wrap gap-1.5">${ptags(p)}</span>
+        <span class="mt-2 flex flex-wrap items-center gap-1.5">${pcerts(p)}</span>
+        <span class="mt-2 block text-xs text-sea/60">활동 지역 ${p.a.slice(0, 3).join(', ')}${p.a.length > 3 ? ` 외 ${p.a.length - 3}곳` : ''}</span></span></button>
+    <div class="mt-3 sm:mt-4">${btn('pchat', id, '1:1 안심채팅').replace('rounded-xl', 'w-full rounded-xl').replace('py-2.5', 'py-2 sm:py-2.5')}</div></article>`; }).join('') || `<div class="sm:col-span-2">${empty('조건에 맞는 기사님이 없어요. 필터를 바꿔 보세요.')}</div>`;
+}
+['fs', 'fg', 'fsort'].forEach(id => $('#' + id).addEventListener('change', e => { FS[{ fs:'spec', fg:'gu', fsort:'sort' }[id]] = e.target.value; renderPros(); }));
+function pdet(id, back) {
+  const p = PRO[id], real = D.rev.filter(v => (D.con.find(c => c.id === v.cid) || {}).pid === id).map(v => ({ s:v.s, tags:v.tags, text:v.other, who:'실거래 고객' }));
+  const revs = [...real, ...(p.c ? SEEDREV : [])], tiles = [0, 1, 2, 3].map(i => ({ e:emo(p.f[i % p.f.length]), t:`${p.f[i % p.f.length]} · ${p.a[i % p.a.length]}` }));
+  openM(head(esc(p.n)) + `<div class="flex flex-wrap items-center gap-2">${pbadges(p)}<span class="text-sm font-bold text-cool">${prate(p)}</span></div>
+    <div class="mt-3 flex flex-wrap gap-1.5">${ptags(p)}</div>
+    ${p.bio ? `<p class="mt-3 rounded-xl bg-ice p-4 text-sm font-medium leading-relaxed">“${esc(p.bio)}”</p>` : ''}
+    <h3 class="mt-5 font-bold">전문 자격증 · 장비 <span class="text-xs font-normal text-sea/60">(자가 등록 · 데모 데이터)</span></h3>
+    <div class="mt-2 flex flex-wrap gap-1.5">${pcerts(p, true) || '<span class="text-sm text-sea/60">등록된 자격·장비가 없어요.</span>'}</div><p class="mt-2 text-sm text-sea/70">활동 지역 ${p.a.join(', ')}</p>
+    ${careerHtml(p)}
+    <h3 class="mt-5 font-bold">${p.port && p.port.length ? '포트폴리오 <span class="text-xs font-normal text-sea/60">(자가 등록 · 데모 데이터)</span>' : '대표 시공 갤러리 <span class="text-xs font-normal text-sea/60">(예시 이미지)</span>'}</h3>
+    <div class="mt-2 grid grid-cols-2 gap-2">${p.port && p.port.length ? portTiles(p) : tiles.map((t, i) => `<div class="rounded-xl bg-gradient-to-br ${i % 2 ? 'from-cool/30 to-mist' : 'from-mist to-cool/30'} p-4"><p class="text-4xl" aria-hidden="true">${t.e}</p><p class="mt-6 text-xs font-bold">${esc(t.t)}</p></div>`).join('')}</div>
+    <h3 class="mt-5 font-bold">실거래 후기 ${revs.length}건 <span class="text-xs font-normal text-sea/60">(데모 후기 포함)</span></h3>
+    ${revs.length ? revs.map(r => card(`<p class="text-sm font-bold">${SL[r.s]} <span class="font-normal text-sea/60">· ${esc(r.who)}</span></p><p class="mt-1 text-sm">${r.tags.map(esc).join(' · ')}${r.text ? ' — ' + esc(r.text) : ''}</p>`)).join('') : `<div class="mt-2">${empty('아직 후기가 없어요.')}</div>`}
+    ${back ? '<div class="mt-5">' + btn(back.act, back.id || '', back.label, 's') + '</div>' : ''}
+    <div class="mt-5 flex gap-3">${btn('pchat', id, '1:1 안심채팅').replace('rounded-xl', 'flex-1 rounded-xl')}<a href="#quote" class="${B.a} text-center">견적 요청</a></div>`);
+}
+function pchat(pid) {
+  let r = D.rooms.find(x => x.pid === pid && x.owner === MEC());
+  if (!r) { r = { id:'R-' + HY_ID_OK(pid) + '-' + D.seq, pid, owner:MEC(), kind:'inq', proxy:`0505-${rnd4()}-${rnd4()}` }; D.rooms.push(r); D.msg.push({ cid:r.id, from:'sys', text:'안심번호 채팅방이 열렸어요. 개인 전화번호는 서로에게 공개되지 않아요.' }); }
+  chatModal(r.id);
+}
+
+/* ---------- 자격증·장비 배지 / 무료 출장 견적 / 재고 판매 / 채팅 퀵 액션 ---------- */
+const CERTS = ['피복아크용접기능사', '온수온돌기능사', '공조냉동기계기능사', '냉동기계산업기사', '비파괴검사 검증', '고압 세척 장비 보유', '진공펌프·가스회수 장비 보유'];
+const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
+Object.assign(SVC, { freezer_stock:'중고 재고 매도' });
+const SEEDQ = { p1:['공조냉동기계기능사', '고압 세척 장비 보유'], p2:['피복아크용접기능사', '비파괴검사 검증'], p3:['진공펌프·가스회수 장비 보유'], p4:['고압 세척 장비 보유', '공조냉동기계기능사'], p5:['냉동기계산업기사', '비파괴검사 검증', '진공펌프·가스회수 장비 보유', '피복아크용접기능사'], p6:['온수온돌기능사'], p7:['고압 세척 장비 보유'], p8:['피복아크용접기능사'] };
+Object.keys(SEEDQ).forEach(id => { PRO[id].q = SEEDQ[id]; PRO[id].free = ['p1', 'p2', 'p4', 'p6', 'p7'].includes(id); });   // 데모 데이터
+/* 기사 모집 섹션: 수수료 계산기 */
+(function () {
+  const svc = document.getElementById('fc-svc'), amt = document.getElementById('fc-amt'); if (!svc || !amt) return;
+  const upd = () => { const p = Math.max(0, +amt.value || 0), f = calcFee(svc.value, p);
+    document.getElementById('fc-out').textContent = won(f.a);
+    document.getElementById('fc-note').textContent = f.t === 'percent' ? (f.a >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f.a ? '건당 정액 · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
+  svc.addEventListener('change', upd); amt.addEventListener('input', upd); upd();
+})();
+/* 데모 데이터: 1:1 문의 · 알림 · 감사 로그 */
+(function () {
+  const t0 = Date.now(), H = 36e5;
+  const mk = (o, ms) => { const i = newInq(Object.assign({ uid:'demo@hanyeoreum.kr' }, o)); i.t = t0 - ms; i.msgs[0].t = i.t; i.hist[0].t = i.t; return i; };
+  const a = mk({ cat:'PAYMENT', title:'기사님 수수료가 두 번 차감된 것 같아요', body:'예치금 내역을 보니 같은 건으로 3,000원이 두 번 빠진 것 같아요. 확인 부탁드려요.' }, 52 * H);
+  a.assignee = '한여름 관리자'; a.tIn = a.t + 3 * H; a.hist.push({ to:'IN_PROGRESS', t:a.tIn });
+  a.msgs.push({ kind:'INTERNAL_NOTE', body:'예치금 원장 확인 필요. 중복 차감 없음 예상.', t:a.tIn + H });
+  a.msgs.push({ kind:'ANSWER', body:'확인해 보니 3,000원이 한 번만 차감되어 있어요. 화면에서 거래 확정 내역과 예치금 내역이 함께 보여 중복으로 느껴지셨을 수 있어요. 다른 궁금한 점이 있으면 편하게 추가 문의 남겨 주세요.', t:t0 - 20 * H, final:true });
+  a.status = 'ANSWERED'; a.tAns = t0 - 20 * H; a.hist.push({ to:'ANSWERED', t:a.tAns }); a.read = false;
+  D.aud.unshift({ id:audSeq++, t:a.tIn, admin:'한여름 관리자', action:'INQUIRY_ASSIGN', target:a.code, before:{ status:'RECEIVED' }, after:{ status:'IN_PROGRESS', assignee:'한여름 관리자' }, reason:'', ip:'203.0.113.24' });
+  D.aud.unshift({ id:audSeq++, t:a.tAns, admin:'한여름 관리자', action:'ANSWER_CREATE', target:a.code, before:{ status:'IN_PROGRESS' }, after:{ status:'ANSWERED' }, reason:'', ip:'203.0.113.24' });
+  const n = { id:++ntfSeq, key:a.code + ':1', uid:a.uid, iid:a.id, code:a.code, title:'문의하신 내용에 답변이 등록되었어요', summary:`${a.code} · ${CAT[a.cat]} — 답변 전문은 앱·웹에서 확인해 주세요.`, t:a.tAns, read:false };
+  D.ntf.unshift(deliver(n));
+  mk({ cat:'ETC', title:'견적 요청 알림을 받고 싶어요', body:'새 견적이 도착하면 문자로도 받을 수 있을까요? 설정 방법이 궁금해요.' }, 5 * H);
+  const c = mk({ cat:'PRO_ISSUE', issue:'NO_SHOW', title:'약속한 시간에 기사님이 오지 않았어요', body:'어제 오후 2시로 약속했는데 연락도 없이 방문하지 않았습니다.' }, 30 * H);
+})();
+/* 데모 데이터: 예치금 · 소개 · 경력 · 포트폴리오 · 신고 · 인증 대기 */
+Object.assign(PRO.p1, { bal:5000, bio:'설치부터 사후 관리까지 한 번에, 약속 시간 꼭 지킵니다.', career:[{y:'2019 – 현재', t:'시원냉난방 대표 (벽걸이·스탠드·시스템 에어컨)'}, {y:'2014 – 2019', t:'대형 설비업체 현장 기사'}], port:[{t:'벽걸이 에어컨 2대 설치', n:'마포구 · 배관 노출 최소화', d:'2026.08'}, {t:'스탠드 에어컨 이전설치', n:'용산구', d:'2026.07'}] });
+Object.assign(PRO.p2, { bal:30000, bio:'꼼꼼한 배관 마감이 강점입니다.' });
+Object.assign(PRO.p3, { bal:30000 });
+Object.assign(PRO.p4, { bal:50000, bio:'마포·서대문 전문, 당일 방문 가능해요.', career:[{y:'2017 – 현재', t:'한강냉난방 대표'}], port:[{t:'에어컨 분해 청소', n:'서대문구 · 전후 사진 제공', d:'2026.09'}] });
+Object.assign(PRO.p5, { bal:80000, bio:'업소용 냉동·냉장 수리 15년.' });
+Object.assign(PRO.p6, { bal:20000 }); Object.assign(PRO.p7, { bal:20000 }); Object.assign(PRO.p8, { bal:0 });
+const _t0 = Date.now();
+D.inc.push({ t:_t0 - 864e5, cid:'seed1', pid:'p1', amt:3000, text:'에어컨 청소 마포구' }, { t:_t0 - 36e5, cid:'seed2', pid:'p1', amt:3000, text:'에어컨 설치 강남구' });
+D.led.push({ pid:'p1', t:_t0 - 864e5 * 2, text:'예치금 충전 (데모 결제)', amt:11000, bal:11000 }, { pid:'p1', t:_t0 - 864e5, text:'연결 수수료 자동 차감', amt:-3000, bal:8000 }, { pid:'p1', t:_t0 - 36e5, text:'연결 수수료 자동 차감', amt:-3000, bal:5000 });
+D.vq.push({ id:'V1', n:'신규기사 최OO', who:'에어컨 청소', doc:'사업자등록증 · 세척사 자격증', st:'대기' }, { id:'V2', n:'드림설비', who:'업소용 수리', doc:'사업자등록증', st:'대기' });
+let sellKind = 'customer', pe = null;
+D.lst.push(
+  { id:'L-0809', owner:'other', kind:'stock', seller:'p8', t:Date.now() - 2 * 36e5, title:'리퍼 4도어 냉장고 (검수 완료)', price:520000, grade:'A', years:1, gu:'성동구', loc:'대성 중고설비 창고', elev:true, ladder:true, desc:'점검·세척을 마친 업체 재고예요. 방문 수령 가능합니다.', photos:[], status:'open' },
+  { id:'L-0810', owner:'other', kind:'stock', seller:'p5', t:Date.now() - 5 * 36e5, title:'쇼케이스 냉동고 (리퍼)', price:390000, grade:'B', years:3, gu:'강남구', loc:'주방냉동 서비스 사무소', elev:false, ladder:true, desc:'', photos:[], status:'open' });
+function hasFree(l) { return l.kind === 'stock' ? !!(PRO[l.seller] && PRO[l.seller].free) : D.off.some(o => o.lid === l.id && !PRO[o.pid].buyer && PRO[o.pid].free); }
+function wdOf(c) { return c.kind === 'stock' ? '인도' : c.kind === 'sale' ? '수거' : '작업'; }
+const chipCls = on => `rounded-full border-2 px-3 py-1.5 text-xs font-bold ${on ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}`;
+const chip = (act, id, on) => `<button type="button" data-act="${act}" data-id="${esc(id)}" aria-pressed="${on}" class="${chipCls(on)}">${esc(id)}</button>`;
+function setChip(act, id, on) { const b = document.querySelector(`[data-act="${act}"][data-id="${id}"]`); if (b) { b.setAttribute('aria-pressed', on); b.className = chipCls(on); } }
+function flip(act, id, set) {
+  set.has(id) ? set.delete(id) : set.add(id);
+  if (!set.has(id) && act.endsWith('cert') && !CERTS.includes(id)) { document.querySelector(`[data-act="${act}"][data-id="${CSS.escape(id)}"]`)?.remove(); return; }   // 직접 입력한 항목은 해제하면 목록에서 사라져요
+  setChip(act, id, set.has(id));
+}
+function addCert(act, set) {   // 자격증·장비 직접 입력 → [+ 추가]
+  const inp = $('#' + act + '-in'), v = inp.value.trim().replace(/\s+/g, ' ');
+  if (!v) return toast('추가할 자격증이나 장비를 입력해 주세요.');
+  if (set.has(v)) { inp.value = ''; return toast('이미 추가된 항목이에요.'); }
+  set.add(v);
+  if (document.querySelector(`[data-act="${act}"][data-id="${CSS.escape(v)}"]`)) setChip(act, v, true);
+  else $('#' + act + '-chips').insertAdjacentHTML('beforeend', chip(act, v, true));
+  inp.value = ''; inp.focus(); toast('추가했어요.');
+}
+const freeToggle = (on, act) => `<div class="mt-4"><button type="button" data-act="${act}" data-id="free" aria-pressed="${on}" class="${chipCls(on)}">🚚 무료 출장 견적 가능</button></div>`;
+const freeChipHtml = (on, act) => `<button type="button" data-act="${act}" aria-pressed="${on}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${on ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">🚚 무료 출장 견적 가능만</button>`;
+const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격증 · 장비 보유 <span class="text-xs font-normal text-sea/60">(선택)</span></p>
+  <div id="${act}-chips" class="mt-2 flex flex-wrap gap-1.5">${[...CERTS, ...[...set].filter(c => !CERTS.includes(c))].map(c => chip(act, c, set.has(c))).join('')}</div>
+  <div class="mt-2 flex gap-2"><input id="${act}-in" maxlength="30" aria-label="자격증·장비 직접 입력" placeholder="직접 입력 (예: 가스용접기능사, 냉매 회수기 보유)" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3"><button type="button" data-act="${act}add" data-id="" class="${B.s} shrink-0">+ 추가</button></div>
+  <p class="mt-1 text-xs text-sea/60">프로필에 배지로 표시돼요. 서류 확인 전에는 자가 등록으로 보여요. (데모)</p>`;
+const cbadge = q => `<span class="rounded-full border border-sea/30 bg-white px-2.5 py-0.5 text-xs font-bold">${q.includes('장비') ? '🧰' : '🏅'} ${esc(q)}</span>`;
+const pcerts = (p, all) => { const q = p.q || [], shown = all ? q : q.slice(0, 3); return shown.map(cbadge).join('') + (!all && q.length > 3 ? `<span class="text-xs text-sea/60">외 ${q.length - 3}</span>` : ''); };
+const qa = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-mist bg-white px-3.5 py-2 text-xs sm:text-sm font-bold hover:bg-ice">${t}</button>`;
+const stockBlock = () => `<div class="mt-10 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-bold">내 재고 판매</h2>${btn('stockopen', '', '재고 판매글 올리기', 'a')}</div>
+  <p class="mt-1 text-sm text-sea/70">보유 중인 중고 재고를 소비자나 타 업체에 팔 수 있어요. 거래 확정 시 거래금액의 5%(건당 최대 10만 원)만 차감돼요.</p>
+  <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${D.lst.filter(l => l.seller === ME).map(lcard).join('') || empty('아직 올린 재고가 없어요.')}</div>`;
+
+function profModal() {   // 기사·업체 프로필 수정
+  const p = PRO[ME]; pe = { certs:new Set(p.q || []), areas:new Set(p.a || []), free:!!p.free };
+  openM(head('프로필 수정') + `<label for="pe-field" class="block text-sm font-bold">대표 전문 분야</label>
+    <select id="pe-field" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${SPEC.map(f => `<option${p.f[0] === f ? ' selected' : ''}>${f}</option>`).join('')}</select>
+    ${credBlock(pe.certs, 'pecert')}${freeToggle(pe.free, 'pefree')}
+    <p class="mt-4 text-sm font-bold">활동 가능 지역</p><div class="mt-2 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto rounded-xl bg-ice p-2">${GU.map(g => chip('pearea', g, pe.areas.has(g))).join('')}</div>
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('pesave', '', '저장하기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function pesave() {
+  if (!pe.areas.size) return $('#merr').textContent = '활동 가능 지역을 1곳 이상 선택해 주세요.';
+  Object.assign(PRO[ME], { f:[$('#pe-field').value], a:[...pe.areas], q:[...pe.certs], free:pe.free });
+  closeM(); render(); toast('프로필을 저장했어요.');
+}
+
+/* 1:1 채팅에서 바로 거래 확정 (퀵 액션) */
+function directModal(rid) {
+  const room = D.rooms.find(x => x.id === rid), p = PRO[room.pid], codes = ['aircon_install', 'aircon_repair', 'aircon_clean', 'freezer_removal'];
+  const guess = { '에어컨 설치':'aircon_install', '이전설치':'aircon_install', '에어컨 수리':'aircon_repair', '업소용 수리':'aircon_repair', '에어컨 청소':'aircon_clean', '냉동고 매매·철거':'freezer_removal' }[p.f[0]];
+  const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
+  openM(head('거래 등록') + `<p class="text-sm"><b>${esc(p.n)}</b> 기사님과 채팅으로 합의한 내용을 등록해요.</p>
+    <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 안심 작업 내역서가 발급되고 안심번호 채팅방이 열려요.</p>
+    ${lab('dc-svc', '서비스')}<select id="dc-svc" class="${inp}">${codes.map(c => `<option value="${c}"${c === guess ? ' selected' : ''}>${SVC[c]}</option>`).join('')}</select>
+    ${lab('dc-gu', '작업 지역 (서울시 구)')}<select id="dc-gu" class="${inp}">${GU.map(g => `<option${g === p.a[0] ? ' selected' : ''}>${g}</option>`).join('')}</select>
+    ${lab('dc-date', '작업 희망일')}<input id="dc-date" type="date" min="${today()}" class="${inp}">
+    ${lab('dc-price', '합의 금액(원)')}<input id="dc-price" type="number" min="0" step="1000" inputmode="numeric" class="${inp}">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('dsend', rid, '거래 등록', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function dsend(rid) {
+  const room = D.rooms.find(x => x.id === rid), service = $('#dc-svc').value, gu = $('#dc-gu').value, date = $('#dc-date').value, price = +$('#dc-price').value;
+  if (!date || date < today()) return $('#merr').textContent = '오늘 이후의 작업 희망일을 선택해 주세요.';
+  if (!(price > 0)) return $('#merr').textContent = '합의 금액을 입력해 주세요.';
+  const req = 'REQ-' + (1000 + D.seq++), qid = 'Q' + D.seq++;
+  D.req.unshift({ id:req, owner:MEC(), service, gu, date, details:'1:1 안심채팅 상담 후 직접 확정', photos:[], status:'open' });
+  D.quo.push({ id:qid, rid:req, pid:room.pid, price, visit:date, msg:'채팅으로 합의한 금액이에요.', status:'submitted' });
+  pick(qid);
+}
+document.addEventListener('change', async e => {   // 채팅 현장 사진 전송
+  if (e.target.id !== 'chat-photo' || !chatCur) return;
+  const f = e.target.files[0]; if (!f) return;
+  if (!f.type.startsWith('image/') || f.size > 10 * 1024 * 1024) return toast('10MB 이하의 이미지 파일만 보낼 수 있어요.');
+  const img = await readURL(f), cid = chatCur;
+  D.msg.push({ cid, from:mode, text:'현장 사진을 보냈어요.', img }); chatModal(cid);
+});
+document.addEventListener('click', e => {   // 이용방법·서비스·안심보장 앵커는 부드럽게 스크롤
+  const a = e.target.closest('a[href="#process"], a[href="#services"], a[href="#safety"]'); if (!a) return;
+  const t = document.querySelector(a.getAttribute('href')); if (!t || t.offsetParent === null) return;
+  e.preventDefault(); t.scrollIntoView({ behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start' });
+  try { history.replaceState(null, '', a.getAttribute('href')); } catch (_) {}
+});
+
+/* ---------- 냉동·냉장고 장터: 메인 피드 페이지 / 전용 장터 화면 ---------- */
+let view = 'main', fp = 0, fpages = 1;
+D.fav = new Set();
+const MK = { q:'', grades:new Set(), sort:'new', tab:'all', free:false };
+const ago = t => { const m = Math.floor((Date.now() - t) / 6e4); return m < 1 ? '방금 전' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
+const heart = id => D.fav.has(id) ? '❤️' : '🤍';
+const favBtn = id => `<button type="button" data-act="fav" data-id="${id}" aria-pressed="${D.fav.has(id)}" aria-label="관심 목록에 담기" class="h-10 w-10 shrink-0 rounded-full hover:bg-ice text-xl">${heart(id)}</button>`;
+const thumbSq = l => l.photos[0] ? `<img src="${l.photos[0]}" alt="${esc(l.title)}" class="h-full w-full object-cover">` : '<span class="grid h-full w-full place-items-center bg-mist text-4xl" aria-hidden="true">❄️</span>';
+
+function showView(v) {
+  view = v; const c = mode === 'customer', main = c && v === 'main';
+  $('#cview').classList.toggle('hidden', !main);
+  $('#mview').classList.toggle('hidden', !(c && v === 'market'));
+  $('#fview').classList.toggle('hidden', !(c && v === 'pros'));
+  $('#pview').classList.toggle('hidden', c);
+  $('#nav').classList.toggle('lg:flex', main);
+  $('#subnav').classList.toggle('hidden', !main);
+  window.scrollTo(0, 0);
+}
+function openPros() { closeM(); if (mode !== 'customer') setMode('customer'); showView('pros'); renderPros(); }
+function openMarket() { closeM(); if (mode !== 'customer') setMode('customer'); showView('market'); renderMarket(); }
+
+function renderFeed() {   // 메인: 최신순 6개(3개×2줄)씩 페이지 로테이션
+  const all = D.lst.filter(l => l.status !== 'closed').sort((a, b) => b.t - a.t);
+  fpages = Math.max(1, Math.ceil(all.length / 6)); fp = Math.min(fp, fpages - 1);
+  $('#feed').innerHTML = all.slice(fp * 6, fp * 6 + 6).map(lcard).join('');
+  $('#fpager').innerHTML = fpages > 1 ? `<button type="button" data-act="fprev" aria-label="이전 페이지" class="${B.s}">이전</button><span class="text-sm font-bold" aria-live="polite">${fp + 1} / ${fpages}</span><button type="button" data-act="fnext" aria-label="다음 페이지" class="${B.s}">다음</button>` : '';
+}
+const mrow = l => `<div class="flex items-start gap-2 py-3 sm:py-4 border-b border-mist ${l.status === 'open' ? '' : 'opacity-60'}">
+  <button type="button" data-act="ldet" data-id="${l.id}" class="flex min-w-0 flex-1 gap-3 sm:gap-4 text-left">
+    <span class="block h-20 w-20 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-2xl">${thumbSq(l)}</span>
+    <span class="min-w-0 flex-1"><span class="block font-bold line-clamp-2">${esc(l.title)}</span>
+      <span class="block mt-1 text-xs text-sea/60">서울 ${l.gu} · ${ago(l.t)} · ${l.years}년 사용</span>
+      <span class="block mt-0.5 sm:mt-1 text-base sm:text-lg font-bold">${won(l.price)}</span>
+      <span class="mt-1 flex flex-wrap items-center gap-2">${badge(l)}${l.owner === MEC() ? '<span class="rounded-full bg-sun/15 px-2.5 py-0.5 text-xs font-bold text-sun">내 글</span>' : ''}<span class="text-xs text-sea/60">${l.status === 'open' ? `제안 ${D.off.filter(o => o.lid === l.id).length}건` : l.status === 'sold' ? '거래 확정' : '판매 종료'}</span></span></span></button>${favBtn(l.id)}</div>`;
+function renderMarket() {
+  const mine = D.lst.filter(l => l.owner === MEC()).length;
+  $('#mtabs').innerHTML = [['all', '전체'], ['mine', `내 판매글 (${mine})`], ['fav', `관심 목록 (${D.fav.size})`]].map(([k, t]) =>
+    `<button type="button" data-act="mtab" data-id="${k}" aria-pressed="${MK.tab === k}" class="shrink-0 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${MK.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`).join('');
+  $('#mchips').innerHTML = ['A', 'B', 'C'].map(g => `<button type="button" data-act="mgr" data-id="${g}" aria-pressed="${MK.grades.has(g)}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.grades.has(g) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${g}급</button>`).join('');
+  $('#mchips').insertAdjacentHTML('beforeend', freeChipHtml(MK.free, 'mfree'));
+  let rows = D.lst.filter(l => MK.tab === 'mine' ? l.owner === MEC() : l.status !== 'closed');
+  if (MK.tab === 'fav') rows = rows.filter(l => D.fav.has(l.id));
+  if (MK.grades.size) rows = rows.filter(l => MK.grades.has(l.grade));
+  if (MK.free) rows = rows.filter(hasFree);
+  if (MK.q) rows = rows.filter(l => (l.title + ' ' + l.desc + ' ' + l.gu + ' ' + l.loc).toLowerCase().includes(MK.q));
+  rows.sort(MK.sort === 'low' ? (a, b) => a.price - b.price : MK.sort === 'high' ? (a, b) => b.price - a.price : (a, b) => b.t - a.t);
+  $('#mcount').textContent = `${rows.length}개의 판매글`;
+  $('#mrows').innerHTML = rows.map(mrow).join('') || `<div class="mt-6">${empty(MK.tab === 'mine' ? '아직 올린 판매글이 없어요. “+ 판매글 올리기”로 첫 글을 올려 보세요.' : MK.tab === 'fav' ? '🤍를 눌러 마음에 드는 판매글을 관심 목록에 담아 보세요.' : '조건에 맞는 판매글이 없어요. 검색어나 필터를 바꿔 보세요.')}</div>`;
+}
+$('#mq').addEventListener('input', e => { MK.q = e.target.value.trim().toLowerCase(); renderMarket(); });
+$('#msort').addEventListener('change', e => { MK.sort = e.target.value; renderMarket(); });
+
+/* 고객 → 고객 구매 제안 (수수료 없음) */
+function buyModal(lid) {
+  const l = D.lst.find(x => x.id === lid);
+  openM(head('구매 제안하기') + `<p class="text-sm"><b>${esc(l.title)}</b> · 희망가 ${won(l.price)}</p>
+    <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">거래 조건은 판매자와 채팅으로 조율해요.</p>
+    <label for="bp" class="block mt-4 text-sm font-bold">구매 제안 금액(원)</label><input id="bp" type="number" min="0" step="1000" inputmode="numeric" value="${l.price}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label for="bd" class="block mt-4 text-sm font-bold">거래 희망일</label><input id="bd" type="date" min="${today()}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label for="bm" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="bm" maxlength="100" placeholder="예) 이번 주말에 직접 가지러 갈게요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('bsend', lid, '구매 제안 보내기', 'a').replace('rounded-xl', 'flex-1 rounded-xl')}</div>`);
+}
+function bsend(lid) {
+  const price = +$('#bp').value, pickup = $('#bd').value, msg = $('#bm').value.trim();
+  if (!(price > 0)) return $('#merr').textContent = '구매 제안 금액을 입력해 주세요.';
+  if (!pickup || pickup < today()) return $('#merr').textContent = '오늘 이후의 거래 희망일을 선택해 주세요.';
+  if (D.off.some(o => o.lid === lid && o.pid === buyerId())) return $('#merr').textContent = '이미 제안한 판매글이에요.';
+  D.off.push({ id:'O' + D.seq++, lid, pid:buyerId(), price, pickup, msg, status:'submitted' });
+  closeM(); render(); toast('구매 제안을 보냈어요. 판매자 응답을 기다려 주세요.');
+}
+
+/* ---------- 이벤트 ---------- */
+const ACT = {
+  gopro: () => AU.user?.role === 'pro' ? setMode('pro') : authModal('signup', 'pro'),
+  home: () => { closeM(); showView('main'); },
+  stockopen: () => sellModal('stock'), mfree: () => { MK.free = !MK.free; renderMarket(); }, ffree: () => { FS.free = !FS.free; renderPros(); },
+  profedit: profModal, pecert: id => flip('pecert', id, pe.certs), pearea: id => flip('pearea', id, pe.areas), pefree: () => { pe.free = !pe.free; setChip('pefree', 'free', pe.free); }, pesave,
+  acert: id => flip('acert', id, au.certs), afree: () => { au.free = !au.free; setChip('afree', 'free', au.free); },
+  qphoto: () => $('#chat-photo').click(), qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
+  qcontract: cid => {
+    if (D.con.find(x => x.id === cid)) return finishDeal(cid);
+    if (mode === 'pro') { D.msg.push({ cid, from:'pro', text:'합의한 내용을 확인하시고 “거래 등록”을 눌러 주세요.' }); chatModal(cid); return toast('고객에게 거래 등록 요청 메시지를 보냈어요.'); }
+    directModal(cid); },
+  dsend,
+  pros: openPros, pdet, pchat, online: () => { PRO[ME].online = PRO[ME].online === false; render(); toast(PRO[ME].online ? '영업중으로 바꿨어요.' : '휴무로 바꿨어요. 새 견적·제안은 잠시 멈춰요.'); },
+  auth: () => AU.user ? logout() : authModal('login'), modesw: () => { const r = AU.user?.role; if (r === 'pro') setMode(mode === 'pro' ? 'customer' : 'pro'); else if (r === 'admin') setMode(mode === 'admin' ? 'customer' : 'admin'); },
+  atab: k => { saveAuth(); au.tab = k; renderAuth(); }, autype: k => { saveAuth(); au.type = k; renderAuth(); },
+  aarea: g => { au.areas.has(g) ? au.areas.delete(g) : au.areas.add(g); const b = document.querySelector(`[data-act="aarea"][data-id="${g}"]`), on = au.areas.has(g); b.setAttribute('aria-pressed', on); b.className = `rounded-lg px-1 py-1.5 text-xs font-bold ${on ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}`; },
+  alogin, asignup, democ: () => loginAs('demo@hanyeoreum.kr'), demop: () => loginAs('pro@hanyeoreum.kr'),
+  sellopen: () => { if (view !== 'market' || mode !== 'customer') openMarket(); sellModal(); },
+  mkt: openMarket, back: () => { closeM(); showView('main'); },
+  mtab: k => { MK.tab = k; renderMarket(); }, mgr: g => { MK.grades.has(g) ? MK.grades.delete(g) : MK.grades.add(g); renderMarket(); },
+  fprev: () => { fp = (fp - 1 + fpages) % fpages; renderFeed(); }, fnext: () => { fp = (fp + 1) % fpages; renderFeed(); },
+  fav: id => { D.fav.has(id) ? D.fav.delete(id) : D.fav.add(id);
+    document.querySelectorAll(`[data-act="fav"][data-id="${id}"]`).forEach(b => { b.textContent = heart(id); b.setAttribute('aria-pressed', D.fav.has(id)); });
+    if (view === 'market') renderMarket(); toast(D.fav.has(id) ? '관심 목록에 담았어요' : '관심 목록에서 뺐어요'); },
+  boffer: buyModal, bsend, lclose: id => { D.lst.find(x => x.id === id).status = 'closed'; closeM(); render(); toast('판매글을 내렸어요.'); },
+   ssend, ldet, lpick, oopen: id => PRO[ME].online === false ? toast('휴무 중에는 매입 제안을 낼 수 없어요. 영업 상태를 “영업중”으로 바꿔 주세요.') : offerModal(id), osend, sprm: i => { sp.splice(+i, 1); spThumbs(); },
+  menu: () => mode === 'customer' ? custMenu() : proMenu(),
+  qopen: id => PRO[ME].online === false ? toast('휴무 중에는 견적을 제출할 수 없어요. 영업 상태를 “영업중”으로 바꿔 주세요.') : quoteGate(id) && quoteModal(id), qsend, cmp: compare, pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pick, rcpt: id => receipt(id, false), chat: chatModal, rev: revModal, rvsend, rew: rewModal, rwsend,
+  csend: cid => { const t = $('#chat-in').value.trim(); if (!t) return; D.msg.push({ cid, from:mode, text:t });
+    const room = D.rooms.find(x => x.id === cid);   // 데모: 다른 기사님은 자동으로 답장
+    if (room && mode === 'customer' && room.pid !== ME) setTimeout(() => { D.msg.push({ cid, from:'pro', text:'문의 감사합니다! 견적 요청서를 남겨 주시면 정확한 가격과 일정을 안내해 드릴게요.' }); if (chatCur === cid) chatModal(cid); }, 1200);
+    chatModal(cid); },
+  done: cid => { const c = D.con.find(x => x.id === cid);
+    if (c.kind) { chargeFee(c); c.status = 'completed'; c.doneAt = nowT(); render(); proMenu(); return toast(wdOf(c) + ' 완료로 처리했어요. 고객이 후기를 남길 수 있어요.'); }
+    c.status = 'pending'; c.reqAt = nowT(); c.ah = AUTO_H; c.deadline = c.reqAt + AUTO_H * 36e5; c.paused = false;   // 작업 완료 요청 → 고객 확인 대기(자동 확정 타이머 시작)
+    D.msg.push({ cid, from:'pro', text:'작업을 마쳤습니다. 확인 부탁드립니다.' }, { cid, from:'sys', text:`작업 완료 요청이 전달됐어요. ${AUTO_H}시간 안에 확인이 없으면 자동으로 확정돼요.` });
+    render(); proMenu(); toast(`작업 완료를 요청했어요. 고객이 확인하지 않으면 ${AUTO_H}시간 뒤 자동 확정돼요.`); },
+  rwstep: cid => { const w = D.rew.find(x => x.cid === cid); w.status = w.status === 'requested' ? 'visit_scheduled' : 'resolved'; proMenu(); },
+  rvs: k => { rv.s = k; rv.tags = []; rv.other = ''; revModal(rv.cid); },
+  rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other;
+    if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t);
+    revModal(rv.cid); $('#rv-other')?.focus(); },
+
+  /* ----- 예치금 · 자동 확정 · 보증서 · 신고 · 마이페이지 · 관리자 ----- */
+  wallet: walletModal, charge: () => { afterCharge = null; chargeModal(); }, charge2: chargeModal,
+  chargego: () => {
+    const a = +document.querySelector('input[name="ch-amt"]:checked').value, pay = document.querySelector('input[name="ch-pay"]:checked')?.value || '결제', back = afterCharge; afterCharge = null;
+    addLed(ME, `예치금 충전 · ${pay} (데모 결제)`, a); PRO[ME].low = false; render();
+    if (back && back.q) { toast(`${won(a)}을 충전했어요. 이어서 견적을 제출해 보세요.`); return quoteModal(back.q); }
+    closeM(); toast(`${won(a)}을 충전했어요.`); },
+  cfin: cid => { const c = D.con.find(x => x.id === cid); if (!c || c.status !== 'pending') return; completeCon(c, '고객 확정'); render(); warrModal(cid, true); toast('계약이 확정됐어요. 무상 A/S 전자 보증서가 발급됐어요.'); rmAfterConfirm(cid); },
+  creport: cid => rpModal(cid, '분쟁', 'menu'), qreport: cid => rpModal(cid, '', 'chat'), rpsend,
+  warr: cid => warrModal(cid, false),
+  skew12: () => { SKEW += 12 * 36e5; tick(); toast('데모 시간을 12시간 앞당겼어요.'); },
+  skewend: cid => { const c = D.con.find(x => x.id === cid); if (c.paused) return toast('신고가 처리될 때까지 자동 확정이 멈춰 있어요.'); SKEW += Math.max(0, c.deadline - nowT()) + 1000; tick(); },
+  mypage: () => mypageModal(),
+  mpbio: () => { PRO[ME].bio = $('#mp-bio').value.trim(); toast('한 줄 소개를 저장했어요.'); },
+  mpcadd: () => { const y = $('#mp-cy').value.trim(), t = $('#mp-ct').value.trim(); if (!t) return $('#merr').textContent = '경력 내용을 입력해 주세요.';
+    PRO[ME].bio = $('#mp-bio').value.trim(); (PRO[ME].career = PRO[ME].career || []).unshift({ y:y || '기간 미입력', t }); mypageModal(true); toast('경력을 추가했어요.'); },
+  mpcrm: i => { PRO[ME].bio = $('#mp-bio').value.trim(); PRO[ME].career.splice(+i, 1); mypageModal(true); },
+  mppadd: async () => { const t = $('#mp-pt').value.trim(), n = $('#mp-pn').value.trim(), bio = $('#mp-bio').value.trim(), f = $('#mp-pf').files[0];
+    if (!t) return $('#merr').textContent = '작업 제목을 입력해 주세요.';
+    if (f && (!f.type.startsWith('image/') || f.size > 10 * 1024 * 1024)) return $('#merr').textContent = '10MB 이하의 이미지 파일만 올릴 수 있어요.';
+    const img = f ? await readURL(f) : null, d = new Date(nowT());
+    PRO[ME].bio = bio; (PRO[ME].port = PRO[ME].port || []).unshift({ t, n, d:`${d.getFullYear()}.${pad(d.getMonth() + 1)}`, img }); mypageModal(true); toast('포트폴리오를 추가했어요.'); },
+  mpprm: i => { PRO[ME].bio = $('#mp-bio').value.trim(); PRO[ME].port.splice(+i, 1); mypageModal(true); },
+  pdetme: () => pdet(ME, { act:'mypage', id:'', label:'← 마이페이지로' }),
+  acertadd: () => addCert('acert', au.certs), pecertadd: () => addCert('pecert', pe.certs),
+  demoa: () => loginAs('admin@hanyeoreum.kr'),
+  aauto: h => { AUTO_H = +h; render(); toast(`다음 작업 완료 요청부터 ${AUTO_H}시간 뒤 자동 확정돼요.`); },
+  cs: () => csModal(), cstab: t => csModal(t), pref: k => { AU.user.pref = Object.assign({ push:true, alim:true, email:true }, AU.user.pref); AU.user.pref[k] = !AU.user.pref[k]; csModal(); },
+  inqnew: () => inqForm(true), iqcat: k => { saveIq(); iq.cat = k; iq.cid = ''; inqForm(); }, inqsend: inqSend, inqdet: inqDetail, inqfu: inqFollow,
+  inqdel: id => { D.inq = D.inq.filter(x => !(x.id === +id && x.status === 'RECEIVED')); render(); csModal(); toast('문의를 취소했어요.'); },
+  ifilt: k => { AF = k; render(); }, iassign: iAssign, iadm: inqAdmin, inote: iNote, ianswer: iAnswer, iclose: iClose,
+  nretry: id => { const n = D.ntf.find(x => x.id === +id); deliver(n); audit('NOTIFY_RETRY', D.inq.find(x => x.id === n.iid), null, { ok:n.ok }); render(); toast(n.ok ? ntfSummary(n) : '아직 발송하지 못했어요. 데모 스위치를 확인해 주세요.'); },
+  ntfsw: k => { NTF[k] = !NTF[k]; render(); },
+  skew7: () => { SKEW += 7 * DAY; tick(); render(); toast('데모 시간을 7일 앞당겼어요.'); },
+  pwreset: resetStart, rssend: resetSend, otpresend: otpResend, otpok: otpVerify, rsconfirm: resetConfirm, asocial,
+  vset: v => { const [i, s] = v.split('|'), q = D.vq.find(x => x.id === i); q.st = s; if (q.pid) { PRO[q.pid].appr = s === '승인' ? 'APPROVED' : 'REJECTED'; } audit(s === '승인' ? 'PRO_APPROVE' : 'PRO_REJECT', null, { approval:'PENDING' }, { approval:s === '승인' ? 'APPROVED' : 'REJECTED', pro:q.n }); render(); toast(`기사 인증을 ${s}했어요.`); }
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (b) { if (b.tagName === 'A') e.preventDefault(); return ACT[b.dataset.act]?.(b.dataset.id); }
+  if (e.target.closest('[data-mclose]')) closeM();
+  const m = e.target.closest('[data-mode]'); if (m) setMode(m.dataset.mode);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#mm').classList.contains('hidden')) closeM();
+  if (e.key === 'Enter' && e.target.id === 'chat-in') $('[data-act="csend"]').click();
+  if (e.key === 'Enter' && /^(acert|pecert)-in$/.test(e.target.id)) { e.preventDefault(); ACT[e.target.id.replace('-in', '') + 'add'](); }
+});
+setMode('customer');
+</script>
+<script>
+/* 리뷰 이벤트 팝업: 거래 확정 직후 별점 + 후기 */
+(function () {
+  let rmCid = null, stars = 5;
+  const rmEl = document.getElementById('rm'), paint = () => [...document.getElementById('rm-stars').children].forEach((el, i) => { el.classList.toggle('text-sun', i < stars); el.classList.toggle('text-gray-300', i >= stars); });
+  window.openRm = cid => { rmCid = cid || null; stars = 5; paint(); document.getElementById('rm-text').value = ''; rmEl.classList.remove('hidden'); };
+  const closeRm = () => rmEl.classList.add('hidden');
+  window.rmAfterConfirm = cid => setTimeout(() => { if (!D.rev.some(r => r.cid === cid)) openRm(cid); }, 600);
+  document.getElementById('demo-confirm-btn').addEventListener('click', () => { toast('거래가 확정되었습니다.'); setTimeout(() => openRm(null), 600); });
+  document.getElementById('rm-overlay').addEventListener('click', closeRm);
+  document.getElementById('rm-cancel').addEventListener('click', closeRm);
+  document.getElementById('rm-stars').addEventListener('click', e => { const st = e.target.closest('[data-star]'); if (!st) return; stars = +st.dataset.star; paint(); });
+  document.getElementById('rm-submit').addEventListener('click', () => {
+    const txt = document.getElementById('rm-text').value.trim(), c = rmCid && D.con.find(x => x.id === rmCid);
+    if (c && !D.rev.some(r => r.cid === rmCid)) {
+      const p = PRO[c.pid], sent = stars >= 5 ? 'great' : stars >= 3 ? 'good' : 'bad';
+      D.rev.push({ cid:rmCid, s:sent, tags:['기타'], other:txt || '별점 ' + stars + '점' });
+      p.r = (p.r * p.c + stars) / (p.c + 1); p.c++; render();
+    }
+    closeRm();
+    toast('소중한 후기가 등록되었어요.');
+  });
+})();
+</script>
+<script>
+/* ===== 실시간 연동: 고객·기사·관리자가 같은 데이터를 함께 봐요 (Artifact db) =====
+   견적 요청·견적·계약·채팅·후기·재점검·장터·문의·알림·예치금·회원·기사 프로필이 모두 공유돼요.
+   claude.ai 밖(내려받은 파일 등)에서 열면 예전처럼 이 브라우저 안에서만 동작해요. */
+(function () {
+  const COLS = ['req', 'quo', 'con', 'msg', 'rev', 'rew', 'lst', 'off', 'inq', 'inc', 'led', 'vq', 'ntf', 'aud', 'rooms', 'users'];
+  const DESC = new Set(['req', 'lst', 'inq', 'led', 'vq', 'ntf', 'aud']);          // 새 항목이 앞에 오는 목록
+  const BYID = new Set(['req', 'quo', 'con', 'lst', 'off', 'vq', 'rooms', 'inq']); // 문서 이름을 항목 번호로
+  const TAB = Math.random().toString(36).slice(2, 8);
+  const liveEl = document.getElementById('live');
+  const setLive = (t, on) => { liveEl.innerHTML = `<span class="${on ? 'text-cool' : 'text-sea/40'}">●</span> ${t}`; };
+  let db = null, clk = 0, pushT = null, warnT = 0;
+  const ready = {}, last = {}, wq = {};
+  [...COLS, 'pros', 'cfg'].forEach(c => last[c] = new Map());
+  const stamp = () => (clk = Math.max(clk + 1, Date.now() * 1000));
+  const rk = () => 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const clone = o => JSON.parse(JSON.stringify(o));
+
+  function keyAll(col) {
+    const a = D[col] || [];
+    (DESC.has(col) ? [...a].reverse() : a).forEach(it => {
+      if (!it._k) it._k = BYID.has(col) && it.id != null ? HY_ID_OK((col === 'inq' ? 'i' : '') + it.id) : rk();
+      if (!it._o) it._o = stamp();
+    });
+  }
+  function warn(e) {
+    if (Date.now() - warnT < 10000) return; warnT = Date.now();
+    const c = e && e.code;
+    toast(c === 'quota_exceeded' ? '저장 공간이 가득 차서 저장하지 못했어요.' : c === 'invalid_argument' ? '저장하지 못했어요. 보기 전용 권한이거나 사진이 너무 커요.' : '실시간 저장에 실패했어요. 잠시 후 다시 시도해 주세요.');
+  }
+  function write(path, data) {   // 문서마다 한 번에 하나씩 순서대로 저장
+    wq[path] = (wq[path] || Promise.resolve()).then(() => data === null ? db.doc(path).delete() : db.doc(path).set(data)).catch(warn);
+  }
+  function pushNow() {   // 바뀐 항목만 저장 (같은 내용은 다시 쓰지 않음)
+    clearTimeout(pushT); pushT = null; if (!db) return;
+    COLS.forEach(col => {
+      if (!ready[col]) return;
+      keyAll(col); const seen = new Set();
+      D[col].forEach(it => { const j = JSON.stringify(it); seen.add(it._k); if (last[col].get(it._k) !== j) { last[col].set(it._k, j); write(col + '/' + it._k, JSON.parse(j)); } });
+      [...last[col].keys()].forEach(k => { if (!seen.has(k)) { last[col].delete(k); write(col + '/' + k, null); } });
+    });
+    if (ready.pros) Object.keys(PRO).forEach(id => { const j = JSON.stringify(PRO[id]), k = HY_ID_OK(id); if (last.pros.get(k) !== j) { last.pros.set(k, j); write('pros/' + k, Object.assign(JSON.parse(j), { _id:id })); } });
+    if (ready.cfg) { const j = JSON.stringify({ autoH:AUTO_H }); if (last.cfg.get('main') !== j) { last.cfg.set('main', j); write('cfg/main', JSON.parse(j)); } }
+  }
+  const schedule = () => { if (db && !pushT) pushT = setTimeout(pushNow, 250); };
+
+  /* 다른 사람의 변경이 도착하면 화면을 다시 그려요 (입력 중인 양식은 건드리지 않음) */
+  let rT = null; const changed = new Set();
+  function refresh(col) {
+    changed.add(col); clearTimeout(rT);
+    rT = setTimeout(() => {
+      const ch = new Set(changed); changed.clear();
+      _render();
+      if ($('#mm').classList.contains('hidden')) return;
+      const st = $('#mm-body').scrollTop;
+      if (chatCur) {
+        if (!ch.has('msg') && !ch.has('con')) return;
+        const i0 = $('#chat-in'), v = i0 ? i0.value : '', fo = document.activeElement === i0;
+        chatModal(chatCur); const i1 = $('#chat-in'); if (i1) { i1.value = v; if (!fo) i1.blur(); }
+        return;
+      }
+      if (menuCur === 'cust') custMenu(); else if (menuCur === 'pro') proMenu(); else if (menuCur === 'cs') csModal(); else return;
+      $('#mm-body').scrollTop = st;
+    }, 80);
+  }
+  function apply(col, snap) {
+    if (ready[col]) pushNow();   // 아직 저장 안 된 내 변경을 먼저 보내요
+    const arr = snap.docs.map(d => { const o = clone(d.data()); o._k = d.id; return o; });
+    if (!ready[col]) { keyAll(col); (D[col] || []).forEach(it => { if (!arr.some(o => o._k === it._k)) arr.push(it); }); }   // 연결 전에 만든 항목은 합쳐서 저장
+    arr.sort((a, b) => DESC.has(col) ? (b._o || 0) - (a._o || 0) : (a._o || 0) - (b._o || 0));
+    last[col] = new Map(arr.filter(o => snap.docs.some(d => d.id === o._k)).map(o => [o._k, JSON.stringify(o)]));
+    D[col] = arr;
+    if (col === 'users') { if (AU.user) AU.user = D.users.find(u => u.email === AU.user.email) || AU.user; else restoreLogin(); }
+    if (col === 'inq') inqSeq = Math.max(inqSeq, ...D.inq.map(x => +x.id || 0));
+    const first = !ready[col]; ready[col] = true;
+    if (first) schedule();
+    liveCheck();
+    refresh(col);
+  }
+  function liveCheck() { if (COLS.every(c => ready[c]) && ready.pros) setLive('실시간 연결됨', true); }
+  function applyPros(snap) {
+    if (ready.pros) pushNow();
+    snap.docs.forEach(d => { const o = clone(d.data()), id = o._id || d.id; delete o._id; PRO[id] = o; last.pros.set(d.id, JSON.stringify(o)); });
+    const first = !ready.pros; ready.pros = true; if (first) schedule(); liveCheck();
+    refresh('pros');
+  }
+  function applyCfg(snap) {
+    if (snap.exists && snap.data().autoH) AUTO_H = +snap.data().autoH;
+    last.cfg.set('main', JSON.stringify({ autoH:AUTO_H })); ready.cfg = true; refresh('cfg');
+  }
+  function onErr() { setLive('실시간 연결이 끊겼어요 · 새로고침해 주세요', false); }
+
+  /* 로그인 유지 (이 브라우저에만 기억) */
+  function restoreLogin() {
+    if (AU.user) return; let e = null; try { e = localStorage.getItem('hy_login'); } catch (_) {}
+    const u = e && D.users.find(x => x.email === e); if (u) setUser(u);
+  }
+  const _setUser = setUser, _logout = logout;
+  setUser = u => { _setUser(u); try { localStorage.setItem('hy_login', u.email); } catch (_) {} };
+  logout = () => { try { localStorage.removeItem('hy_login'); } catch (_) {} _logout(); };
+
+  const _render = render;
+  render = function () { _render(); schedule(); };
+  document.addEventListener('click', () => setTimeout(schedule, 0));
+  document.addEventListener('change', () => setTimeout(schedule, 0));
+  setInterval(() => { if (db) pushNow(); }, 2000);   // 놓친 변경이 있으면 저장 (바뀐 것만)
+
+  const busy = new Map();
+  HY_once = (k, fn) => {   // 자동 확정·자동 종결은 열려 있는 화면 중 한 곳에서만
+    if (!db) return fn();
+    const t = busy.get(k); if (t && Date.now() - t < 30000) return; busy.set(k, Date.now());
+    db.doc('locks/' + HY_ID_OK(k)).acquire({ holder:GUEST + '-' + TAB, ttlMs:60000 }).then(r => { if (r.acquired) { fn(); pushNow(); } }).catch(() => {});
+  };
+
+  window.HY_SYNC = { dump() { const o = {}; COLS.forEach(c => { keyAll(c); o[c] = clone(D[c]); }); o.pros = clone(PRO); o.cfg = { autoH:AUTO_H }; return o; } };
+
+  (async function init() {
+    restoreLogin();
+    if (!window.claude || !claude.use) { setLive('로컬 체험 모드 (이 브라우저에만 저장)', false); return; }
+    setLive('실시간 연결 중…', false);
+    try { const u = await claude.use('user'); if (u) { const id = await u.id(); if (id) GUEST = 'c' + HY_ID_OK(id).slice(0, 40); } } catch (_) {}
+    db = await claude.use('db').catch(() => null);
+    if (!db) { setLive('로컬 체험 모드 (로그인 후 실시간 연결)', false); return; }
+    COLS.forEach(c => { D[c] = []; });   // 코드에 든 예시 데이터 대신 공유 데이터를 써요
+    _render();
+    COLS.forEach(col => db.collection(col).onSnapshot(s => apply(col, s), onErr));
+    db.collection('pros').onSnapshot(applyPros, onErr);
+    db.doc('cfg/main').onSnapshot(applyCfg, onErr);
+  })();
+})();
+</script>
+</body>
+</html>
+
+
+</body></html>
