@@ -4,8 +4,8 @@
    anon 키는 공개돼도 괜찮은 키예요. (service_role 키는 절대 여기에 넣지 마세요!)
    ===================================================================== */
 window.HY_CONFIG = {
-  SUPABASE_URL: 'https://YOUR-PROJECT.supabase.co',
-  SUPABASE_ANON_KEY: 'YOUR-ANON-KEY',
+    SUPABASE_URL: 'https://bxzrsggjvrolyxlpwosc.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_-DbRd04mxB52782xwt0eig_GxErWPkH',
 
   // 사이트 주소 (비밀번호 재설정·가입 인증 메일의 링크가 여기로 돌아와요)
   SITE_URL: 'https://l87482305-web.github.io/-/',
