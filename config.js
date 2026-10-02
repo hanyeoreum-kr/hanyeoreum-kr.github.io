@@ -31,6 +31,6 @@ window.HY_CONFIG = {
   BIZ: { name: '한여름', ceo: '', bizNo: '', mailOrderNo: '', address: '' },
 
   // 이용약관·개인정보처리방침 페이지 주소 (만들면 넣어 주세요)
-  TERMS_URL: '',
-  PRIVACY_URL: ''
+  TERMS_URL: 'terms.html',
+  PRIVACY_URL: 'privacy.html'
 };

@@ -217,7 +217,7 @@ function needLogin(msg) { if (S.user) return false; toast(msg || '로그인 후 
 
 let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(), free:false, agree:false };
 const PROV = { kakao:'카카오', google:'구글', naver:'네이버' };
-function saveAuth() { ['name', 'email', 'pw', 'pw2', 'biz', 'field'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const a = $('#au-agree'); if (a) au.agree = a.checked; }
+function saveAuth() { ['name', 'email', 'pw', 'pw2', 'biz', 'field'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const cs = [...document.querySelectorAll('.au-c')]; if (cs.length) au.agree = cs.every(c => c.checked); }
 function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); }
 const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격증 · 장비 보유 <span class="text-xs font-normal text-sea/60">(선택)</span></p>
   <div id="${act}-chips" class="mt-2 flex flex-wrap gap-1.5">${[...CERTS, ...[...set].filter(c => !CERTS.includes(c))].map(c => chip(act, c, set.has(c))).join('')}</div>
@@ -242,7 +242,14 @@ function renderAuth() {
         <p class="mt-4 text-sm font-bold">활동 가능 지역 <span class="text-xs font-normal text-sea/60">(1곳 이상)</span></p>${areaGrid(au.areas, 'aarea')}
         <p class="mt-4 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">📄 <b>사업자등록증</b>은 메일 인증 후 로그인하면 기사 화면에서 바로 올릴 수 있어요. 관리자가 사업자등록증을 확인하고 승인하면 견적을 낼 수 있어요.</p>` : ''}
       ${common}
-      <label class="mt-4 flex items-start gap-2 text-sm"><input id="au-agree" type="checkbox" class="mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>${legalLinks()}에 동의해요. (필수)</span></label>
+      <div class="mt-4 rounded-2xl border border-mist p-3 text-sm space-y-2">
+        <label class="flex items-start gap-2 font-bold"><input id="au-agree" type="checkbox" data-act="agreeall" class="mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>아래 필수 항목에 모두 동의해요</span></label>
+        <div class="border-t border-mist pt-2 space-y-1.5 text-sea/80">
+          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] 만 14세 이상이며 ${C.TERMS_URL ? `<a href="${esc(C.TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a>` : '이용약관'}에 동의</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] ${C.PRIVACY_URL ? `<a href="${esc(C.PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보 수집·이용</a>` : '개인정보 수집·이용'}에 동의</span></label>
+          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] 개인정보 제3자 제공에 동의 <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">제공받는 자: 견적 요청 시 승인된 기사 회원, 계약·장터 거래 시 거래 상대방 회원<br>목적: 견적 작성, 작업·거래 진행, 일정 조율, 14일 재점검<br>항목: 견적 요청 내용(지역·희망일·요청사항·사진), 이름(닉네임)·상호, 거래 내용, 채팅 내용 (전화번호·이메일은 제공하지 않음)<br>기간: 거래 종료(재점검 기간 포함) 시까지<br>동의를 거부할 수 있으나, 거부하면 중개 서비스를 이용할 수 없어요.</span></details></span></label>
+        </div>
+      </div>
       ${errBox()}${btn('asignup', '', '가입하기', 'a', 'mt-2 w-full')}`));
 }
 const emailOk = e => /^\S+@\S+\.\S+$/.test(e);
@@ -260,7 +267,7 @@ async function alogin(el) {
 async function asignup(el) {
   saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '';
   const err = !name ? (pro ? '상호명 또는 기사명을 입력해 주세요.' : '이름을 입력해 주세요.') : !emailOk(email) ? '이메일 형식을 확인해 주세요.' : !pwOk(pw) ? '비밀번호는 8자 이상, 영문과 숫자를 모두 넣어 주세요.'
-    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : !au.agree ? '이용약관과 개인정보처리방침에 동의해 주세요.' : '';
+    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : !au.agree ? '필수 약관 3개에 모두 동의해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
@@ -1292,6 +1299,7 @@ const ACT = {
   barea: g => toggleIn(bp.areas, g, 'barea'), bcert: c => toggleIn(bp.certs, c, 'bcert'), bcertadd: () => addCert('bcert', bp.certs),
   bfree: () => { bp.free = !bp.free; const b = document.querySelector('[data-act="bfree"]'); b.setAttribute('aria-pressed', bp.free); b.className = chipCls(bp.free); },
   bpsend: (id, el) => bpSend(el), bdsend: (id, el) => bdSend(el), bdview: () => S.pro && S.pro.biz_doc && openBizDoc(S.pro.biz_doc),
+  agreeall: (id, el) => document.querySelectorAll('.au-c').forEach(c => c.checked = el.checked),
   pdoc: id => { const p = S.adminPros.find(x => x.id === id); if (p && p.biz_doc) openBizDoc(p.biz_doc); },
   tosspay: (id, el) => tossPay(el), paymeth: k => { payMethod = k; walletModal(true); },
   modesw: () => setMode(S.mode === 'pro' ? 'customer' : 'pro'),
@@ -1366,6 +1374,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && /^au-(email|pw|pw2)$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); document.querySelector(au.tab === 'login' ? '[data-act="alogin"]' : '[data-act="asignup"]')?.click(); }
 });
 document.addEventListener('change', e => {
+  if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
   if (e.target.id === 'chat-photo') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'sp-file') { for (const f of e.target.files) { if (sp.length >= 5) { setErr('사진은 최대 5장까지 올릴 수 있어요.'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); }
 });
