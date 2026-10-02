@@ -2,7 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0C2D48">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="한여름">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta property="og:title" content="한여름 | 시원함의 모든 것">
+<meta property="og:description" content="서울 에어컨 설치·수리·청소, 중고 업소용 냉동고 매매·철거까지. 무료 견적 비교.">
+<meta property="og:image" content="https://hanyeoreum-kr.github.io/icon-512.png">
+<meta property="og:type" content="website">
 <title>한여름 | 시원함의 모든 것, 한여름에서 한 번에!</title>
 <meta name="description" content="서울 에어컨 설치·수리·청소, 중고 업소용 냉동고 매매·철거까지. 무료 견적 비교하고 안심하고 맡기세요.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,12 +39,20 @@ if (window.tailwind) tailwind.config = {
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   input, select, textarea { font-size: 16px; }
   button, a { -webkit-tap-highlight-color: transparent; }
+  /* 모바일 앱처럼: 아이폰 하단 홈바·노치 영역 피하기 */
+  #mbar { padding-bottom: calc(.625rem + env(safe-area-inset-bottom)); }
+  @media (max-width: 767px) {
+    body { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); overscroll-behavior-y: none; }
+    #mm-body, #qm-box { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); max-height: 92vh; max-height: 92dvh; }
+    #toast { bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  }
+  header { padding-top: env(safe-area-inset-top); }
 </style>
 </head>
-<body class="bg-ice text-sea font-sans antialiased pb-20 md:pb-0">
+<body class="bg-ice text-sea font-sans antialiased">
 
 <header class="sticky top-0 z-30 bg-ice/90 backdrop-blur border-b border-mist">
-  <div class="mx-auto max-w-6xl flex items-center justify-between gap-2 px-4 sm:px-5 h-16">
+  <div class="mx-auto max-w-6xl flex items-center justify-between gap-2 px-3 sm:px-5 h-16">
     <a href="#" data-act="home" class="font-display text-2xl tracking-tight shrink-0">한여름<span class="text-cool">.</span></a>
     <nav id="nav" class="hidden lg:flex items-center gap-6 text-sm font-medium">
       <a href="#market" data-act="mkt" class="font-bold text-cool hover:text-sea">냉동·냉장고 장터</a>
@@ -43,13 +63,13 @@ if (window.tailwind) tailwind.config = {
       <a href="#safety" class="hover:text-cool">안심 보장</a>
       <a href="#" data-act="cs" class="hover:text-cool">고객센터</a>
     </nav>
-    <div class="flex items-center gap-1.5 sm:gap-2">
-      <button id="hdr-admin" type="button" data-act="admin" style="display:none" class="rounded-full bg-sun px-3 py-1.5 text-xs sm:text-sm font-bold text-white">관리자</button>
-      <button id="modesw" type="button" role="switch" aria-checked="false" data-act="modesw" style="display:none" class="inline-flex items-center gap-2 rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold"><span>기사 모드</span><span class="relative h-5 w-9 shrink-0 rounded-full bg-sea/30" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all" style="left:.125rem"></i></span></button>
-      <button id="hdr-bal" type="button" data-act="wallet" style="display:none" class="rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold whitespace-nowrap"></button>
+    <div class="flex min-w-0 items-center gap-1.5 sm:gap-2">
+      <button id="hdr-admin" type="button" data-act="admin" style="display:none" class="shrink-0 whitespace-nowrap rounded-full bg-sun px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold text-white">관리자</button>
+      <button id="modesw" type="button" role="switch" aria-checked="false" data-act="modesw" style="display:none" class="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 sm:gap-2 rounded-full bg-mist px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold"><span>기사 모드</span><span class="relative h-5 w-9 shrink-0 rounded-full bg-sea/30" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all" style="left:.125rem"></i></span></button>
+      <button id="hdr-bal" type="button" data-act="wallet" style="display:none" class="hidden sm:inline-block rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold whitespace-nowrap"></button>
       <a id="hdr-quote" href="#quote" class="hidden sm:inline-block rounded-full bg-sea text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2.5 hover:bg-cool transition-colors whitespace-nowrap">무료 견적 요청</a>
       <span id="hdr-user" style="display:none" class="hidden md:inline text-sm font-bold"></span>
-      <button id="hdr-auth" type="button" data-act="auth" class="rounded-full border-2 border-sea px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold hover:bg-sea hover:text-white whitespace-nowrap">로그인/회원가입</button>
+      <button id="hdr-auth" type="button" data-act="auth" class="shrink-0 rounded-full border-2 border-sea px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-bold hover:bg-sea hover:text-white whitespace-nowrap">로그인/회원가입</button>
     </div>
   </div>
   <div id="subnav" class="lg:hidden border-t border-mist">
@@ -65,6 +85,7 @@ if (window.tailwind) tailwind.config = {
   </div>
 </header>
 
+<div id="offline" style="display:none" class="bg-sea text-white text-sm font-bold px-4 py-2.5 text-center">📡 인터넷 연결이 끊겼어요. 연결되면 자동으로 다시 불러와요.</div>
 <div id="setup-warn" class="hidden bg-sun text-white text-sm font-bold px-4 py-3 text-center">config.js에 Supabase 주소와 키를 넣어야 사이트가 작동해요.</div>
 
 <div id="cview">
@@ -279,7 +300,7 @@ if (window.tailwind) tailwind.config = {
 <!-- 견적 요청 멀티스텝 모달 -->
 <div id="qm" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="qm-title">
   <div class="absolute inset-0 bg-sea/60" data-close></div>
-  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl flex flex-col max-h-[92vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl">
+  <div id="qm-box" class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl flex flex-col max-h-[92vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl">
     <div class="px-6 pt-5 pb-4 border-b border-mist">
       <div class="flex items-center justify-between">
         <h2 id="qm-title" class="font-display text-2xl">무료 견적 요청</h2>
@@ -349,6 +370,14 @@ if (window.tailwind) tailwind.config = {
   </div>
 </div>
 
+<!-- 홈 화면에 추가(앱 설치) 안내 -->
+<div id="inst" style="display:none" class="md:hidden fixed left-3 right-3 z-30 rounded-2xl bg-sea text-white shadow-2xl p-3.5 flex items-center gap-3" role="dialog" aria-label="앱 설치 안내">
+  <img src="icon-192.png" alt="" class="h-11 w-11 rounded-xl shrink-0">
+  <div class="min-w-0 flex-1 text-sm leading-snug"><b>한여름을 앱처럼 쓰세요</b><br><span id="inst-sub" class="text-white/75 text-xs">홈 화면에 추가하면 바로 열려요</span></div>
+  <button type="button" data-act="install" class="shrink-0 rounded-xl bg-sun px-3.5 py-2.5 text-sm font-bold">추가</button>
+  <button type="button" data-act="instclose" aria-label="닫기" class="shrink-0 px-1 text-xl text-white/60">×</button>
+</div>
+
 <!-- 모바일 하단 바 -->
 <div id="mbar" class="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center gap-3 border-t border-mist bg-white px-4 py-2.5 shadow-lg">
   <button id="mbar-bal" type="button" data-act="wallet" style="display:none" class="shrink-0 rounded-xl bg-mist px-3 py-3 text-sm font-bold whitespace-nowrap">예치금</button>
@@ -359,7 +388,7 @@ if (window.tailwind) tailwind.config = {
 <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

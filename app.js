@@ -145,7 +145,7 @@ async function loadAll() {
   }
   await Promise.all(keys.map(load));
   if (S.user && S.pro) await Promise.all([load('led'), load('chg')]);
-  render();
+  render(); watchNew();
 }
 
 /* 실시간: 표가 바뀌면 그 표만 다시 불러와요 (보안 규칙이 그대로 적용돼요) */
@@ -159,7 +159,7 @@ function queueLoad(key) {
     if (ks.includes('prosPub') && S.admin) ks.push('adminPros');
     if (ks.includes('led') || ks.includes('chg')) { if (S.admin) ks.push('inc'); }
     await Promise.all([...new Set(ks)].map(load));
-    render(); refreshOpen(ks);
+    render(); refreshOpen(ks); watchNew();
   }, 250);
 }
 function subscribe() {
@@ -209,7 +209,7 @@ function updateAuthUI() {
   $('#hdr-user').style.display = u ? '' : 'none'; $('#hdr-user').textContent = u ? nm + '님' : '';
   const sw = $('#modesw'), on = S.mode === 'pro';
   sw.style.display = isPro() || S.admin ? 'inline-flex' : 'none'; sw.setAttribute('aria-checked', on);
-  sw.className = `inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${on ? 'bg-sun text-white' : 'bg-mist'}`;
+  sw.className = `inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 sm:gap-2 rounded-full px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-bold ${on ? 'bg-sun text-white' : 'bg-mist'}`;
   sw.querySelector('i').style.left = on ? '1.125rem' : '.125rem';
   const ad = $('#hdr-admin'); ad.style.display = S.admin ? '' : 'none'; ad.textContent = S.mode === 'admin' ? '고객 화면' : '관리자';
 }
@@ -422,6 +422,7 @@ function render() {
   $('#mbar-menu').innerHTML = (cust ? '내 요청' : '견적·계약') + (n ? ` <span class="ml-0.5 rounded-full bg-sun px-1.5 text-xs text-white">${n}</span>` : '');
   $('#fab').style.display = S.mode === 'admin' ? 'none' : '';
   $('#mbar').style.display = S.mode === 'admin' ? 'none' : '';
+  if ($('#inst').style.display !== 'none') instPlace();
   const proMode = S.mode === 'pro', bal = S.pro ? won(S.pro.balance) : '';
   $('#hdr-bal').style.display = proMode && approved() ? '' : 'none'; $('#hdr-bal').textContent = '예치금 ' + bal;
   $('#mbar-bal').style.display = proMode && approved() ? '' : 'none'; $('#mbar-bal').textContent = '예치금 ' + bal;
@@ -709,7 +710,8 @@ function conBlock(c) {
 function custMenu(keep) {
   if (!S.user) { openM(head('내 요청 관리') + `<p class="leading-relaxed text-sea/80">견적 요청, 계약, 판매글은 로그인 후 볼 수 있어요.</p><div class="mt-4">${btn('auth', '', '로그인 / 회원가입', 'a')}</div>`); return; }
   const my = myReqs(), ml = S.lst.filter(l => l.seller_id === me()), buys = S.con.filter(c => c.client_id === me() && c.kind !== 'service'), pre = S.thr.filter(t => t.contract_id == null && t.u1 === me());
-  openM(head('내 요청 관리') + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
+  const nb = notifBtn() && my.length ? `<div class="mb-3 flex items-center justify-between gap-3 rounded-2xl bg-sun/10 p-3 text-sm"><span>견적이 도착하면 바로 알려 드릴까요?</span>${notifBtn()}</div>` : '';
+  openM(head('내 요청 관리') + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
     (my.length ? '<h3 class="mt-2 font-bold">견적 요청</h3>' : '') + my.map(r => {
       const qs = S.quo.filter(q => q.request_id === r.id), c = conFor('request_id', r.id);
       return card(`<div class="flex justify-between gap-2"><p class="font-bold">${SVC[r.service]} · ${esc(r.gu)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
@@ -787,7 +789,7 @@ function onNewMessage(m) {
   const list = S.msgs[m.thread_id];
   if (list && !list.some(x => x.id === m.id)) list.push(m);
   if (chatCur === m.thread_id) chatModal(m.thread_id, true);
-  else if (m.sender_id && m.sender_id !== me()) { const t = S.thr.find(x => x.id === m.thread_id); if (t) toast(`💬 ${esc(t.u1 === me() ? t.u2_name : t.u1_name)}: ${m.kind === 'photo' ? '사진' : String(m.body).slice(0, 30)}`); }
+  else if (m.sender_id && m.sender_id !== me()) { const t = S.thr.find(x => x.id === m.thread_id); if (t) { const who = t.u1 === me() ? t.u2_name : t.u1_name, txt = m.kind === 'photo' ? '사진' : String(m.body).slice(0, 30); toast(`💬 ${who}: ${txt}`); phoneNote('새 메시지', `${who}: ${txt}`); } }
   if (!S.thr.some(t => t.id === m.thread_id)) queueLoad('thr');
 }
 const qa = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-mist bg-white px-3.5 py-2 text-xs sm:text-sm font-bold hover:bg-ice">${t}</button>`;
@@ -803,14 +805,14 @@ async function chatModal(tid, keep) {
   else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 계약하기'));
   else acts.push(qa('qask', tid, '📝 계약 등록 요청'));
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
-    <div id="chatbox" class="mt-3 h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
+    <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
       : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}</p></div></div>`).join('')}</div>
     <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"></div>
     <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
   chatCur = tid;
   const b = $('#chatbox'); b.scrollTop = b.scrollHeight;
-  const i1 = $('#chat-in'); i1.value = draft; if (!keep || focused) i1.focus();
+  const i1 = $('#chat-in'); i1.value = draft; if (keep ? focused : innerWidth >= 768) i1.focus();
 }
 async function chatOfContract(cid) {
   let t = S.thr.find(x => x.contract_id === +cid);
@@ -932,7 +934,7 @@ function proView() {
   const p = S.pro; if (!p) { $('#pview').innerHTML = empty('기사 정보를 불러오는 중이에요.'); return; }
   const on = p.online !== false, ok = p.approval === 'APPROVED';
   const top = `<div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">기사/업체 대시보드</h1><p class="mt-1 text-sm text-sea/70">${esc(p.name)} · ${prate({ rating:p.rating_count ? p.rating_sum / p.rating_count : 0, rating_count:p.rating_count })}</p></div>
-    <div class="flex flex-wrap items-center gap-2">${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
+    <div class="flex flex-wrap items-center gap-2">${notifBtn()}${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
   if (!ok) {
     $('#pview').innerHTML = top + (p.approval === 'PENDING'
       ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>`
@@ -1219,7 +1221,7 @@ function adminView() {
   const fchip = (k, t, n) => `<button type="button" data-act="ifilt" data-id="${k}" aria-pressed="${AF === k}" class="${chipCls(AF === k)}">${t} ${n}</button>`;
   const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
-    <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div>${btn('refresh', '', '새로고침', 's')}</div>
+    <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
@@ -1325,6 +1327,7 @@ const ACT = {
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
+  notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(14),
   wallet: () => walletModal(), chargego: (id, el) => chargeGo(el),
   mypage: () => mypageModal(), profedit: profModal, pesave: (id, el) => peSave(el),
   pecert: c => toggleIn(pe.certs, c, 'pecert'), pecertadd: () => addCert('pecert', pe.certs), pearea: g => toggleIn(pe.areas, g, 'pearea'),
@@ -1407,6 +1410,104 @@ setInterval(() => {
 }, 1000);
 
 /* =====================================================================
+   새 소식 알림: 새 견적 요청·견적 도착·계약·충전 신청 등을 알려줘요
+   (앱/사이트가 열려 있거나 방금 내려둔 동안 동작 · 폰 알림은 '알림 켜기' 후)
+   ===================================================================== */
+let W = null, nBadge = 0; const baseTitle = document.title;
+const canNote = () => 'Notification' in window && window.isSecureContext;
+const notifBtn = () => canNote() && Notification.permission === 'default' ? `<button type="button" data-act="notifon" class="rounded-xl border-2 border-sun/60 bg-sun/10 font-bold px-4 py-2.5 text-sm text-sea">🔔 알림 켜기</button>` : '';
+async function notifOn() {
+  if (!canNote()) return toast(isIOS() && !standalone() ? '아이폰은 홈 화면에 추가한 앱에서 알림을 켤 수 있어요.' : '이 브라우저는 알림을 지원하지 않아요.');
+  const r = await Notification.requestPermission().catch(() => 'denied');
+  toast(r === 'granted' ? '알림을 켰어요. 새 소식이 오면 알려 드릴게요.' : '알림이 꺼져 있어요. 브라우저 설정에서 허용할 수 있어요.');
+  render(); refreshOpen(['con']);
+}
+function phoneNote(t, b) {
+  if (!document.hidden) return;
+  nBadge++; document.title = `(${nBadge}) ${baseTitle}`;
+  if (!canNote() || Notification.permission !== 'granted') return;
+  const opt = { body:b, icon:'icon-192.png', badge:'icon-192.png', tag:'hy-' + Date.now(), vibrate:[120, 60, 120] };
+  const sw = navigator.serviceWorker;
+  (sw ? sw.getRegistration() : Promise.resolve(null)).then(r => r ? r.showNotification('한여름 · ' + t, opt) : new Notification('한여름 · ' + t, opt)).catch(() => {});
+}
+function alertUser(t, b) { toast(`🔔 ${t} · ${b}`); try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} phoneNote(t, b); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && nBadge) { nBadge = 0; document.title = baseTitle; } });
+function snapW() {
+  return { uid:me(), req:new Set(S.req.map(r => r.id)), quo:new Set(S.quo.map(q => q.id)), con:new Map(S.con.map(c => [c.id, c.status])), off:new Set(S.off.map(o => o.id)),
+    chg:new Set(S.chg.map(c => c.id)), inq:new Set(S.inq.map(i => i.id)), pp:new Set(S.adminPros.filter(p => p.approval === 'PENDING').map(p => p.id)) };
+}
+function watchNew() {
+  if (!S.user) { W = null; return; }
+  const n = snapW(); if (!W || W.uid !== n.uid) { W = n; return; }
+  const out = [], nm = c => c.title || SVC[c.service] || '거래';
+  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && r.customer_id !== me()).forEach(r => out.push(['새 견적 요청', `${SVC[r.service] || ''} · ${r.gu}`]));
+  S.quo.filter(q => !W.quo.has(q.id) && S.req.some(r => r.id === q.request_id && r.customer_id === me())).forEach(q => out.push(['새 견적 도착', `${won(q.price)} 견적이 도착했어요`]));
+  S.con.forEach(c => {
+    const was = W.con.get(c.id); if (was === c.status) return;
+    if (was === undefined) { if (c.provider_id === me()) out.push(['계약 성사', `${nm(c)} 계약이 맺어졌어요`]); }
+    else if (c.status === 'pending' && c.client_id === me()) out.push(['완료 확인 요청', `${nm(c)} 작업 완료를 확인해 주세요`]);
+    else if (c.status === 'completed' && c.provider_id === me()) out.push(['거래 확정', `${nm(c)} 거래가 확정됐어요`]);
+  });
+  S.off.filter(o => !W.off.has(o.id) && o.buyer_id !== me() && S.lst.some(l => l.id === o.listing_id && l.seller_id === me())).forEach(o => out.push(['새 매입 제안', `${won(o.price)} 제안이 왔어요`]));
+  if (S.admin) {
+    S.chg.filter(c => !W.chg.has(c.id) && c.status === 'requested').forEach(c => out.push(['충전 신청', `${won(c.amount)} · 입금자 ${c.depositor}`]));
+    S.inq.filter(i => !W.inq.has(i.id) && i.user_id !== me()).forEach(i => out.push(['새 문의·신고', i.title]));
+    S.adminPros.filter(p => p.approval === 'PENDING' && !W.pp.has(p.id)).forEach(p => out.push(['기사 가입 신청', `${p.name} · 승인 대기`]));
+  }
+  W = n; out.slice(0, 3).forEach(([t, b], i) => setTimeout(() => alertUser(t, b), i * 3400));
+}
+
+/* =====================================================================
+   모바일 웹앱: 홈 화면 설치 · 오프라인 표시 · 다시 열 때 새로고침
+   ===================================================================== */
+const PWA = { prompt: null };
+const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function instPlace() { const bar = $('#mbar'), h = bar && bar.style.display !== 'none' ? bar.offsetHeight : 0; $('#inst').style.bottom = (h + 12) + 'px'; }
+function instShow() {
+  if (standalone() || innerWidth >= 768) return;
+  const until = +lsGet('hy_inst_hide') || 0; if (Date.now() < until) return;
+  if (!PWA.prompt && !isIOS()) return;
+  $('#inst-sub').textContent = PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : '공유 버튼 → 홈 화면에 추가';
+  instPlace(); $('#inst').style.display = '';
+}
+function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide', Date.now() + days * 864e5); }
+async function installApp() {
+  if (PWA.prompt) { PWA.prompt.prompt(); const r = await PWA.prompt.userChoice.catch(() => ({})); PWA.prompt = null; instHide(r.outcome === 'accepted' ? 365 : 7); return; }
+  instHide(3);
+  openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
+    <p class="mt-2 text-sm text-sea/70">아이폰은 <b>사파리</b>에서만 추가할 수 있어요.</p>
+    <ol class="mt-4 space-y-3 text-sm">
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">1</span><span>화면 아래(또는 위)의 <b>공유 버튼</b> <span class="inline-block rounded border border-mist px-1.5">⬆︎</span> 을 눌러요</span></li>
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">2</span><span>목록을 내려서 <b>‘홈 화면에 추가’</b>를 눌러요</span></li>
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">3</span><span>오른쪽 위 <b>‘추가’</b>를 누르면 끝!</span></li>
+    </ol>
+    <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
+}
+/* 휴대폰 키보드가 올라오면 아래에서 올라오는 창도 키보드 위로 올려요 */
+function fitSheets() {
+  const v = window.visualViewport; if (!v) return;
+  const mob = innerWidth < 640, kb = Math.max(0, innerHeight - v.height - v.offsetTop);
+  ['#mm-body', '#qm-box'].forEach(id => { const e = $(id); if (!e) return;
+    e.style.bottom = mob && kb > 80 ? kb + 'px' : ''; e.style.maxHeight = mob && kb > 80 ? (v.height * 0.94) + 'px' : ''; });
+}
+if (window.visualViewport) { visualViewport.addEventListener('resize', fitSheets); visualViewport.addEventListener('scroll', fitSheets); }
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); PWA.prompt = e; setTimeout(instShow, 2500); });
+addEventListener('appinstalled', () => { PWA.prompt = null; instHide(365); toast('홈 화면에 한여름이 추가됐어요'); });
+function netState() { $('#offline').style.display = navigator.onLine ? 'none' : ''; }
+addEventListener('offline', netState);
+addEventListener('online', () => { netState(); if (sb) { subscribe(); loadAll(); } toast('다시 연결됐어요'); });
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  if (sb && hiddenAt && Date.now() - hiddenAt > 20000) { subscribe(); loadAll().then(() => refreshOpen(Object.values(TBL))).catch(() => {}); }
+  hiddenAt = 0;
+});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+
+/* =====================================================================
    시작
    ===================================================================== */
 (function init() {
@@ -1420,6 +1521,7 @@ setInterval(() => {
   const z = C.BIZ || {}, parts = [z.name && `상호 ${esc(z.name)}`, z.ceo && `대표 ${esc(z.ceo)}`, z.bizNo && `사업자등록번호 ${esc(z.bizNo)}`, z.mailOrderNo && `통신판매업 신고 ${esc(z.mailOrderNo)}`, z.address && esc(z.address), C.CS_PHONE && `고객센터 ${esc(C.CS_PHONE)}`, C.CS_EMAIL && esc(C.CS_EMAIL)].filter(Boolean);
   $('#foot').innerHTML = `<p><span class="font-display text-lg text-sea">한여름</span> Midsummer Cool Service · 서울 지역 서비스 중</p>${parts.length ? `<p>${parts.join(' · ')}</p>` : ''}<p>${C.TERMS_URL ? `<a class="underline" href="${esc(C.TERMS_URL)}" target="_blank" rel="noopener">이용약관</a>` : ''}${C.TERMS_URL && C.PRIVACY_URL ? ' · ' : ''}${C.PRIVACY_URL ? `<a class="underline font-bold" href="${esc(C.PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a>` : ''}</p><p>한여름은 고객과 기사·업체를 연결하는 중개 플랫폼이며, 작업과 거래의 당사자가 아니에요.</p><p>&copy; ${new Date().getFullYear()} Midsummer. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
+  netState(); if (isIOS()) setTimeout(instShow, 4000);
   if (!sb) { $('#setup-warn').classList.remove('hidden'); render(); return; }
   render();
   sb.auth.onAuthStateChange((ev, session) => {

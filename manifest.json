@@ -1,0 +1,17 @@
+{
+  "name": "한여름 - 에어컨·냉동고 매칭",
+  "short_name": "한여름",
+  "description": "서울 에어컨 설치·수리·청소, 중고 업소용 냉동·냉장고 매매·철거",
+  "lang": "ko",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F8FA",
+  "theme_color": "#0C2D48",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
