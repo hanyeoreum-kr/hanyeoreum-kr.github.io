@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한여름 | 시원함의 모든 것, 한여름에서 한 번에!</title>
+<meta name="description" content="서울 에어컨 설치·수리·청소, 중고 업소용 냉동고 매매·철거까지. 무료 견적 비교하고 안심하고 맡기세요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+if (window.tailwind) tailwind.config = {
+  theme: { extend: {
+    colors: { sea:'#0C2D48', ice:'#F2F8FA', mist:'#D9EBF1', cool:'#1AA7C7', sun:'#FF7A2F' },
+    fontFamily: { display:['"Black Han Sans"','sans-serif'], sans:['"Noto Sans KR"','sans-serif'] }
+  } }
+}
+</script>
+<style>
+  :where(.hidden) { display: none; }
+  html { scroll-behavior: smooth; }
+  section[id] { scroll-margin-top: 7rem; }
+  .heat { background: linear-gradient(180deg,#FFB27A 0%,#F2F8FA 38%,#BFE6F0 100%); }
+  .scale { background: repeating-linear-gradient(180deg,#0C2D48 0 2px,transparent 2px 22px); }
+  :focus-visible { outline: 3px solid #1AA7C7; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  input, select, textarea { font-size: 16px; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body class="bg-ice text-sea font-sans antialiased pb-20 md:pb-0">
+
+<header class="sticky top-0 z-30 bg-ice/90 backdrop-blur border-b border-mist">
+  <div class="mx-auto max-w-6xl flex items-center justify-between gap-2 px-4 sm:px-5 h-16">
+    <a href="#" data-act="home" class="font-display text-2xl tracking-tight shrink-0">한여름<span class="text-cool">.</span></a>
+    <nav id="nav" class="hidden lg:flex items-center gap-6 text-sm font-medium">
+      <a href="#market" data-act="mkt" class="font-bold text-cool hover:text-sea">냉동·냉장고 장터</a>
+      <a href="#pros" data-act="pros" class="font-bold text-cool hover:text-sea">기사찾기</a>
+      <a href="#pro" class="font-bold text-sun hover:text-sea">기사·업체 등록</a>
+      <a href="#services" class="hover:text-cool">서비스</a>
+      <a href="#process" class="hover:text-cool">이용 방법</a>
+      <a href="#safety" class="hover:text-cool">안심 보장</a>
+      <a href="#" data-act="cs" class="hover:text-cool">고객센터</a>
+    </nav>
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <button id="hdr-admin" type="button" data-act="admin" style="display:none" class="rounded-full bg-sun px-3 py-1.5 text-xs sm:text-sm font-bold text-white">관리자</button>
+      <button id="modesw" type="button" role="switch" aria-checked="false" data-act="modesw" style="display:none" class="inline-flex items-center gap-2 rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold"><span>기사 모드</span><span class="relative h-5 w-9 shrink-0 rounded-full bg-sea/30" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all" style="left:.125rem"></i></span></button>
+      <button id="hdr-bal" type="button" data-act="wallet" style="display:none" class="rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold whitespace-nowrap"></button>
+      <a id="hdr-quote" href="#quote" class="hidden sm:inline-block rounded-full bg-sea text-white text-xs sm:text-sm font-bold px-3 sm:px-5 py-2.5 hover:bg-cool transition-colors whitespace-nowrap">무료 견적 요청</a>
+      <span id="hdr-user" style="display:none" class="hidden md:inline text-sm font-bold"></span>
+      <button id="hdr-auth" type="button" data-act="auth" class="rounded-full border-2 border-sea px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold hover:bg-sea hover:text-white whitespace-nowrap">로그인/회원가입</button>
+    </div>
+  </div>
+  <div id="subnav" class="lg:hidden border-t border-mist">
+    <div class="mx-auto max-w-6xl flex gap-4 overflow-x-auto px-4 py-2 text-sm font-bold whitespace-nowrap text-sea/70">
+      <a href="#process" class="text-sea underline decoration-cool decoration-2 underline-offset-4">이용 방법</a>
+      <a href="#market" data-act="mkt" class="text-cool">냉동·냉장고 장터</a>
+      <a href="#pros" data-act="pros" class="text-cool">기사찾기</a>
+      <a href="#pro">기사·업체 등록</a>
+      <a href="#services">서비스</a>
+      <a href="#safety">안심 보장</a>
+      <a href="#" data-act="cs">고객센터</a>
+    </div>
+  </div>
+</header>
+
+<div id="setup-warn" class="hidden bg-sun text-white text-sm font-bold px-4 py-3 text-center">config.js에 Supabase 주소와 키를 넣어야 사이트가 작동해요.</div>
+
+<div id="cview">
+<main>
+<section class="heat relative overflow-hidden">
+  <div class="mx-auto max-w-6xl px-5 pt-7 pb-10 sm:pt-14 sm:pb-20 md:pt-24 md:pb-28 grid md:grid-cols-[1fr_auto] gap-10 items-center">
+    <div>
+      <p class="inline-block rounded-full bg-white/70 px-3 py-1 text-xs sm:px-4 sm:py-1.5 sm:text-sm font-medium">서울 지역 우선 오픈 · 고객 100% 무료</p>
+      <h1 class="font-display text-[2rem] sm:text-6xl md:text-7xl leading-[1.15] sm:leading-[1.08] mt-4 sm:mt-6">시원함의 모든 것,<br>한여름에서 한 번에!</h1>
+      <p class="mt-3 sm:mt-6 max-w-md text-[15px] sm:text-lg leading-relaxed text-sea/80">에어컨 설치·수리·청소부터 업소용 냉동고 매매·철거까지.<span class="hidden sm:inline"> 견적 한 번 남기면 기사님들의 가격이 모입니다.</span></p>
+      <form id="quick" class="mt-5 grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto] gap-2 max-w-2xl bg-white rounded-2xl p-2.5 shadow-lg" aria-label="빠른 견적 요청">
+        <label class="sr-only" for="svc">서비스 종류</label>
+        <select id="svc" class="rounded-xl bg-ice px-3 py-2.5 text-sm font-medium truncate">
+          <option>에어컨 설치</option><option>에어컨 수리</option><option>에어컨 청소</option>
+          <option>중고 냉동고 매매</option><option>냉장·냉동고 철거</option>
+        </select>
+        <label class="sr-only" for="gu">지역</label>
+        <select id="gu" class="rounded-xl bg-ice px-3 py-2.5 text-sm font-medium truncate"></select>
+        <button type="submit" class="col-span-2 sm:col-span-1 rounded-xl bg-sun text-white font-bold text-sm py-3 px-5 hover:brightness-95">견적 요청하기</button>
+      </form>
+      <p class="mt-2 sm:mt-3 text-xs sm:text-sm text-sea/70">견적 요청은 무료이며, 마음에 드는 기사님을 직접 고르세요.</p>
+      <div class="mt-3 sm:mt-4 flex flex-wrap gap-2">
+        <a href="#process" class="rounded-full bg-sea px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white hover:bg-cool">서비스 이용방법</a>
+        <button type="button" data-act="pros" class="rounded-full bg-white/80 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold hover:bg-white">기사 찾아보기</button>
+        <button type="button" data-act="mkt" class="rounded-full bg-white/80 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold hover:bg-white">중고 장터</button>
+      </div>
+    </div>
+    <div class="hidden md:flex items-stretch gap-4 h-80 select-none" aria-hidden="true">
+      <div class="flex flex-col justify-between text-right font-display"><span class="text-5xl text-sun">36°</span><span class="text-5xl text-cool">24°</span></div>
+      <div class="scale w-6 rounded-full"></div>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+  <h2 class="font-display text-3xl md:text-4xl">어떤 시원함이 필요하세요?</h2>
+  <div class="mt-8 sm:mt-10 grid md:grid-cols-2 gap-6">
+    <article class="rounded-3xl bg-white p-6 sm:p-8 border border-mist">
+      <h3 class="text-2xl font-bold">에어컨</h3>
+      <p class="mt-2 text-sea/75">가정·매장 모두 가능해요. 작업 종류만 고르면 견적이 도착합니다.</p>
+      <ul class="mt-6 grid grid-cols-3 gap-3 text-center font-bold">
+        <li><a href="#quote" data-svc="aircon_install" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">설치</a></li>
+        <li><a href="#quote" data-svc="aircon_repair" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">수리</a></li>
+        <li><a href="#quote" data-svc="aircon_clean" class="block rounded-xl bg-mist py-5 hover:bg-cool hover:text-white">청소</a></li>
+      </ul>
+    </article>
+    <article class="rounded-3xl bg-sea text-white p-6 sm:p-8">
+      <h3 class="text-2xl font-bold">중고 업소용 냉장·냉동고</h3>
+      <p class="mt-2 text-white/75">폐업·리뉴얼 매장의 설비를 사고팔고, 철거까지 한 번에 연결해요.</p>
+      <ul class="mt-6 grid grid-cols-2 gap-3 text-center font-bold">
+        <li><a href="#quote" data-svc="freezer_sale" class="block rounded-xl bg-white/10 py-5 hover:bg-white hover:text-sea">매매</a></li>
+        <li><a href="#quote" data-svc="freezer_removal" class="block rounded-xl bg-white/10 py-5 hover:bg-white hover:text-sea">철거</a></li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section id="market" class="mx-auto max-w-6xl px-5 pb-16 sm:pb-20">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div><h2 class="font-display text-3xl md:text-4xl">냉동·냉장고 장터</h2>
+    <p class="mt-2 max-w-xl text-sea/75 leading-relaxed">고객과 매입 업체 모두 직거래와 매입 제안을 주고받을 수 있는 냉동·냉장고 전문 중고 장터예요. 일반 고객은 구매·판매 모두 무료예요.</p></div>
+    <div class="flex gap-2">
+      <button type="button" data-act="mkt" class="rounded-full border-2 border-sea font-bold px-5 py-2.5 text-sm hover:bg-sea hover:text-white">장터 전체 보기</button>
+      <button type="button" data-act="sellopen" class="rounded-full bg-sun text-white font-bold px-5 py-2.5 text-sm hover:brightness-95">판매글 올리기</button>
+    </div>
+  </div>
+  <div id="feed" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+  <div id="fpager" class="mt-6 flex items-center justify-center gap-4"></div>
+</section>
+
+<section id="process" class="bg-white border-y border-mist">
+  <div class="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+    <h2 class="font-display text-3xl md:text-4xl">이용 방법</h2>
+    <div class="mt-8 sm:mt-10 grid lg:grid-cols-2 gap-6">
+      <div class="rounded-3xl bg-ice p-6 sm:p-8">
+        <h3 class="text-2xl font-bold">고객 이용 흐름</h3>
+        <ol class="mt-6 space-y-5">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">1</span><div><p class="font-bold">견적 요청 · 기사 검색</p><p class="mt-1 text-sm opacity-75 leading-relaxed">서비스와 지역을 고르고 무료로 견적을 요청하거나, 기사찾기에서 프로필과 후기를 보고 직접 골라요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">2</span><div><p class="font-bold">안심 채팅 상담 · 계약</p><p class="mt-1 text-sm opacity-75 leading-relaxed">전화번호 공개 없이 사이트 채팅으로 가격과 일정을 조율하고, 마음에 드는 견적으로 계약해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cool text-white font-display">3</span><div><p class="font-bold">거래 확정 · 무상 A/S 보증</p><p class="mt-1 text-sm opacity-75 leading-relaxed">기사님이 작업 완료를 요청하면 확인하고 확정해요. 확인하지 않아도 정해진 시간 뒤 자동 확정되고, 무상 A/S 전자 보증서와 14일 재점검, 실거래 후기가 이어져요.</p></div></li>
+        </ol>
+        <div class="mt-6 flex flex-wrap gap-2">
+          <a href="#quote" class="rounded-full bg-sun px-5 py-2.5 text-sm font-bold text-white hover:brightness-95">견적 요청하기</a>
+          <button type="button" data-act="pros" class="rounded-full border-2 border-sea px-5 py-2 text-sm font-bold hover:bg-sea hover:text-white">기사 찾아보기</button>
+        </div>
+      </div>
+      <div class="rounded-3xl bg-sea p-6 sm:p-8 text-white">
+        <h3 class="text-2xl font-bold">기사·업체 이용 흐름</h3>
+        <ol class="mt-6 space-y-5">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">1</span><div><p class="font-bold">가입 · 승인</p><p class="mt-1 text-sm opacity-75 leading-relaxed">전문 분야와 활동 지역을 등록하고 사업자등록증을 올리면, 관리자가 확인 후 승인하고 인증 표시가 붙어요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">2</span><div><p class="font-bold">맞춤 견적 제출</p><p class="mt-1 text-sm opacity-75 leading-relaxed">들어온 요청에 무료로 견적을 제출해요. 거래가 확정될 때만 수수료가 선충전 예치금에서 자동 차감돼요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun text-white font-display">3</span><div><p class="font-bold">작업 수행 · 후기 관리</p><p class="mt-1 text-sm opacity-75 leading-relaxed">작업을 마무리하면 고객이 실거래 후기를 남기고, 평점이 프로필에 쌓여요.</p></div></li>
+        </ol>
+        <div class="mt-6"><button type="button" data-act="gopro" class="rounded-full bg-sun px-5 py-2.5 text-sm font-bold hover:brightness-95">기사·업체로 가입하기</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="safety" class="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+  <h2 class="font-display text-3xl md:text-4xl">한여름 안심보장 4대 시스템</h2>
+  <div class="mt-8 sm:mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">🧾</p><h3 class="mt-3 font-bold text-lg">전자 작업 내역서</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">계약하면 작업 내용과 금액이 담긴 안심 작업 내역서를 바로 발급해요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">🔁</p><h3 class="mt-3 font-bold text-lg">14일 재점검 중개</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">작업 후 14일 이내 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 연결해요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">💬</p><h3 class="mt-3 font-bold text-lg">번호 공개 없는 안심 채팅</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">내 전화번호를 알려주지 않고 사이트 채팅으로 상담하고 사진도 주고받아요.</p></div>
+    <div class="rounded-2xl border border-mist bg-white p-6"><p class="text-3xl" aria-hidden="true">⭐</p><h3 class="mt-3 font-bold text-lg">100% 실거래 후기</h3><p class="mt-2 text-sm leading-relaxed text-sea/75">거래가 확정된 고객만 후기를 남길 수 있어서 후기를 믿고 볼 수 있어요.</p></div>
+  </div>
+</section>
+
+<section id="pro" class="bg-sea text-white">
+  <div class="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+    <div class="grid md:grid-cols-2 gap-10 items-center">
+      <div>
+        <p class="inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-bold text-sun">기사님 · 업체 모집</p>
+        <h2 class="mt-4 font-display text-3xl md:text-4xl">견적·매입은 <span class="text-sun">0원</span>, 확정될 때만 수수료를 내요</h2>
+        <p class="mt-5 text-white/75 leading-relaxed max-w-md">견적을 아무리 많이 내도, 중고 매입을 제안해도 <b class="text-white">수수료 0원</b>이에요. 에어컨 서비스·철거·재고 매도가 <b class="text-white">확정될 때만</b> 미리 충전한 예치금에서 자동으로 차감돼요.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button type="button" data-act="gopro" class="rounded-full bg-sun font-bold px-7 py-3.5 text-sea hover:brightness-95">무료로 기사·업체 등록하기</button>
+          <a href="#pro-calc" class="rounded-full border-2 border-white/40 font-bold px-6 py-3 hover:bg-white/10">내 수수료 계산해 보기</a>
+        </div>
+        <p class="mt-3 text-sm text-white/60">가입비·월 이용료 없이 시작해요. 예치금은 확정 수수료로만 쓰여요.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="col-span-2 rounded-2xl bg-sun p-6 text-sea"><p class="text-sm font-bold">견적 제출 · 중고 매입 제안 · 고객 이용</p><p class="font-display text-5xl mt-2">수수료 0원</p><p class="mt-1 text-xs font-medium">확정되기 전까지는 한 푼도 내지 않아요</p></div>
+        <div class="rounded-2xl bg-white/10 p-6"><p class="text-sm text-white/70">에어컨 설치·수리·청소<br>거래 확정 시</p><p class="font-display text-4xl mt-2">3,000원</p><p class="mt-1 text-xs text-white/60">건당 정액</p></div>
+        <div class="rounded-2xl bg-white/10 p-6"><p class="text-sm text-white/70">냉장·냉동고 철거 · 재고 매도<br>확정 시</p><p class="font-display text-4xl mt-2">5%</p><p class="mt-1 text-xs text-white/60">확정 금액 기준 · 건당 최대 10만 원</p></div>
+      </div>
+    </div>
+    <ul class="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">🆓</p><h3 class="mt-2 font-bold">견적은 몇 번이든 무료</h3><p class="mt-1 text-sm leading-relaxed text-white/70">계약이 안 돼도 비용이 없어요. 부담 없이 여러 요청에 견적을 내 보세요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">🧾</p><h3 class="mt-2 font-bold">차감 내역이 투명해요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">충전·차감 내역이 예치금 화면에 건별로 남고, 잔액은 언제든 확인할 수 있어요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">⭐</p><h3 class="mt-2 font-bold">고객이 직접 골라요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">프로필·경력·포트폴리오·실거래 후기로 선택받아요. 가격 경쟁만 하지 않아도 돼요.</p></li>
+      <li class="rounded-2xl bg-white/10 p-5"><p class="text-2xl" aria-hidden="true">⏱️</p><h3 class="mt-2 font-bold">거래 확정이 늦어지지 않아요</h3><p class="mt-1 text-sm leading-relaxed text-white/70">작업 완료 요청 후 고객 응답이 없으면 정해진 시간 뒤 자동 확정돼요. 분쟁 신고 시에는 잠시 멈춰요.</p></li>
+    </ul>
+    <div class="mt-10 grid lg:grid-cols-[1.1fr_1fr] gap-6">
+      <div id="pro-calc" class="rounded-3xl bg-white p-6 text-sea sm:p-8">
+        <h3 class="font-display text-2xl">수수료 미리 계산해 보기</h3>
+        <p class="mt-1 text-sm text-sea/70">예상 거래 금액을 넣으면 확정 시 차감되는 수수료를 바로 알려드려요.</p>
+        <label for="fc-svc" class="mt-5 block text-sm font-bold">서비스 종류</label>
+        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 설치·수리·청소</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 매도</option><option value="freezer_sale">중고 매입</option></select>
+        <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
+        <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+        <div class="mt-5 rounded-2xl bg-ice p-5" aria-live="polite"><p class="text-sm text-sea/70">확정 시 차감 수수료</p><p id="fc-out" class="font-display text-4xl text-sea">3,000원</p><p id="fc-note" class="mt-1 text-sm text-sea/70"></p></div>
+      </div>
+      <div class="rounded-3xl bg-white/10 p-6 sm:p-8">
+        <h3 class="font-display text-2xl">3단계면 바로 시작해요</h3>
+        <ol class="mt-5 space-y-4">
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">1</span><div><p class="font-bold">기사·업체로 가입</p><p class="text-sm text-white/70">이메일로 가입하고 사업자등록증을 올리면 확인 후 승인해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">2</span><div><p class="font-bold">예치금 충전</p><p class="text-sm text-white/70">확정 수수료로 쓸 만큼만 충전해요. 1만 원부터 가능해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-display text-sea">3</span><div><p class="font-bold">견적 제출</p><p class="text-sm text-white/70">내 지역·분야의 열린 요청에 무료로 견적을 보내요.</p></div></li>
+        </ol>
+        <button type="button" data-act="gopro" class="mt-6 w-full rounded-full bg-sun py-3.5 font-bold text-sea hover:brightness-95">지금 무료로 시작하기</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="quote" class="mx-auto max-w-6xl px-5 py-16 sm:py-20 text-center">
+  <h2 class="font-display text-4xl md:text-5xl">올여름, 가장 시원한 선택</h2>
+  <p class="mt-4 text-sea/75">지금 견적을 요청하고 서울 기사님들의 가격을 비교해 보세요.</p>
+  <a href="#quote" class="inline-block mt-8 rounded-full bg-sun text-white font-bold text-lg px-10 py-4 hover:brightness-95">무료 견적 요청하기</a>
+</section>
+</main>
+
+<footer class="border-t border-mist">
+  <div id="foot" class="mx-auto max-w-6xl px-5 py-10 text-xs sm:text-sm text-sea/70 space-y-2"></div>
+</footer>
+</div>
+
+<section id="pview" class="hidden mx-auto max-w-6xl px-5 py-10 pb-28"></section>
+
+<section id="fview" class="hidden">
+  <div class="sm:sticky sm:top-16 z-20 bg-white border-b border-mist">
+    <div class="mx-auto max-w-5xl px-4 sm:px-5 py-2 sm:py-3">
+      <div class="flex items-center gap-1">
+        <button type="button" data-act="back" aria-label="메인 화면으로 돌아가기" class="h-9 w-9 rounded-full hover:bg-ice text-xl">←</button>
+        <h1 class="font-display text-lg sm:text-xl">기사찾기</h1><span id="pcount" class="ml-auto text-sm text-sea/60"></span>
+      </div>
+      <div class="mt-2 grid grid-cols-3 gap-1.5 sm:gap-2">
+        <label for="fs" class="sr-only">전문 분야</label><select id="fs" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"></select>
+        <label for="fg" class="sr-only">활동 지역</label><select id="fg" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"></select>
+        <label for="fsort" class="sr-only">정렬</label><select id="fsort" class="min-w-0 rounded-xl bg-ice px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium"><option value="rating">별점순</option><option value="reviews">리뷰순</option><option value="new">신규순</option></select>
+      </div>
+      <div id="fchips" class="mt-1.5"></div>
+    </div>
+  </div>
+  <div class="mx-auto max-w-5xl px-4 sm:px-5 pb-28"><div id="prows" class="mt-3 sm:mt-6 grid sm:grid-cols-2 gap-3 sm:gap-4"></div></div>
+</section>
+
+<section id="mview" class="hidden">
+  <div class="sm:sticky sm:top-16 z-20 bg-white border-b border-mist">
+    <div class="mx-auto max-w-3xl px-4 sm:px-5 py-2 sm:py-3">
+      <div class="flex items-center gap-1">
+        <button type="button" data-act="back" aria-label="메인 화면으로 돌아가기" class="h-9 w-9 rounded-full hover:bg-ice text-xl">←</button>
+        <h1 class="font-display text-lg sm:text-xl">냉동·냉장고 장터</h1>
+        <button type="button" data-act="sellopen" class="ml-auto rounded-full bg-sun text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 hover:brightness-95">+ 판매글</button>
+      </div>
+      <div class="mt-2 flex gap-1.5 sm:gap-2">
+        <label for="mq" class="sr-only">장터 검색</label>
+        <input id="mq" type="search" placeholder="제품명, 지역, 키워드로 검색" class="min-w-0 flex-1 rounded-xl bg-ice px-3 sm:px-4 py-2 sm:py-2.5">
+        <label for="msort" class="sr-only">정렬</label>
+        <select id="msort" class="shrink-0 rounded-xl bg-ice px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium"><option value="new">최신순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option></select>
+      </div>
+      <div class="-mx-4 sm:mx-0 mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap px-4 sm:px-0 pb-0.5 sm:flex-wrap">
+        <div id="mtabs" class="flex shrink-0 gap-1.5"></div><span class="h-5 w-px shrink-0 bg-mist" aria-hidden="true"></span><div id="mchips" class="flex shrink-0 gap-1.5"></div>
+      </div>
+    </div>
+  </div>
+  <div class="mx-auto max-w-3xl px-4 sm:px-5 pb-28"><p id="mcount" class="mt-2 sm:mt-4 text-xs sm:text-sm text-sea/60"></p><div id="mrows"></div></div>
+</section>
+
+<!-- 견적 요청 멀티스텝 모달 -->
+<div id="qm" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="qm-title">
+  <div class="absolute inset-0 bg-sea/60" data-close></div>
+  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl flex flex-col max-h-[92vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl">
+    <div class="px-6 pt-5 pb-4 border-b border-mist">
+      <div class="flex items-center justify-between">
+        <h2 id="qm-title" class="font-display text-2xl">무료 견적 요청</h2>
+        <button type="button" data-close aria-label="닫기" class="h-10 w-10 rounded-full hover:bg-ice text-2xl leading-none">&times;</button>
+      </div>
+      <div id="qm-bar" class="mt-4 grid grid-cols-4 gap-2" aria-hidden="true"><i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i><i class="h-1.5 rounded-full bg-mist"></i></div>
+      <p id="qm-label" class="mt-2 text-sm text-sea/70"></p>
+    </div>
+    <div class="overflow-y-auto px-6 py-6">
+      <section data-step="1"><h3 class="text-xl font-bold">어떤 서비스가 필요하세요?</h3><div id="qm-services" class="mt-5 space-y-5"></div></section>
+      <section data-step="2" class="hidden">
+        <h3 class="text-xl font-bold">어디에서, 언제 필요하세요?</h3>
+        <label for="qm-gu" class="block mt-5 text-sm font-bold">서울시 구</label>
+        <select id="qm-gu" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">구를 선택하세요</option></select>
+        <label for="qm-date" class="block mt-5 text-sm font-bold">작업 희망일</label>
+        <input id="qm-date" type="date" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+        <p class="mt-2 text-xs text-sea/60">정확한 시간은 기사님과 채팅으로 조율해요.</p>
+      </section>
+      <section data-step="3" class="hidden">
+        <h3 class="text-xl font-bold">상태를 알려주시면 견적이 더 정확해져요</h3>
+        <p class="mt-1 text-sm text-sea/70">사진과 요청사항은 선택이에요. 사진은 최대 5장까지 올릴 수 있어요.</p>
+        <label class="mt-5 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-8 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool">
+          <span class="font-bold">사진 추가하기</span><span class="text-xs text-sea/60">실외기, 제품 라벨, 설치 장소를 찍어주세요</span>
+          <input id="qm-file" type="file" accept="image/*" multiple class="sr-only">
+        </label>
+        <ul id="qm-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
+        <label for="qm-details" class="block mt-5 text-sm font-bold">세부 요청사항</label>
+        <textarea id="qm-details" rows="4" maxlength="500" placeholder="예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 resize-none"></textarea>
+        <p id="qm-count" class="text-right text-xs text-sea/60">0 / 500</p>
+      </section>
+      <section data-step="4" class="hidden text-center py-4">
+        <div class="mx-auto h-16 w-16 rounded-full bg-cool/15 grid place-items-center"><svg viewBox="0 0 24 24" class="h-8 w-8 text-cool" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h3 class="mt-5 font-display text-3xl">견적 요청이 접수됐어요</h3>
+        <p class="mt-4 text-sea/75 leading-relaxed">지역 기사님들이 요청을 확인하고 견적을 보내요.<br>도착한 견적은 '내 요청'에서 확인할 수 있어요.</p>
+        <dl id="qm-summary" class="mt-6 rounded-2xl bg-ice p-5 text-left text-sm space-y-2"></dl>
+      </section>
+      <p id="qm-err" role="alert" class="mt-4 text-sm font-bold text-red-600 hidden"></p>
+    </div>
+    <div class="px-6 py-4 border-t border-mist flex gap-3">
+      <button type="button" id="qm-back" class="rounded-xl border-2 border-mist px-5 py-3 font-bold hover:bg-ice">이전</button>
+      <button type="button" id="qm-next" class="flex-1 rounded-xl bg-sea text-white font-bold px-5 py-3 hover:bg-cool transition-colors disabled:opacity-60">다음</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공용 모달 -->
+<div id="mm" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true" aria-label="한여름">
+  <div class="absolute inset-0 bg-sea/60" data-mclose></div>
+  <div id="mm-body" class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-xl max-h-[92vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6"></div>
+</div>
+
+<!-- 거래 확정 직후 후기 팝업 -->
+<div id="rm" class="fixed inset-0 z-[65] hidden" role="dialog" aria-modal="true" aria-labelledby="rm-title">
+  <div class="absolute inset-0 bg-sea/60" data-rmclose></div>
+  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:m-auto sm:h-fit sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl p-6">
+    <div class="text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-sun/20 text-2xl mb-3" aria-hidden="true">⭐</div>
+      <h3 id="rm-title" class="font-display text-2xl">거래가 확정되었습니다!</h3>
+      <p class="mt-2 text-sm text-sea/70">서비스는 만족스러우셨나요?<br>솔직한 후기를 남겨 주세요.</p>
+    </div>
+    <div class="mt-5 flex justify-center gap-2 text-3xl" id="rm-stars" role="group" aria-label="별점"></div>
+    <textarea id="rm-text" rows="3" maxlength="200" aria-label="후기" class="mt-4 w-full rounded-xl bg-ice p-3 text-sm" placeholder="기사님의 친절도, 작업 품질에 대한 솔직한 후기를 남겨주세요."></textarea>
+    <div class="mt-5 flex gap-2">
+      <button type="button" data-rmclose class="w-1/3 rounded-xl border border-mist py-3 text-sm font-bold text-sea/60">다음에 하기</button>
+      <button type="button" id="rm-submit" class="w-2/3 rounded-xl bg-sun text-white py-3 text-sm font-bold hover:brightness-95">후기 남기기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모바일 하단 바 -->
+<div id="mbar" class="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center gap-3 border-t border-mist bg-white px-4 py-2.5 shadow-lg">
+  <button id="mbar-bal" type="button" data-act="wallet" style="display:none" class="shrink-0 rounded-xl bg-mist px-3 py-3 text-sm font-bold whitespace-nowrap">예치금</button>
+  <button id="mbar-menu" type="button" data-act="menu" class="shrink-0 rounded-xl border-2 border-mist px-3.5 py-2.5 text-sm font-bold">내 요청</button>
+  <a id="mbar-quote" href="#quote" class="flex-1 rounded-xl bg-sea py-3 text-center text-sm font-bold text-white shadow-md active:bg-cool">⚡ 무료 견적 신청하기</a>
+</div>
+<button id="fab" type="button" data-act="menu" class="hidden md:block fixed bottom-5 right-5 z-40 rounded-full bg-sea text-white font-bold px-6 py-4 shadow-xl hover:bg-cool"></button>
+<div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=4"></script>
+<script src="app.js?v=4"></script>
+</body>
+</html>
