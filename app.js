@@ -205,7 +205,7 @@ async function onSession(session) {
 }
 function updateAuthUI() {
   const u = S.user, nm = S.profile ? S.profile.name : (u ? (u.email || '').split('@')[0] : '');
-  $('#hdr-auth').textContent = u ? '로그아웃' : '로그인/회원가입';
+  $('#hdr-auth').textContent = u ? '로그아웃' : '로그인/회원가입'; $('#hdr-auth').classList.toggle('hidden', !!u);
   $('#hdr-user').style.display = u ? '' : 'none'; $('#hdr-user').textContent = u ? nm + '님' : '';
   const sw = $('#modesw'), on = S.mode === 'pro';
   sw.style.display = isPro() || S.admin ? 'inline-flex' : 'none'; sw.setAttribute('aria-checked', on);
@@ -402,7 +402,19 @@ function showView(v) {
   $('#pview').classList.toggle('hidden', c);
   $('#nav').classList.toggle('lg:flex', main);
   $('#subnav').classList.toggle('hidden', !main);
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0); tabState();
+}
+/* 휴대폰 하단 탭: 지금 보는 화면 표시 · 알림 숫자 */
+function tabState() { document.querySelectorAll('#mbar-c [data-tab]').forEach(b => b.toggleAttribute('aria-current', S.mode === 'customer' && b.dataset.tab === S.view)); document.querySelectorAll('#mbar-c [aria-current]').forEach(b => b.setAttribute('aria-current', 'page')); }
+function setBadge(el, n) { if (!el) return; let b = el.querySelector('.tbadge'); if (!n) { if (b) b.remove(); return; } if (!b) { b = document.createElement('i'); b.className = 'tbadge absolute top-1 left-1/2 ml-1.5 min-w-[18px] rounded-full bg-sun px-1 text-center text-[10px] not-italic leading-[18px] text-white'; el.append(b); } b.textContent = n > 9 ? '9+' : n; }
+/* 휴대폰 전체 메뉴 (☰) */
+function navMenu() {
+  const it = (attrs, t, cls = '') => `<button type="button" ${attrs} class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice ${cls}">${t}<span class="text-sea/30" aria-hidden="true">›</span></button>`;
+  openM(head('전체 메뉴') + `<div class="-mx-2 divide-y divide-mist">
+    <div class="py-1">${it('data-act="mkt"', '냉동·냉장고 장터', 'text-cool')}${it('data-act="pros"', '기사찾기', 'text-cool')}${it('data-act="navgo" data-id="#pro"', '기사·업체 등록', 'text-sun')}</div>
+    <div class="py-1">${it('data-act="navgo" data-id="#process"', '이용 방법')}${it('data-act="navgo" data-id="#services"', '서비스 안내')}${it('data-act="navgo" data-id="#safety"', '안심 보장')}${it('data-act="cs"', '고객센터')}</div>
+    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
+    ${S.user ? `<p class="mt-3 px-2 text-xs text-sea/50">${esc((S.profile && S.profile.name) || S.user.email || '')}님으로 로그인 중</p>` : ''}`);
 }
 function openPros() { closeM(); if (S.mode !== 'customer') S.mode = 'customer', updateAuthUI(); showView('pros'); renderPros(); }
 function openMarket() { closeM(); if (S.mode !== 'customer') S.mode = 'customer', updateAuthUI(); showView('market'); renderMarket(); }
@@ -419,14 +431,14 @@ function render() {
   const n = !S.user ? 0 : cust ? myReqs().filter(r => r.status === 'open').length + S.con.filter(c => c.client_id === me() && c.status === 'pending').length : S.con.filter(c => c.provider_id === me() && c.status !== 'completed').length;
   const need = cust && S.con.some(c => c.client_id === me() && c.status === 'pending');
   $('#fab').innerHTML = (cust ? '내 요청 관리' : '내 견적·계약') + (n ? ` <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">${n}</span>` : '') + (need ? ' <span class="ml-1 rounded-full bg-white px-2 py-0.5 text-xs text-sea">확인 필요</span>' : '') + (cust && unreadN() ? ' <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">새 답변</span>' : '');
-  $('#mbar-menu').innerHTML = (cust ? '내 요청' : '견적·계약') + (n ? ` <span class="ml-0.5 rounded-full bg-sun px-1.5 text-xs text-white">${n}</span>` : '');
+  setBadge($('#mbar-menu'), cust ? n + (S.user ? unreadN() : 0) : 0); setBadge($('#mbar-pmenu'), cust ? 0 : n);
   $('#fab').style.display = S.mode === 'admin' ? 'none' : '';
   $('#mbar').style.display = S.mode === 'admin' ? 'none' : '';
   if ($('#inst').style.display !== 'none') instPlace();
   const proMode = S.mode === 'pro', bal = S.pro ? won(S.pro.balance) : '';
   $('#hdr-bal').style.display = proMode && approved() ? '' : 'none'; $('#hdr-bal').textContent = '예치금 ' + bal;
-  $('#mbar-bal').style.display = proMode && approved() ? '' : 'none'; $('#mbar-bal').textContent = '예치금 ' + bal;
-  $('#mbar-quote').style.display = cust ? '' : 'none';
+  $('#mbar-bal').style.display = proMode && approved() ? '' : 'none';
+  $('#mbar-c').classList.toggle('hidden', !cust); $('#mbar-p').classList.toggle('hidden', cust); $('#mbar-p').classList.toggle('grid', !cust); tabState();
   $('#hdr-quote').style.display = cust ? '' : 'none';
   renderFeed();
   if (S.view === 'market' && cust) renderMarket();
@@ -1327,6 +1339,8 @@ const ACT = {
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
+  navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
+  navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
   notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(14),
   wallet: () => walletModal(), chargego: (id, el) => chargeGo(el),
   mypage: () => mypageModal(), profedit: profModal, pesave: (id, el) => peSave(el),
@@ -1477,6 +1491,13 @@ function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy
 async function installApp() {
   if (PWA.prompt) { PWA.prompt.prompt(); const r = await PWA.prompt.userChoice.catch(() => ({})); PWA.prompt = null; instHide(r.outcome === 'accepted' ? 365 : 7); return; }
   instHide(3);
+  if (!isIOS()) return openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
+    <ol class="mt-4 space-y-3 text-sm">
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">1</span><span>오른쪽 위(삼성 인터넷은 아래)의 <b>메뉴 버튼</b> <span class="inline-block rounded border border-mist px-1.5">⋮</span> 또는 <span class="inline-block rounded border border-mist px-1.5">≡</span> 을 눌러요</span></li>
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">2</span><span><b>‘홈 화면에 추가’</b> 또는 <b>‘앱 설치’</b>를 눌러요</span></li>
+      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">3</span><span><b>‘추가’</b> 또는 <b>‘설치’</b>를 누르면 끝!</span></li>
+    </ol>
+    <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
   openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
     <p class="mt-2 text-sm text-sea/70">아이폰은 <b>사파리</b>에서만 추가할 수 있어요.</p>
     <ol class="mt-4 space-y-3 text-sm">
