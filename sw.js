@@ -1,7 +1,7 @@
 /* 한여름 서비스워커 — 항상 최신 화면을 먼저 받고, 인터넷이 끊겼을 때만 저장본을 보여줘요. */
-const CACHE = 'hy-v5';
+const CACHE = 'hy-v6';
 const CDN = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
-const CORE = ['./', 'index.html', 'app.js?v=5', 'config.js?v=5', 'manifest.json', 'icon-192.png', 'icon-512.png', 'terms.html', 'privacy.html', 'legal.css'];
+const CORE = ['./', 'index.html', 'app.js?v=6', 'config.js?v=6', 'manifest.json', 'icon-192.png', 'icon-512.png', 'terms.html', 'privacy.html', 'legal.css'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}));

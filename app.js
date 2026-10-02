@@ -274,6 +274,7 @@ async function asignup(el) {
     if (pro) Object.assign(data, { fields:[v.field || SPEC[0]], areas:[...au.areas], certs:[...au.certs], free:au.free });
     const { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
     if (error) return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error));
+    track('signup');
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false };
     if (res && res.session) { closeM(); toast(pro ? '가입했어요. 기사 화면에서 사업자등록증을 올려 주세요.' : '가입을 환영해요!'); return; }
     openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 기사 회원은 인증 후 로그인해서 사업자등록증을 올려 주세요. 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
@@ -403,6 +404,7 @@ function showView(v) {
   $('#nav').classList.toggle('lg:flex', main);
   $('#subnav').classList.toggle('hidden', !main);
   window.scrollTo(0, 0); tabState();
+  if (S.mode === 'customer') setTimeout(() => track('view', v), 1500);
 }
 /* 휴대폰 하단 탭: 지금 보는 화면 표시 · 알림 숫자 */
 function tabState() { document.querySelectorAll('#mbar-c [data-tab]').forEach(b => b.toggleAttribute('aria-current', S.mode === 'customer' && b.dataset.tab === S.view)); document.querySelectorAll('#mbar-c [aria-current]').forEach(b => b.setAttribute('aria-current', 'page')); }
@@ -450,7 +452,11 @@ function render() {
 /* =====================================================================
    장터 (메인 미리보기 · 전용 화면 · 상세 · 판매 · 제안)
    ===================================================================== */
-let fp = 0, fpages = 1, ldetCur = null, sellKind = 'normal', sp = [];
+let fp = 0, fpages = 1, ldetCur = null, sellKind = 'normal', sp = [], sellBulk = false, bk = [];
+/* 일괄 판매: 자주 파는 종목 */
+const ITEMS = ['업소용 냉장고(4도어)', '업소용 냉동고', '냉장·냉동 겸용', '테이블 냉장고', '쇼케이스', '반찬 냉장고(밧드)', '음료 냉장고', '아이스크림 냉동고', '김치냉장고', '제빙기', '에어컨'];
+const itemsOf = l => Array.isArray(l.items) ? l.items : [];
+const itemsN = l => itemsOf(l).reduce((t, x) => t + (+x.q || 0), 0);
 const MK = { q:'', grades:new Set(), sort:'new', tab:'all', free:false };
 const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('hy_fav') || '[]'); } catch (_) { return []; } })());
 const saveFav = () => { try { localStorage.setItem('hy_fav', JSON.stringify([...FAV])); } catch (_) {} };
@@ -460,7 +466,7 @@ const favBtn = id => `<button type="button" data-act="fav" data-id="${id}" aria-
 const sellerFree = l => l.kind === 'stock' && !!(proPub(l.seller_id) || {}).free;
 const thumb = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="aspect-[4/3] w-full object-cover">` : '<div class="aspect-[4/3] grid place-items-center bg-mist text-5xl" aria-hidden="true">❄️</div>';
 const thumbSq = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="h-full w-full object-cover">` : '<span class="grid h-full w-full place-items-center bg-mist text-4xl" aria-hidden="true">❄️</span>';
-const badge = l => `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${sellerFree(l) ? FREE_CHIP : ''}`;
+const badge = l => `${itemsOf(l).length ? `<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">일괄 ${itemsN(l)}대</span>` : ''}<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${sellerFree(l) ? FREE_CHIP : ''}`;
 const lstate = l => l.status === 'open' ? (l.seller_id === me() ? `받은 제안 ${S.off.filter(o => o.listing_id === l.id).length}건` : '판매 중') : l.status === 'sold' ? '거래 완료' : '판매 종료';
 const lcard = l => `<button type="button" data-act="ldet" data-id="${l.id}" class="text-left overflow-hidden rounded-2xl bg-white border border-mist hover:border-cool ${l.status !== 'open' ? 'opacity-60' : ''}">${thumb(l)}
   <div class="p-3 sm:p-4"><div class="flex flex-wrap items-center gap-1.5">${badge(l)}</div><p class="mt-1 text-xs text-sea/60">서울 ${esc(l.gu)} · ${l.years}년 사용</p>
@@ -488,7 +494,7 @@ function renderMarket() {
   if (MK.tab === 'fav') rows = rows.filter(l => FAV.has(l.id));
   if (MK.grades.size) rows = rows.filter(l => MK.grades.has(l.grade));
   if (MK.free) rows = rows.filter(sellerFree);
-  if (MK.q) rows = rows.filter(l => (l.title + ' ' + l.descr + ' ' + l.gu + ' ' + l.loc).toLowerCase().includes(MK.q));
+  if (MK.q) rows = rows.filter(l => (l.title + ' ' + l.descr + ' ' + l.gu + ' ' + l.loc + ' ' + itemsOf(l).map(x => x.n).join(' ')).toLowerCase().includes(MK.q));
   rows.sort(MK.sort === 'low' ? (a, b) => a.price - b.price : MK.sort === 'high' ? (a, b) => b.price - a.price : (a, b) => b.id - a.id);
   $('#mcount').textContent = `${rows.length}개의 판매글`;
   $('#mrows').innerHTML = rows.map(mrow).join('') || `<div class="mt-6">${empty(MK.tab === 'mine' ? (S.user ? '아직 올린 판매글이 없어요. “+ 판매글”로 첫 글을 올려 보세요.' : '로그인하면 내 판매글을 볼 수 있어요.') : MK.tab === 'fav' ? '🤍를 눌러 마음에 드는 판매글을 담아 보세요.' : '조건에 맞는 판매글이 없어요.')}</div>`;
@@ -511,40 +517,67 @@ function ldet(id, keep) {
   openM(head(esc(l.title)) + (l.photos && l.photos.length ? `<div class="flex gap-2 overflow-x-auto">${l.photos.map(u => `<img src="${esc(u)}" alt="판매 사진" class="h-44 rounded-xl object-cover">`).join('')}</div>` : thumb(l)) + `
     <div class="mt-3 flex items-center justify-between"><p class="font-display text-3xl">${won(l.price)}</p>${favBtn(l.id)}</div>
     <div class="mt-2 flex flex-wrap gap-2 text-xs">${badge(l)}${ch(GR[l.grade][1])}${ch(l.years + '년 사용')}${ch('엘리베이터 ' + yn(l.elev))}${ch('사다리차 ' + (l.ladder ? '가능' : '불가'))}</div>
-    <p class="mt-3 text-sm text-sea/70">서울 ${esc(l.gu)}${l.loc ? ' · ' + esc(l.loc) : ''} · ${ago(l.created_at)}</p>${l.descr ? `<p class="mt-2 leading-relaxed whitespace-pre-wrap">${esc(l.descr)}</p>` : ''}` + foot, keep);
+    ${itemsOf(l).length ? `<div class="mt-4 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">일괄 판매 구성 · 총 ${itemsN(l)}대</p><ul class="mt-2 space-y-1 text-sm">${itemsOf(l).map(x => `<li class="flex justify-between gap-3"><span>${esc(x.n)}</span><b class="tabular-nums">${+x.q}대</b></li>`).join('')}</ul><p class="mt-2 text-xs text-sea/60">표시된 가격은 전체를 한 번에 사는 가격이에요.</p></div>` : ''}
+    <p class="mt-3 text-sm text-sea/70">서울 ${esc(l.gu)}${l.loc ? ' · ' + esc(l.loc) : ''} · ${ago(l.created_at)}</p>${l.descr ? `<p class="mt-2 leading-relaxed whitespace-pre-wrap">${esc(l.descr)}</p>` : ''}` + foot + sellerMore(l), keep);
   menuCur = 'ldet';
 }
+function sellerMore(l) {
+  const more = S.lst.filter(x => x.seller_id === l.seller_id && x.id !== l.id && x.status === 'open').slice(0, 6);
+  if (!more.length) return '';
+  return `<h3 class="mt-6 font-bold">${l.seller_id === me() ? '내 다른 판매글' : '이 판매자의 다른 물건'} ${more.length}개</h3><div class="mt-2 flex gap-2 overflow-x-auto pb-1">${more.map(x => `<button type="button" data-act="ldet" data-id="${x.id}" class="w-32 shrink-0 overflow-hidden rounded-xl border border-mist text-left"><span class="block h-20 overflow-hidden">${thumbSq(x)}</span><span class="block px-2 pt-1.5 text-xs font-bold line-clamp-1">${esc(x.title)}</span><span class="block px-2 pb-2 text-xs text-sea/70">${won(x.price)}</span></button>`).join('')}</div>${l.seller_id === me() ? '' : '<p class="mt-2 text-xs text-sea/60">여러 개를 함께 사고 싶다면 제안 메시지에 적어 주세요.</p>'}`;
+}
+function bkDraw() {
+  const box = $('#bk-box'); if (!box) return;
+  box.classList.toggle('hidden', !sellBulk);
+  document.querySelectorAll('[data-act="smode"]').forEach(b => { const on = (b.dataset.id === 'bulk') === sellBulk; b.setAttribute('aria-pressed', on); b.className = `rounded-xl py-3 text-sm font-bold ${on ? 'bg-sea text-white' : 'text-sea/60'}`; });
+  $('#sl-title-l').textContent = sellBulk ? '판매글 제목 (비워 두면 자동으로 만들어요)' : '제품명';
+  $('#sl-price-l').textContent = sellBulk ? '일괄 희망 가격 · 전체 합계(원)' : '희망 판매 가격(원)';
+  $('#sl-years-l').textContent = sellBulk ? '평균 사용 연식(년)' : '사용 연식(년)';
+  $('#bk-chips').innerHTML = ITEMS.map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
+  $('#bk-list').innerHTML = bk.length ? bk.map((x, i) => `<li class="flex items-center gap-2 rounded-xl bg-white px-3 py-2"><span class="min-w-0 flex-1 truncate text-sm font-bold">${esc(x.n)}</span>
+    <button type="button" data-act="bkq" data-id="${i}:-1" aria-label="${esc(x.n)} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold">−</button><span class="w-8 text-center font-bold tabular-nums">${x.q}</span><button type="button" data-act="bkq" data-id="${i}:1" aria-label="${esc(x.n)} 한 대 더하기" class="h-8 w-8 rounded-full bg-ice font-bold">+</button>
+    <button type="button" data-act="bkrm" data-id="${i}" aria-label="${esc(x.n)} 빼기" class="ml-1 text-xl leading-none text-sea/40">&times;</button></li>`).join('') + `<li class="px-1 pt-1 text-right text-sm font-bold">총 ${bk.reduce((t, x) => t + x.q, 0)}대 · ${bk.length}종목</li>` : '<li class="rounded-xl bg-white px-3 py-4 text-center text-sm text-sea/60">위에서 파실 물건 종목을 눌러 담아 주세요.</li>';
+}
+function bkAdd(n) { n = String(n || '').trim().slice(0, 30); if (!n) return; const f = bk.find(x => x.n === n); if (f) f.q = Math.min(f.q + 1, 99); else if (bk.length < 20) bk.push({ n, q:1 }); else return toast('종목은 20개까지 담을 수 있어요.'); bkDraw(); }
 function sellModal(kind) {
   if (needLogin('판매글은 로그인 후 올릴 수 있어요.')) return;
   if (kind === 'stock' && !approved()) return toast('승인된 기사·업체만 재고 판매글을 올릴 수 있어요.');
-  sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = [];
+  sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false;
   const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
   openM(head(sellKind === 'stock' ? '중고 재고 판매글 올리기' : '중고 냉동·냉장고 판매글') + `${sellKind === 'stock' ? '<p class="mb-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">거래가 확정되면 <b>거래금액의 5%(건당 최대 10만 원)</b>만 예치금에서 차감돼요.</p>' : ''}
-    <label class="flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
+    <div class="grid grid-cols-2 gap-1 rounded-2xl bg-ice p-1" role="group" aria-label="판매 방식"><button type="button" data-act="smode" data-id="one" aria-pressed="true" class="rounded-xl py-3 text-sm font-bold bg-sea text-white">한 대만 팔기</button><button type="button" data-act="smode" data-id="bulk" aria-pressed="false" class="rounded-xl py-3 text-sm font-bold text-sea/60">여러 대 일괄 판매</button></div>
+    <div id="bk-box" class="hidden mt-3 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">파실 물건을 모두 담아 주세요</p><p class="mt-0.5 text-xs text-sea/60">폐업·리뉴얼 매장은 한 번에 올리면 매입 업체 연락이 더 빨라요.</p>
+      <div id="bk-chips" class="mt-3 flex flex-wrap gap-1.5"></div>
+      <div class="mt-2 flex gap-2"><input id="bk-in" maxlength="30" placeholder="목록에 없으면 직접 입력 (예: 냉장 진열대)" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-sm"><button type="button" data-act="bkcustom" class="shrink-0 rounded-xl bg-sea px-3 text-sm font-bold text-white">담기</button></div>
+      <ul id="bk-list" class="mt-3 space-y-1.5"></ul></div>
+    <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
     <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
-    ${lab('sl-title', '제품명')}<input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
-    ${lab('sl-price', '희망 판매 가격(원)')}<input id="sl-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">
+    <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
+    <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label><input id="sl-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">
     <fieldset class="mt-4"><legend class="text-sm font-bold">제품 상태</legend><div class="mt-2 grid grid-cols-3 gap-2">${Object.keys(GR).map(k => `<label class="relative"><input type="radio" name="sg" value="${k}" class="peer sr-only"><span class="block rounded-xl border-2 border-mist py-3 text-center cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool"><b>${GR[k][0]}</b><br><span class="text-xs text-sea/60">${GR[k][1]}</span></span></label>`).join('')}</div></fieldset>
-    ${lab('sl-years', '사용 연식(년)')}<input id="sl-years" type="number" min="0" max="40" inputmode="numeric" placeholder="예) 3" class="${inp}">
+    <label id="sl-years-l" for="sl-years" class="block mt-4 text-sm font-bold">사용 연식(년)</label><input id="sl-years" type="number" min="0" max="40" inputmode="numeric" placeholder="예) 3" class="${inp}">
     ${lab('sl-gu', '매장 위치 (서울시 구)')}<select id="sl-gu" class="${inp}"><option value="">구를 선택하세요</option>${GU.map(g => `<option>${g}</option>`).join('')}</select>
     <input id="sl-loc" maxlength="40" aria-label="상세 위치" placeholder="상세 위치 예) 삼성역 인근 1층 (번지까지는 적지 마세요)" class="${inp}">
     <div class="mt-4 grid grid-cols-2 gap-3"><div><label for="sl-elev" class="text-sm font-bold">엘리베이터</label><select id="sl-elev" class="${inp}"><option value="">선택</option><option value="y">있음</option><option value="n">없음</option></select></div>
     <div><label for="sl-lad" class="text-sm font-bold">사다리차 이용</label><select id="sl-lad" class="${inp}"><option value="">선택</option><option value="y">가능</option><option value="n">불가</option></select></div></div>
     ${lab('sl-desc', '설명 (선택)')}<textarea id="sl-desc" rows="3" maxlength="300" class="${inp} resize-none"></textarea>${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('ssend', '', '판매글 올리기')}</div>`);
+  bkDraw();
 }
 function spThumbs() { const u = $('#sp-thumbs'); if (u) u.innerHTML = sp.map((f, i) => `<li class="relative aspect-square"><img src="${URL.createObjectURL(f)}" alt="판매 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-act="sprm" data-id="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join(''); }
 async function ssend(el) {
   const g = id => $(id).value.trim(), grade = document.querySelector('input[name="sg"]:checked')?.value, price = +$('#sl-price').value, years = $('#sl-years').value;
-  const err = !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
+  if (sellBulk && !g('#sl-title') && bk.length) $('#sl-title').value = (bk.length > 1 ? `${bk[0].n} 외 ${bk.length - 1}종 일괄 (총 ${bk.reduce((t, x) => t + x.q, 0)}대)` : `${bk[0].n} ${bk[0].q}대 일괄`).slice(0, 40);
+  const err = sellBulk && !bk.length ? '일괄 판매할 물건 종목을 담아 주세요.' : sellBulk && bk.length === 1 && bk[0].q < 2 ? '일괄 판매는 2대 이상일 때 써 주세요. 한 대면 ‘한 대만 팔기’를 눌러 주세요.' : !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
     : years === '' || +years < 0 ? '사용 연식을 입력해 주세요.' : !g('#sl-gu') ? '매장 위치(구)를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     el.textContent = '올리는 중...';
     const photos = await uploadAll(sp);
-    const { error } = await sb.from('listings').insert({ kind:sellKind, title:g('#sl-title'), price, grade, years:+years, gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', descr:g('#sl-desc'), photos });
+    const { error } = await sb.from('listings').insert({ kind:sellKind, title:g('#sl-title'), price, grade, years:+years, gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', descr:g('#sl-desc'), photos, items:sellBulk ? bk.map(x => ({ n:x.n, q:x.q })) : [] });
+    track('sell');
     if (error) throw error;
-    sp = []; closeM(); await load('lst'); fp = 0; render(); toast('판매글을 올렸어요.');
+    sp = []; bk = []; closeM(); await load('lst'); fp = 0; render(); toast('판매글을 올렸어요.');
   });
   if (el && document.body.contains(el)) el.textContent = '판매글 올리기';
 }
@@ -552,7 +585,7 @@ function offerModal(lid) {
   if (needLogin('제안은 로그인 후 할 수 있어요.')) return;
   const l = S.lst.find(x => x.id === +lid), asPro = S.mode === 'pro' && approved();
   if (asPro && S.pro.online === false) return toast('휴무 중에는 매입 제안을 낼 수 없어요.');
-  openM(head(asPro ? '매입 제안하기' : '구매 제안하기') + `<p class="text-sm"><b>${esc(l.title)}</b> · 희망가 ${won(l.price)}</p>
+  openM(head(asPro ? '매입 제안하기' : '구매 제안하기') + `<p class="text-sm"><b>${esc(l.title)}</b> · 희망가 ${won(l.price)}</p>${itemsOf(l).length ? `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm">일괄 판매 <b>${itemsN(l)}대 전체</b>에 대한 제안이에요.</p>` : ''}
     <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">${asPro ? '매입 제안은 <b>무료</b>이고 매입 수수료도 0원이에요.' : '구매자는 수수료가 없어요. 조건은 판매자와 채팅으로 조율해요.'}</p>
     <label for="op" class="block mt-4 text-sm font-bold">제안 금액(원)</label><input id="op" type="number" min="1000" step="1000" inputmode="numeric" value="${l.price}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
     <label for="od" class="block mt-4 text-sm font-bold">${asPro ? '철거/수거 가능일' : '거래 희망일'}</label><input id="od" type="date" min="${today()}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
@@ -683,6 +716,7 @@ async function qNext() {
   try {
     const photos = await uploadAll(qphotos.map(p => p.file));
     const { data, error } = await sb.from('requests').insert({ service:qform.service, gu:qform.district, wish_date:qform.date, details:qform.details, photos }).select('id').single();
+    if (!error) track('quote');
     if (error) throw error;
     const rows = [['요청 번호', reqCode(data.id)], ['서비스', SVC[qform.service]], ['지역', '서울 ' + qform.district], ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
@@ -1223,6 +1257,29 @@ async function inqDel(el, id) {
    ===================================================================== */
 let AF = 'ALL';
 const slaOver = i => { const t = Date.now(), c = T(i.created_at); return (i.status === 'RECEIVED' && t - c > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - c > SLA_ANS); };
+/* 관리자: 방문 통계 카드 */
+let VS = null, vsAt = 0;
+function loadVisits(force) {
+  if (!S.admin || (!force && Date.now() - vsAt < 60000)) return;
+  vsAt = Date.now();
+  rpc('admin_visit_stats', { p_days:14 }).then(d => { VS = d; if (S.mode === 'admin') adminView(); }).catch(() => { VS = { err:true }; if (S.mode === 'admin') adminView(); });
+}
+function visitCard() {
+  loadVisits();
+  const box = b => `<section class="mt-8 rounded-3xl border border-mist bg-white p-5 sm:p-6"><div class="flex flex-wrap items-baseline justify-between gap-2"><h2 class="text-xl font-bold">방문 통계</h2><span class="text-xs text-sea/50">운영자 본인 방문은 빼고 세요 · 최근 14일</span></div>${b}</section>`;
+  if (!VS) return box('<p class="mt-3 text-sm text-sea/60">불러오는 중...</p>');
+  if (VS.err) return box('<p class="mt-3 rounded-xl bg-sun/10 p-3 text-sm">방문 통계를 불러오지 못했어요. Supabase에서 <b>update_03.sql</b>을 실행했는지 확인해 주세요.</p>');
+  const days = VS.daily || [], mx = Math.max(1, ...days.map(d => d.visitors)), last = days.length - 1;
+  const bars = days.map((d, i) => { const h = Math.round(d.visitors / mx * 100), dd = String(d.day).slice(8, 10); return `<div class="flex min-w-0 flex-1 flex-col items-center gap-1" title="${esc(String(d.day))} 방문자 ${d.visitors}명 · 조회 ${d.views}회"><span class="text-[10px] tabular-nums ${i === last ? 'font-bold text-sea' : 'text-sea/50'}">${d.visitors || ''}</span><div class="flex h-24 w-full items-end"><div class="w-full rounded-t ${i === last ? 'bg-cool' : 'bg-cool/35'}" style="height:${d.visitors ? Math.max(h, 4) : 0}%"></div></div><span class="text-[10px] tabular-nums text-sea/50">${+dd}</span></div>`; }).join('');
+  const pg = VS.pages || {}, refs = VS.refs || [];
+  const mini = (t, v, sub) => `<div class="rounded-2xl bg-ice p-3"><p class="text-xs text-sea/60">${t}</p><p class="mt-0.5 font-display text-2xl tabular-nums">${v}</p>${sub ? `<p class="text-[11px] text-sea/50">${sub}</p>` : ''}</div>`;
+  return box(`<div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">${mini('오늘 방문자', (VS.today_visitors || 0) + '명', `조회 ${VS.today_views || 0}회`)}${mini('최근 7일 방문자', (VS.week_visitors || 0) + '명')}${mini('휴대폰으로 방문', (VS.mobile_pct || 0) + '%')}${mini('앱으로 설치해 사용', (VS.app_pct || 0) + '%', `새 설치 ${VS.week_install || 0}명`)}</div>
+    <div class="mt-5 flex items-end gap-1" role="img" aria-label="최근 14일 하루 방문자 수">${bars}</div>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      <div><h3 class="text-sm font-bold">어디서 왔나요 (7일)</h3><ul class="mt-2 space-y-1 text-sm">${refs.length ? refs.map(r => `<li class="flex justify-between gap-3"><span class="truncate">${esc(r.ref)}</span><b class="tabular-nums">${r.n}명</b></li>`).join('') : '<li class="text-sea/50">아직 기록이 없어요</li>'}</ul><p class="mt-2 text-[11px] leading-relaxed text-sea/50">홍보 링크 끝에 <b>?from=이름</b>을 붙이면 여기에 따로 보여요. 예) hanyeoreum-kr.github.io/?from=당근</p></div>
+      <div><h3 class="text-sm font-bold">최근 7일 실제 행동</h3><ul class="mt-2 space-y-1 text-sm"><li class="flex justify-between"><span>견적 요청</span><b class="tabular-nums">${VS.week_quote || 0}건</b></li><li class="flex justify-between"><span>회원가입</span><b class="tabular-nums">${VS.week_signup || 0}명</b></li><li class="flex justify-between"><span>판매글 등록</span><b class="tabular-nums">${VS.week_listing || 0}건</b></li><li class="flex justify-between text-sea/60"><span>장터 · 기사찾기 화면 조회</span><b class="tabular-nums">${pg.market || 0} · ${pg.pros || 0}회</b></li></ul></div>
+    </div>`);
+}
 function adminView() {
   if (!S.admin) { $('#pview').innerHTML = ''; return; }
   const open = S.inq.filter(i => i.status === 'RECEIVED' || i.status === 'IN_PROGRESS').length, over = S.inq.filter(slaOver).length, wait = S.con.filter(c => c.status === 'pending').length;
@@ -1235,6 +1292,7 @@ function adminView() {
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
+    ${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
@@ -1339,6 +1397,10 @@ const ACT = {
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
+  smode: id => { sellBulk = id === 'bulk'; bkDraw(); },
+  bkadd: id => bkAdd(ITEMS[+id]), bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
+  bkq: id => { const [i, d] = id.split(':').map(Number); const x = bk[i]; if (!x) return; x.q = Math.max(1, Math.min(99, x.q + d)); bkDraw(); },
+  bkrm: id => { bk.splice(+id, 1); bkDraw(); },
   navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
   navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
   notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(14),
@@ -1356,7 +1418,7 @@ const ACT = {
   mpprm: (i, el) => busy(el, async () => { const p = [...(S.pro.portfolio || [])]; p.splice(+i, 1); await savePro({ portfolio:p }); mypageModal(true); }),
   inqnew: () => inqForm(true), iqcat: k => { saveIq(); iq.cat = k; iq.cid = ''; inqForm(); }, inqsend: (id, el) => inqSend(el),
   inqdet: id => inqDetail(id), inqfu: (id, el) => inqFollow(el, id), inqdel: (id, el) => inqDel(el, id),
-  refresh: () => loadAll().then(() => toast('새로 불러왔어요.')),
+  refresh: () => { loadVisits(true); return loadAll().then(() => toast('새로 불러왔어요.')); },
   ifilt: k => { AF = k; render(); }, iadm: id => inqAdmin(id),
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
@@ -1386,6 +1448,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (!$('#rm').classList.contains('hidden')) return $('#rm').classList.add('hidden'); if (mmOpen()) return closeM(); if (!qm.classList.contains('hidden')) return closeQuote(); }
+  if (e.key === 'Enter' && e.target.id === 'bk-in' && !e.isComposing) { e.preventDefault(); return ACT.bkcustom(); }
   if (e.key === 'Enter' && e.target.id === 'chat-in' && !e.isComposing) { e.preventDefault(); document.querySelector('[data-act="csend"]')?.click(); }
   if (e.key === 'Enter' && /^(acert|pecert|bcert)-in$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); ACT[e.target.id.replace('-in', '') + 'add'](); }
   if (e.key === 'Enter' && /^au-(email|pw|pw2)$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); document.querySelector(au.tab === 'login' ? '[data-act="alogin"]' : '[data-act="asignup"]')?.click(); }
@@ -1422,6 +1485,18 @@ setInterval(() => {
   const due = S.con.some(c => c.status === 'pending' && !c.paused && T(c.deadline) <= Date.now());
   if (S.user && (due ? Date.now() - hkAt > 15000 : Date.now() - hkAt > 300000)) { hkAt = Date.now(); rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); }
 }, 1000);
+
+/* =====================================================================
+   방문 통계: 이름·IP 없이 무작위 번호로 방문 수만 세요 (관리자 화면에서 확인)
+   ===================================================================== */
+let VID_ = null; const VID = () => VID_ || (VID_ = (() => { let v = lsGet('hy_vid'); if (!v || v.length < 8) { v = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/-/g, '').slice(0, 20); lsSet('hy_vid', v); } return v; })());
+const SRC = (() => { try { const q = new URLSearchParams(location.search), u = q.get('from') || q.get('utm_source'); if (u) return u.slice(0, 40); const r = document.referrer && new URL(document.referrer).hostname.replace(/^www\./, ''); return r && r !== location.hostname ? r.slice(0, 80) : ''; } catch (e) { return ''; } })();
+const seenView = new Set();
+function track(kind, path) {
+  if (!sb || S.admin || (kind === 'view' && seenView.has(path))) return;
+  if (kind === 'view') seenView.add(path);
+  sb.from('visits').insert({ vid:VID(), kind, path:String(path || '').slice(0, 40), ref:SRC, mobile:innerWidth < 768, app:standalone() }).then(() => {}, () => {});
+}
 
 /* =====================================================================
    새 소식 알림: 새 견적 요청·견적 도착·계약·충전 신청 등을 알려줘요
@@ -1516,7 +1591,7 @@ function fitSheets() {
 }
 if (window.visualViewport) { visualViewport.addEventListener('resize', fitSheets); visualViewport.addEventListener('scroll', fitSheets); }
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); PWA.prompt = e; setTimeout(instShow, 2500); });
-addEventListener('appinstalled', () => { PWA.prompt = null; instHide(365); toast('홈 화면에 한여름이 추가됐어요'); });
+addEventListener('appinstalled', () => { track('install'); PWA.prompt = null; instHide(365); toast('홈 화면에 한여름이 추가됐어요'); });
 function netState() { $('#offline').style.display = navigator.onLine ? 'none' : ''; }
 addEventListener('offline', netState);
 addEventListener('online', () => { netState(); if (sb) { subscribe(); loadAll(); } toast('다시 연결됐어요'); });
