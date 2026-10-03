@@ -87,7 +87,14 @@ async function uploadPhoto(file) {
   if (error) throw error;
   return sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
 }
-const uploadAll = files => Promise.all([...files].map(uploadPhoto));
+/* 사진은 4장씩 나눠 올려요 (휴대폰 데이터가 느려도 끊기지 않게) */
+async function uploadAll(files, onProg) {
+  const list = [...files], out = new Array(list.length); let done = 0, next = 0;
+  const work = async () => { while (next < list.length) { const i = next++; out[i] = await uploadPhoto(list[i]); done++; if (onProg) onProg(done, list.length); } };
+  await Promise.all(Array.from({ length:Math.min(4, list.length) }, work));
+  return out;
+}
+const spMax = () => sellBulk ? 20 : 5;
 const isPhotoUrl = u => typeof u === 'string' && /^https:\/\//.test(u);
 
 /* =====================================================================
@@ -410,12 +417,44 @@ function showView(v) {
 function tabState() { document.querySelectorAll('#mbar-c [data-tab]').forEach(b => b.toggleAttribute('aria-current', S.mode === 'customer' && b.dataset.tab === S.view)); document.querySelectorAll('#mbar-c [aria-current]').forEach(b => b.setAttribute('aria-current', 'page')); }
 function setBadge(el, n) { if (!el) return; let b = el.querySelector('.tbadge'); if (!n) { if (b) b.remove(); return; } if (!b) { b = document.createElement('i'); b.className = 'tbadge absolute top-1 left-1/2 ml-1.5 min-w-[18px] rounded-full bg-sun px-1 text-center text-[10px] not-italic leading-[18px] text-white'; el.append(b); } b.textContent = n > 9 ? '9+' : n; }
 /* 휴대폰 전체 메뉴 (☰) */
+/* 회원 탈퇴 신청 */
+async function delModal() {
+  if (needLogin()) return;
+  let req = null; try { req = await rpc('my_deletion_status'); } catch (e) {}
+  if (req) return openM(head('회원 탈퇴 신청됨') + `<p class="leading-relaxed">${esc(new Date(req).toLocaleString('ko-KR'))}에 탈퇴를 신청하셨어요. 진행 중인 거래가 없으면 <b>7일 안에</b> 처리돼요. 처리되면 이름·이메일이 지워지고 다시 로그인할 수 없어요.</p>
+    <div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('delcancel', '', '탈퇴 신청 취소', 's')}</div>`);
+  openM(head('회원 탈퇴') + `<ul class="space-y-2 rounded-2xl bg-ice p-4 text-sm leading-relaxed">
+      <li>탈퇴하면 이름·이메일·프로필이 지워지고 같은 계정으로 다시 로그인할 수 없어요.</li>
+      <li>진행 중인 계약·분쟁이 있으면 끝난 뒤에 처리돼요.</li>
+      <li>기사 회원의 남은 예치금은 약관에 따라 환불해 드려요.</li>
+      <li>계약·결제 기록은 법에 따라 정해진 기간 동안 이름 없이 보관돼요.</li></ul>
+    <label for="del-why" class="mt-4 block text-sm font-bold">떠나시는 이유 (선택)</label><textarea id="del-why" rows="2" maxlength="200" class="mt-2 w-full resize-none rounded-xl bg-ice px-4 py-3"></textarea>
+    <label class="mt-3 flex items-start gap-2 text-sm"><input id="del-ok" type="checkbox" class="mt-1 h-4 w-4"> 위 내용을 확인했고 탈퇴를 신청해요.</label>${errBox()}
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('delgo', '', '탈퇴 신청', 'p')}</div>`);
+}
+async function delGo(el) {
+  if (!$('#del-ok').checked) return setErr('확인란에 체크해 주세요.');
+  await busy(el, async () => { await rpc('request_account_deletion', { p_reason:$('#del-why').value.trim() }); closeM(); toast('탈퇴를 신청했어요. 7일 안에 처리돼요.'); });
+}
+let DL = null, dlAt = 0;
+function loadDels(force) {
+  if (!S.admin || (!force && Date.now() - dlAt < 60000)) return;
+  dlAt = Date.now();
+  rpc('admin_list_deletions').then(d => { DL = d || []; if (S.mode === 'admin') adminView(); }).catch(() => { DL = []; });
+}
+function delCard() {
+  loadDels();
+  if (!DL || !DL.length) return '';
+  return `<section class="mt-8 rounded-3xl border-2 border-sun/40 bg-white p-5 sm:p-6"><h2 class="text-xl font-bold">회원 탈퇴 신청 ${DL.length}건</h2><p class="mt-1 text-sm text-sea/70">진행 중 거래가 없으면 처리할 수 있어요. 남은 예치금은 먼저 계좌로 돌려준 뒤 처리하세요.</p>
+    ${DL.map(d => `<div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-4 py-3 text-sm"><div><b>${esc(d.name || '이름 없음')}</b> · ${esc(d.email || '')} · ${d.role === 'pro' ? '기사' : '고객'}<p class="text-xs text-sea/60">${esc(new Date(d.delete_req).toLocaleString('ko-KR'))} 신청${d.open_deals ? ` · <b class="text-sun">진행 중 거래 ${d.open_deals}건</b>` : ''}${d.balance ? ` · 예치금 ${won(d.balance)}` : ''}</p></div>
+      ${d.open_deals ? '<span class="text-xs font-bold text-sea/50">거래 끝난 뒤 처리</span>' : btn(d.balance ? 'deldone2' : 'deldone', d.id, d.balance ? '환불했어요 · 탈퇴 처리' : '탈퇴 처리', 's')}</div>`).join('')}</section>`;
+}
 function navMenu() {
   const it = (attrs, t, cls = '') => `<button type="button" ${attrs} class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice ${cls}">${t}<span class="text-sea/30" aria-hidden="true">›</span></button>`;
   openM(head('전체 메뉴') + `<div class="-mx-2 divide-y divide-mist">
     <div class="py-1">${it('data-act="mkt"', '냉동·냉장고 장터', 'text-cool')}${it('data-act="pros"', '기사찾기', 'text-cool')}${it('data-act="navgo" data-id="#pro"', '기사·업체 등록', 'text-sun')}</div>
     <div class="py-1">${it('data-act="navgo" data-id="#process"', '이용 방법')}${it('data-act="navgo" data-id="#services"', '서비스 안내')}${it('data-act="navgo" data-id="#safety"', '안심 보장')}${it('data-act="cs"', '고객센터')}</div>
-    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
+    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
     ${S.user ? `<p class="mt-3 px-2 text-xs text-sea/50">${esc((S.profile && S.profile.name) || S.user.email || '')}님으로 로그인 중</p>` : ''}`);
 }
 function openPros() { closeM(); if (S.mode !== 'customer') S.mode = 'customer', updateAuthUI(); showView('pros'); renderPros(); }
@@ -514,7 +553,7 @@ function ldet(id, keep) {
   } else {
     foot = `<div class="mt-5">${myOff ? `<p class="font-bold text-cool">내 제안 ${won(myOff.price)} · ${QL[myOff.status]}</p>` : l.status === 'open' ? btn('oopen', l.id, asPro ? '매입 제안하기' : '구매 제안하기', 'a', 'w-full') : ''}</div><p class="mt-2 text-xs text-sea/60">제안이 선택되면 판매자와 채팅방이 열려요. 제안 내역은 판매자만 볼 수 있어요.</p>`;
   }
-  openM(head(esc(l.title)) + (l.photos && l.photos.length ? `<div class="flex gap-2 overflow-x-auto">${l.photos.map(u => `<img src="${esc(u)}" alt="판매 사진" class="h-44 rounded-xl object-cover">`).join('')}</div>` : thumb(l)) + `
+  openM(head(esc(l.title)) + (l.photos && l.photos.length ? `<div class="flex snap-x gap-2 overflow-x-auto pb-1">${l.photos.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener" class="shrink-0 snap-start"><img src="${esc(u)}" alt="판매 사진 ${i + 1}" loading="lazy" class="h-44 rounded-xl object-cover"></a>`).join('')}</div>${l.photos.length > 2 ? `<p class="mt-1 text-xs text-sea/50">사진 ${l.photos.length}장 · 옆으로 밀어서 보기 · 누르면 크게 보여요</p>` : ''}` : thumb(l)) + `
     <div class="mt-3 flex items-center justify-between"><p class="font-display text-3xl">${won(l.price)}</p>${favBtn(l.id)}</div>
     <div class="mt-2 flex flex-wrap gap-2 text-xs">${badge(l)}${ch(GR[l.grade][1])}${ch(l.years + '년 사용')}${ch('엘리베이터 ' + yn(l.elev))}${ch('사다리차 ' + (l.ladder ? '가능' : '불가'))}</div>
     ${itemsOf(l).length ? `<div class="mt-4 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">일괄 판매 구성 · 총 ${itemsN(l)}대</p><ul class="mt-2 space-y-1 text-sm">${itemsOf(l).map(x => `<li class="flex justify-between gap-3"><span>${esc(x.n)}</span><b class="tabular-nums">${+x.q}대</b></li>`).join('')}</ul><p class="mt-2 text-xs text-sea/60">표시된 가격은 전체를 한 번에 사는 가격이에요.</p></div>` : ''}
@@ -533,6 +572,7 @@ function bkDraw() {
   $('#sl-title-l').textContent = sellBulk ? '판매글 제목 (비워 두면 자동으로 만들어요)' : '제품명';
   $('#sl-price-l').textContent = sellBulk ? '일괄 희망 가격 · 전체 합계(원)' : '희망 판매 가격(원)';
   $('#sl-years-l').textContent = sellBulk ? '평균 사용 연식(년)' : '사용 연식(년)';
+  $('#sp-lab').textContent = sellBulk ? `사진 추가하기 (최대 20장 · 물건마다 찍어 주세요) ${sp.length ? sp.length + '/20' : ''}` : `사진 추가하기 (최대 5장) ${sp.length ? sp.length + '/5' : ''}`;
   $('#bk-chips').innerHTML = ITEMS.map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
   $('#bk-list').innerHTML = bk.length ? bk.map((x, i) => `<li class="flex items-center gap-2 rounded-xl bg-white px-3 py-2"><span class="min-w-0 flex-1 truncate text-sm font-bold">${esc(x.n)}</span>
     <button type="button" data-act="bkq" data-id="${i}:-1" aria-label="${esc(x.n)} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold">−</button><span class="w-8 text-center font-bold tabular-nums">${x.q}</span><button type="button" data-act="bkq" data-id="${i}:1" aria-label="${esc(x.n)} 한 대 더하기" class="h-8 w-8 rounded-full bg-ice font-bold">+</button>
@@ -550,7 +590,7 @@ function sellModal(kind) {
       <div id="bk-chips" class="mt-3 flex flex-wrap gap-1.5"></div>
       <div class="mt-2 flex gap-2"><input id="bk-in" maxlength="30" placeholder="목록에 없으면 직접 입력 (예: 냉장 진열대)" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-sm"><button type="button" data-act="bkcustom" class="shrink-0 rounded-xl bg-sea px-3 text-sm font-bold text-white">담기</button></div>
       <ul id="bk-list" class="mt-3 space-y-1.5"></ul></div>
-    <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
+    <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span id="sp-lab" class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
     <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
     <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
     <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label><input id="sl-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">
@@ -568,12 +608,12 @@ function spThumbs() { const u = $('#sp-thumbs'); if (u) u.innerHTML = sp.map((f,
 async function ssend(el) {
   const g = id => $(id).value.trim(), grade = document.querySelector('input[name="sg"]:checked')?.value, price = +$('#sl-price').value, years = $('#sl-years').value;
   if (sellBulk && !g('#sl-title') && bk.length) $('#sl-title').value = (bk.length > 1 ? `${bk[0].n} 외 ${bk.length - 1}종 일괄 (총 ${bk.reduce((t, x) => t + x.q, 0)}대)` : `${bk[0].n} ${bk[0].q}대 일괄`).slice(0, 40);
-  const err = sellBulk && !bk.length ? '일괄 판매할 물건 종목을 담아 주세요.' : sellBulk && bk.length === 1 && bk[0].q < 2 ? '일괄 판매는 2대 이상일 때 써 주세요. 한 대면 ‘한 대만 팔기’를 눌러 주세요.' : !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
+  const err = sp.length > spMax() ? `사진이 ${sp.length}장이에요. 한 대 판매는 5장까지예요. 사진을 줄이거나 ‘여러 대 일괄 판매’를 눌러 주세요.` : sellBulk && !bk.length ? '일괄 판매할 물건 종목을 담아 주세요.' : sellBulk && bk.length === 1 && bk[0].q < 2 ? '일괄 판매는 2대 이상일 때 써 주세요. 한 대면 ‘한 대만 팔기’를 눌러 주세요.' : !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
     : years === '' || +years < 0 ? '사용 연식을 입력해 주세요.' : !g('#sl-gu') ? '매장 위치(구)를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     el.textContent = '올리는 중...';
-    const photos = await uploadAll(sp);
+    const photos = await uploadAll(sp, (d, t) => { if (t > 1) el.textContent = `사진 올리는 중 ${d}/${t}`; });
     const { error } = await sb.from('listings').insert({ kind:sellKind, title:g('#sl-title'), price, grade, years:+years, gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', descr:g('#sl-desc'), photos, items:sellBulk ? bk.map(x => ({ n:x.n, q:x.q })) : [] });
     track('sell');
     if (error) throw error;
@@ -760,12 +800,12 @@ function custMenu(keep) {
   openM(head('내 요청 관리') + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
     (my.length ? '<h3 class="mt-2 font-bold">견적 요청</h3>' : '') + my.map(r => {
       const qs = S.quo.filter(q => q.request_id === r.id), c = conFor('request_id', r.id);
-      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${SVC[r.service]} · ${esc(r.gu)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${SVC[r.service]} · ${esc(r.gu)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
         <p class="text-xs text-sea/60 mt-1">${reqCode(r.id)} · 희망일 ${esc(r.wish_date)} · 사진 ${(r.photos || []).length}장</p>
         <div class="mt-3 flex flex-wrap gap-2 items-center">${r.status === 'open' ? (qs.length ? btn('cmp', r.id, `받은 견적 ${qs.length}건 비교`) : '<span class="text-sm text-sea/60">기사님 견적을 기다리는 중이에요</span>') + btn('rclose', r.id, '요청 취소', 's') : conBlock(c)}</div>`);
     }).join('') +
     (ml.length ? '<h3 class="mt-6 font-bold">내 판매글</h3>' + ml.map(l => { const c = conFor('listing_id', l.id), n = S.off.filter(o => o.listing_id === l.id).length;
-      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${esc(l.title)} · ${won(l.price)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit">${l.status === 'open' ? '판매 중' : l.status === 'sold' ? '거래 체결' : '판매 종료'}</span></div>
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${esc(l.title)} · ${won(l.price)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${l.status === 'open' ? '판매 중' : l.status === 'sold' ? '거래 체결' : '판매 종료'}</span></div>
         <div class="mt-3 flex flex-wrap gap-2 items-center">${l.status === 'open' ? btn('ldet', l.id, n ? `받은 제안 ${n}건 보기` : '판매글 보기', n ? 'p' : 's') : conBlock(c)}</div>`); }).join('') : '') +
     (buys.length ? '<h3 class="mt-6 font-bold">내 구매</h3>' + buys.map(c => card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)}</p><div class="mt-3 flex flex-wrap gap-2 items-center">${conBlock(c)}</div>`)).join('') : '') +
     (pre.length ? '<h3 class="mt-6 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(t.u2_name)} 기사님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : '') +
@@ -1292,7 +1332,7 @@ function adminView() {
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
-    ${visitCard()}
+    ${delCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
@@ -1382,7 +1422,7 @@ const ACT = {
   ffree: () => { FS.free = !FS.free; renderPros(); },
   fav: id => { id = +id; FAV.has(id) ? FAV.delete(id) : FAV.add(id); saveFav(); document.querySelectorAll(`[data-act="fav"][data-id="${id}"]`).forEach(b => { b.textContent = heart(id); b.setAttribute('aria-pressed', FAV.has(id)); }); if (S.view === 'market') renderMarket(); },
   ldet: id => ldet(id), sellopen: () => { if (S.view !== 'market' && S.mode === 'customer') openMarket(); sellModal('normal'); }, stockopen: () => sellModal('stock'),
-  sprm: i => { sp.splice(+i, 1); spThumbs(); }, ssend: (id, el) => ssend(el),
+  sprm: i => { sp.splice(+i, 1); spThumbs(); bkDraw(); }, ssend: (id, el) => ssend(el),
   oopen: id => offerModal(id), osend: (id, el) => osend(el, id), lpick: (id, el) => lpick(el, id), lclose: (id, el) => lclose(el, id),
   pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
@@ -1397,10 +1437,14 @@ const ACT = {
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
-  smode: id => { sellBulk = id === 'bulk'; bkDraw(); },
+  smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
   bkadd: id => bkAdd(ITEMS[+id]), bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
   bkq: id => { const [i, d] = id.split(':').map(Number); const x = bk[i]; if (!x) return; x.q = Math.max(1, Math.min(99, x.q + d)); bkDraw(); },
   bkrm: id => { bk.splice(+id, 1); bkDraw(); },
+  delacct: () => { closeM(); delModal(); }, delgo: (id, el) => delGo(el),
+  delcancel: (id, el) => busy(el, async () => { await rpc('cancel_account_deletion'); closeM(); toast('탈퇴 신청을 취소했어요.'); }),
+  deldone: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:false }); loadDels(true); toast('탈퇴 처리했어요.'); }); },
+  deldone2: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:true }); loadDels(true); await load('adminPros'); render(); toast('예치금 환불 기록 후 탈퇴 처리했어요.'); }); },
   navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
   navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
   notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(14),
@@ -1418,7 +1462,7 @@ const ACT = {
   mpprm: (i, el) => busy(el, async () => { const p = [...(S.pro.portfolio || [])]; p.splice(+i, 1); await savePro({ portfolio:p }); mypageModal(true); }),
   inqnew: () => inqForm(true), iqcat: k => { saveIq(); iq.cat = k; iq.cid = ''; inqForm(); }, inqsend: (id, el) => inqSend(el),
   inqdet: id => inqDetail(id), inqfu: (id, el) => inqFollow(el, id), inqdel: (id, el) => inqDel(el, id),
-  refresh: () => { loadVisits(true); return loadAll().then(() => toast('새로 불러왔어요.')); },
+  refresh: () => { loadVisits(true); loadDels(true); return loadAll().then(() => toast('새로 불러왔어요.')); },
   ifilt: k => { AF = k; render(); }, iadm: id => inqAdmin(id),
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
@@ -1456,7 +1500,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('change', e => {
   if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
   if (e.target.id === 'chat-photo') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
-  if (e.target.id === 'sp-file') { for (const f of e.target.files) { if (sp.length >= 5) { setErr('사진은 최대 5장까지 올릴 수 있어요.'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); }
+  if (e.target.id === 'sp-file') { for (const f of e.target.files) { if (sp.length >= spMax()) { setErr(sellBulk ? '일괄 판매는 사진을 최대 20장까지 올릴 수 있어요.' : '사진은 최대 5장까지 올릴 수 있어요. 여러 대라면 ‘여러 대 일괄 판매’를 눌러 주세요 (최대 20장).'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); bkDraw(); }
 });
 $('#qm-file').addEventListener('change', e => {
   qErr('');
@@ -1615,9 +1659,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = ['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액 · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
   fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd();
   const z = C.BIZ || {}, parts = [z.name && `상호 ${esc(z.name)}`, z.ceo && `대표 ${esc(z.ceo)}`, z.bizNo && `사업자등록번호 ${esc(z.bizNo)}`, z.mailOrderNo && `통신판매업 신고 ${esc(z.mailOrderNo)}`, z.address && esc(z.address), C.CS_PHONE && `고객센터 ${esc(C.CS_PHONE)}`, C.CS_EMAIL && esc(C.CS_EMAIL)].filter(Boolean);
-  $('#foot').innerHTML = `<p><span class="font-display text-lg text-sea">한여름</span> Midsummer Cool Service · 서울 지역 서비스 중</p>${parts.length ? `<p>${parts.join(' · ')}</p>` : ''}<p>${C.TERMS_URL ? `<a class="underline" href="${esc(C.TERMS_URL)}" target="_blank" rel="noopener">이용약관</a>` : ''}${C.TERMS_URL && C.PRIVACY_URL ? ' · ' : ''}${C.PRIVACY_URL ? `<a class="underline font-bold" href="${esc(C.PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a>` : ''}</p><p>한여름은 고객과 기사·업체를 연결하는 중개 플랫폼이며, 작업과 거래의 당사자가 아니에요.</p><p>&copy; ${new Date().getFullYear()} Midsummer. All rights reserved.</p>`;
+  $('#foot').innerHTML = `<p><span class="font-display text-lg text-sea">한여름</span> Midsummer Cool Service · 서울 지역 서비스 중</p>${parts.length ? `<p>${parts.join(' · ')}</p>` : ''}<p>${C.TERMS_URL ? `<a class="underline" href="${esc(C.TERMS_URL)}" target="_blank" rel="noopener">이용약관</a>` : ''}${C.TERMS_URL && C.PRIVACY_URL ? ' · ' : ''}${C.PRIVACY_URL ? `<a class="underline font-bold" href="${esc(C.PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a>` : ''} · <a class="underline" href="delete-account.html">회원 탈퇴 안내</a></p><p>한여름은 고객과 기사·업체를 연결하는 중개 플랫폼이며, 작업과 거래의 당사자가 아니에요.</p><p>&copy; ${new Date().getFullYear()} Midsummer. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
   netState(); if (isIOS()) setTimeout(instShow, 4000);
+  /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
+  try { const q = new URLSearchParams(location.search), go = q.get('go');
+    if (go || q.has('app')) { q.delete('go'); q.delete('app'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+    if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote({}); else if (go === 'delete') delModal(); }, 1500);
+  } catch (e) {}
   if (!sb) { $('#setup-warn').classList.remove('hidden'); render(); return; }
   render();
   sb.auth.onAuthStateChange((ev, session) => {
