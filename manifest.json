@@ -2,30 +2,97 @@
   "id": "/",
   "name": "한여름 - 에어컨·냉동고 매칭",
   "short_name": "한여름",
-  "description": "서울 에어컨 설치·수리·청소 견적 비교, 중고 업소용 냉장·냉동고 매매·철거까지 한 번에.",
+  "description": "서울 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭. 14일 재점검 안심 보장.",
   "lang": "ko",
   "dir": "ltr",
   "start_url": "/?app=1",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F2F8FA",
-  "theme_color": "#0C2D48",
-  "categories": ["business", "lifestyle", "shopping"],
+  "background_color": "#F8FAFC",
+  "theme_color": "#2563EB",
+  "categories": [
+    "business",
+    "lifestyle",
+    "shopping"
+  ],
   "prefer_related_applications": false,
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "screenshots": [
-    { "src": "shot-home.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "견적 한 번이면 기사님 가격이 모여요" },
-    { "src": "shot-market.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "중고 업소용 냉장·냉동고 장터" },
-    { "src": "shot-pro.jpg", "sizes": "1080x1920", "type": "image/jpeg", "form_factor": "narrow", "label": "기사님 대시보드" }
+    {
+      "src": "shot-home.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "견적 한 번이면 기사님 가격이 모여요"
+    },
+    {
+      "src": "shot-market.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "중고 업소용 냉장·냉동고 장터"
+    },
+    {
+      "src": "shot-pro.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "기사님 대시보드"
+    }
   ],
   "shortcuts": [
-    { "name": "무료 견적 요청", "short_name": "견적 요청", "url": "/?go=quote", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
-    { "name": "냉동·냉장고 장터", "short_name": "장터", "url": "/?go=market", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
-    { "name": "기사찾기", "short_name": "기사찾기", "url": "/?go=pros", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "무료 견적 요청",
+      "short_name": "견적 요청",
+      "url": "/?go=quote",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "중고마켓",
+      "short_name": "중고마켓",
+      "url": "/?go=market",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "기사님 찾기",
+      "short_name": "기사님 찾기",
+      "url": "/?go=pros",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
