@@ -11,6 +11,12 @@ const sb = CONFIGURED ? window.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_
 
 /* ---------- 상수 ---------- */
 const GU = ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'];
+/* 지역: 고객은 서울 + 경기 인접 도시, 기사님 활동 지역은 경기 전체, 용달 도착지는 경기 전체 + 지방 */
+const GG_NEAR = ['성남시','하남시','구리시','남양주시','고양시','김포시','부천시','광명시','과천시','안양시','의정부시'];
+const GG_ALL = ['수원시','성남시','고양시','용인시','부천시','안산시','안양시','남양주시','화성시','평택시','의정부시','시흥시','파주시','김포시','광명시','광주시','군포시','하남시','오산시','이천시','안성시','의왕시','양주시','구리시','포천시','여주시','동두천시','과천시','가평군','양평군','연천군'];
+const FAR = '기타(지방)';
+const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
+const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
 const SVC = { aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
 /* 3대 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통) */
 const KINDS = {
@@ -25,7 +31,7 @@ const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
 const kindOf = code => String(code).startsWith('aircon') ? 'aircon' : code === 'truck' ? 'truck' : 'cold';
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-const reqWhere = r => r.service === 'truck' ? `${esc(r.gu)} → ${esc(r.to_gu || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : `서울 ${esc(r.gu)}`;
+const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
 const CERTS = ['피복아크용접기능사','온수온돌기능사','공조냉동기계기능사','냉동기계산업기사','비파괴검사 검증','고압 세척 장비 보유','진공펌프·가스회수 장비 보유'];
 const SL = { bad:'🙁 별로예요', good:'🙂 만족해요', great:'😄 최고예요' };
@@ -258,7 +264,8 @@ const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격
   <div class="mt-2 flex gap-2"><input id="${act}-in" maxlength="30" aria-label="자격증·장비 직접 입력" placeholder="직접 입력 (예: 가스용접기능사)" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3"><button type="button" data-act="${act}add" class="${B.s} shrink-0">+ 추가</button></div>
   <p class="mt-1 text-xs text-sea/60">프로필에 배지로 표시돼요. 자격증 사본은 관리자 승인 때 확인을 요청할 수 있어요.</p>`;
 const freeToggle = (on, act) => `<div class="mt-4"><button type="button" data-act="${act}" aria-pressed="${on}" class="${chipCls(on)}">🚚 무료 출장 견적 가능</button></div>`;
-const areaGrid = (set, act) => `<div class="mt-2 grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto rounded-xl bg-ice p-2">${GU.map(g => `<button type="button" data-act="${act}" data-id="${g}" aria-pressed="${set.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${set.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`).join('')}</div>`;
+const areaBtn = (set, act, g) => `<button type="button" data-act="${act}" data-id="${g}" aria-pressed="${set.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${set.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`;
+const areaGrid = (set, act) => `<div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${GG_ALL.map(g => areaBtn(set, act, g)).join('')}</div></div>`;
 const legalLinks = () => `${C.TERMS_URL ? `<a href="${esc(C.TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a>` : '이용약관'} 및 ${C.PRIVACY_URL ? `<a href="${esc(C.PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보처리방침</a>` : '개인정보처리방침'}`;
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
@@ -537,7 +544,7 @@ const thumbSq = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" a
 const badge = l => `${itemsOf(l).length ? `<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">일괄 ${itemsN(l)}대</span>` : ''}<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${sellerFree(l) ? FREE_CHIP : ''}`;
 const lstate = l => l.status === 'open' ? (l.seller_id === me() ? `받은 제안 ${S.off.filter(o => o.listing_id === l.id).length}건` : '판매 중') : l.status === 'sold' ? '거래 완료' : '판매 종료';
 const lcard = l => `<button type="button" data-act="ldet" data-id="${l.id}" class="text-left overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-0.5 lg:rounded-3xl ${l.status !== 'open' ? 'opacity-60' : ''}">${thumb(l)}
-  <div class="p-3 sm:p-4"><div class="flex flex-wrap items-center gap-1.5">${badge(l)}</div><p class="mt-1 text-xs text-sea/60">서울 ${esc(l.gu)} · ${l.years}년 사용</p>
+  <div class="p-3 sm:p-4"><div class="flex flex-wrap items-center gap-1.5">${badge(l)}</div><p class="mt-1 text-xs text-sea/60">${esc(place(l.gu))} · ${l.years}년 사용</p>
   <p class="mt-1.5 font-bold line-clamp-1">${esc(l.title)}</p><p class="mt-0.5 text-lg font-black text-brand md:text-xl">${won(l.price)}</p>
   <p class="mt-1 text-xs text-sea/60">${lstate(l)}</p></div></button>`;
 function renderFeed() {
@@ -550,7 +557,7 @@ const mrow = l => `<div class="flex items-start gap-2 py-3 sm:py-4 border-b bord
   <button type="button" data-act="ldet" data-id="${l.id}" class="flex min-w-0 flex-1 gap-3 sm:gap-4 text-left">
     <span class="block h-20 w-20 sm:h-28 sm:w-28 shrink-0 overflow-hidden rounded-2xl">${thumbSq(l)}</span>
     <span class="min-w-0 flex-1"><span class="block font-bold line-clamp-2">${esc(l.title)}</span>
-      <span class="block mt-1 text-xs text-sea/60">서울 ${esc(l.gu)} · ${ago(l.created_at)} · ${l.years}년 사용</span>
+      <span class="block mt-1 text-xs text-sea/60">${esc(place(l.gu))} · ${ago(l.created_at)} · ${l.years}년 사용</span>
       <span class="block mt-0.5 sm:mt-1 text-base sm:text-lg font-bold">${won(l.price)}</span>
       <span class="mt-1 flex flex-wrap items-center gap-1.5">${badge(l)}${l.seller_id === me() ? '<span class="rounded-full bg-sun/15 px-2.5 py-0.5 text-xs font-bold text-sun">내 글</span>' : ''}<span class="text-xs text-sea/60">${lstate(l)}</span></span></span></button>${favBtn(l.id)}</div>`;
 function renderMarket() {
@@ -586,7 +593,7 @@ function ldet(id, keep) {
     <div class="mt-3 flex items-center justify-between"><p class="font-display text-3xl">${won(l.price)}</p>${favBtn(l.id)}</div>
     <div class="mt-2 flex flex-wrap gap-2 text-xs">${badge(l)}${ch(GR[l.grade][1])}${ch(l.years + '년 사용')}${ch('엘리베이터 ' + yn(l.elev))}${ch('사다리차 ' + (l.ladder ? '가능' : '불가'))}</div>
     ${itemsOf(l).length ? `<div class="mt-4 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">일괄 판매 구성 · 총 ${itemsN(l)}대</p><ul class="mt-2 space-y-1 text-sm">${itemsOf(l).map(x => `<li class="flex justify-between gap-3"><span>${esc(x.n)}</span><b class="tabular-nums">${+x.q}대</b></li>`).join('')}</ul><p class="mt-2 text-xs text-sea/60">표시된 가격은 전체를 한 번에 사는 가격이에요.</p></div>` : ''}
-    <p class="mt-3 text-sm text-sea/70">서울 ${esc(l.gu)}${l.loc ? ' · ' + esc(l.loc) : ''} · ${ago(l.created_at)}</p>${l.descr ? `<p class="mt-2 leading-relaxed whitespace-pre-wrap">${esc(l.descr)}</p>` : ''}` + foot + sellerMore(l), keep);
+    <p class="mt-3 text-sm text-sea/70">${esc(place(l.gu))}${l.loc ? ' · ' + esc(l.loc) : ''} · ${ago(l.created_at)}</p>${l.descr ? `<p class="mt-2 leading-relaxed whitespace-pre-wrap">${esc(l.descr)}</p>` : ''}` + foot + sellerMore(l), keep);
   menuCur = 'ldet';
 }
 function sellerMore(l) {
@@ -625,7 +632,7 @@ function sellModal(kind) {
     <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label><input id="sl-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">
     <fieldset class="mt-4"><legend class="text-sm font-bold">제품 상태</legend><div class="mt-2 grid grid-cols-3 gap-2">${Object.keys(GR).map(k => `<label class="relative"><input type="radio" name="sg" value="${k}" class="peer sr-only"><span class="block rounded-xl border-2 border-mist py-3 text-center cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool"><b>${GR[k][0]}</b><br><span class="text-xs text-sea/60">${GR[k][1]}</span></span></label>`).join('')}</div></fieldset>
     <label id="sl-years-l" for="sl-years" class="block mt-4 text-sm font-bold">사용 연식(년)</label><input id="sl-years" type="number" min="0" max="40" inputmode="numeric" placeholder="예) 3" class="${inp}">
-    ${lab('sl-gu', '매장 위치 (서울시 구)')}<select id="sl-gu" class="${inp}"><option value="">구를 선택하세요</option>${GU.map(g => `<option>${g}</option>`).join('')}</select>
+    ${lab('sl-gu', '매장 위치 (서울·경기 인접)')}<select id="sl-gu" class="${inp}"><option value="">지역을 선택하세요</option>${guOpts(GG_NEAR)}</select>
     <input id="sl-loc" maxlength="40" aria-label="상세 위치" placeholder="상세 위치 예) 삼성역 인근 1층 (번지까지는 적지 마세요)" class="${inp}">
     <div class="mt-4 grid grid-cols-2 gap-3"><div><label for="sl-elev" class="text-sm font-bold">엘리베이터</label><select id="sl-elev" class="${inp}"><option value="">선택</option><option value="y">있음</option><option value="n">없음</option></select></div>
     <div><label for="sl-lad" class="text-sm font-bold">사다리차 이용</label><select id="sl-lad" class="${inp}"><option value="">선택</option><option value="y">가능</option><option value="n">불가</option></select></div></div>
@@ -638,7 +645,7 @@ async function ssend(el) {
   const g = id => $(id).value.trim(), grade = document.querySelector('input[name="sg"]:checked')?.value, price = +$('#sl-price').value, years = $('#sl-years').value;
   if (sellBulk && !g('#sl-title') && bk.length) $('#sl-title').value = (bk.length > 1 ? `${bk[0].n} 외 ${bk.length - 1}종 일괄 (총 ${bk.reduce((t, x) => t + x.q, 0)}대)` : `${bk[0].n} ${bk[0].q}대 일괄`).slice(0, 40);
   const err = sp.length > spMax() ? `사진이 ${sp.length}장이에요. 한 대 판매는 5장까지예요. 사진을 줄이거나 ‘여러 대 일괄 판매’를 눌러 주세요.` : sellBulk && !bk.length ? '일괄 판매할 물건 종목을 담아 주세요.' : sellBulk && bk.length === 1 && bk[0].q < 2 ? '일괄 판매는 2대 이상일 때 써 주세요. 한 대면 ‘한 대만 팔기’를 눌러 주세요.' : !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
-    : years === '' || +years < 0 ? '사용 연식을 입력해 주세요.' : !g('#sl-gu') ? '매장 위치(구)를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
+    : years === '' || +years < 0 ? '사용 연식을 입력해 주세요.' : !g('#sl-gu') ? '매장 위치를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     el.textContent = '올리는 중...';
@@ -771,7 +778,7 @@ function qShow(n) {
   [...$('#qm-bar').children].forEach((b, i) => b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}`);
   $('#qm-label').textContent = n < 4 ? `${n} / 3 단계${qform.targetName ? ` · 지정 기사님: ${qform.targetName}` : ''}` : '';
   const truck = (n === 2 && (document.querySelector('input[name="qm-svc"]:checked') || {}).value === 'truck') || (n === 2 && qform.service === 'truck');
-  $('#qm-truck').classList.toggle('hidden', !truck); $('#qm-gu-l').textContent = truck ? '출발지 (서울시 구)' : '서울시 구';
+  $('#qm-truck').classList.toggle('hidden', !truck); $('#qm-gu-l').textContent = truck ? '출발지' : '작업 지역';
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
   $('#qm-next').textContent = n === 3 ? (S.user ? '견적 요청 보내기' : '로그인하고 보내기') : n === 4 ? '닫기' : '다음';
   $('#qm-next').disabled = false;
@@ -828,7 +835,7 @@ async function qNext() {
     const { data, error } = await sb.from('requests').insert(row).select('id').single();
     if (!error) track('quote');
     if (error) throw error;
-    const rows = [['요청 번호', reqCode(data.id)], ['서비스', SVC[qform.service]], truck ? ['출발 → 도착', `${qform.district} → ${qform.to}`] : ['지역', '서울 ' + qform.district], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
+    const rows = [['요청 번호', reqCode(data.id)], ['서비스', SVC[qform.service]], truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
     await load('req'); render(); qShow(4);
   } catch (e) { qErr(errMsg(e) || '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '견적 요청 보내기'; }
@@ -907,7 +914,7 @@ function receipt(cid, fresh) {
   const c = S.con.find(x => x.id === +cid); if (!c) return;
   const svc = c.kind === 'service', provLabel = svc ? '담당 기사' : '판매자', cliLabel = svc ? '고객' : '구매자';
   openM(head('한여름 안심 작업 내역서') + `<div class="rounded-2xl bg-ice p-5"><p class="font-display text-xl text-cool">${conCode(c.id)}</p>
-    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.created_at))}${row(svc ? '서비스' : '품목', conTitle(c))}${row('지역', '서울 ' + esc(c.gu))}${row(provLabel, esc(c.provider_name))}${row(cliLabel, esc(c.client_name))}${c.work_date ? row(wdOf(c) + ' 예정일', esc(c.work_date)) : ''}${row('확정 금액', won(c.price))}
+    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.created_at))}${row(svc ? '서비스' : '품목', conTitle(c))}${row('지역', esc(place(c.gu)))}${row(provLabel, esc(c.provider_name))}${row(cliLabel, esc(c.client_name))}${c.work_date ? row(wdOf(c) + ' 예정일', esc(c.work_date)) : ''}${row('확정 금액', won(c.price))}
     ${c.fee_payer === me() || S.admin ? row('수수료 (기사·업체 예치금에서 차감)', `${won(c.fee)} · ${esc(c.fee_label)}${c.fee_charged ? ' · 차감 완료' : ' · 거래 확정 시 차감'}`) : ''}${row('상태', c.status === 'completed' ? '거래 확정 (' + esc(c.method || '') + ')' : c.status === 'pending' ? '확정 대기' : '진행 중')}</dl></div>
     <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">💬 전화번호를 공개하지 않고 한여름 채팅으로 연락해요.${svc ? '<br>작업 후 <b>14일 이내</b> 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 신청할 수 있어요.' : ''}</p>
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${wbtn('chatc', c.id, fresh ? '채팅방 열기' : '채팅방', 'p')}</div>`);
@@ -918,7 +925,7 @@ function warrModal(cid, fresh) {
   openM(head('한여름 무상 A/S 전자 보증서') + `<div class="relative rounded-2xl border-2 border-sea/15 bg-ice p-5">
     <span class="absolute right-4 top-4 grid h-20 w-20 -rotate-12 place-items-center rounded-full border-2 border-sun text-center font-display text-sm leading-tight text-sun" aria-hidden="true">한여름<br>안심보증</span>
     <p class="font-display text-xl text-cool pr-24">${esc(c.warranty_no)}</p>
-    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.done_at))}${row('서비스', SVC[c.service])}${row('지역', '서울 ' + esc(c.gu))}${row('담당 기사', esc(c.provider_name))}${row('작업 금액', won(c.price))}${row('확정 방식', esc(c.method))}${row('보증 기간', `${fmtD(c.done_at)} ~ ${fmtD(c.warranty_until)} (14일)`)}${row('작업 내역서', conCode(c.id))}</dl></div>
+    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.done_at))}${row('서비스', SVC[c.service])}${row('지역', esc(place(c.gu)))}${row('담당 기사', esc(c.provider_name))}${row('작업 금액', won(c.price))}${row('확정 방식', esc(c.method))}${row('보증 기간', `${fmtD(c.done_at)} ~ ${fmtD(c.warranty_until)} (14일)`)}${row('작업 내역서', conCode(c.id))}</dl></div>
     <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">보증 기간 안에 <b>같은 증상</b>이 다시 생기면 담당 기사님이 <b>우선 방문해 무상으로 재점검</b>해요. <span class="font-bold text-cool">남은 기간 ${left}일</span><br><span class="text-xs text-sea/60">보증 범위는 작업 내역서에 적힌 작업과 같은 증상에 한해요.</span></p>
     ${w ? `<p class="mt-3 text-sm font-bold text-cool">재점검: ${RWL[w.status]}</p>` : ''}
     <div class="mt-4 flex flex-wrap gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${client && fresh && !v ? btn('rev', c.id, '후기 남기기', 's') : ''}${client && !w && left > 0 ? btn('rew', c.id, '무상 재점검 신청', 'a') : ''}</div>`);
@@ -993,7 +1000,7 @@ function directModal(tid) {
   openM(head('합의 내용으로 계약하기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님과 채팅으로 합의한 내용을 계약으로 등록해요.</p>
     <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 계약 채팅방이 열려요.</p>
     ${lab('dc-svc', '서비스')}<select id="dc-svc" class="${inp}">${codes.map(c => `<option value="${c}"${c === guess ? ' selected' : ''}>${SVC[c]}</option>`).join('')}</select>
-    ${lab('dc-gu', '작업 지역 (서울시 구)')}<select id="dc-gu" class="${inp}">${GU.map(g => `<option${g === (p.areas || [])[0] ? ' selected' : ''}>${g}</option>`).join('')}</select>
+    ${lab('dc-gu', '작업 지역')}<select id="dc-gu" class="${inp}">${guOpts(GG_ALL, (p.areas || [])[0])}</select>
     ${lab('dc-date', '작업 날짜')}<input id="dc-date" type="date" min="${today()}" class="${inp}">
     ${lab('dc-price', '합의 금액(원)')}<input id="dc-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">${errBox()}
     <div class="mt-4 flex gap-3">${btn('chat', t.id, '취소', 's')}${wbtn('dsend', t.id, '계약 등록')}</div>`);
@@ -1132,7 +1139,7 @@ function proReq(r) {
 function proListing(l) {
   const my = S.off.find(o => o.listing_id === l.id && o.buyer_id === me());
   return `<article class="overflow-hidden rounded-2xl bg-white border border-mist">${thumb(l)}<div class="p-4">
-    <div class="flex flex-wrap items-center gap-1.5">${badge(l)}<span class="text-xs text-sea/60">서울 ${esc(l.gu)} · ${l.years}년 사용</span></div>
+    <div class="flex flex-wrap items-center gap-1.5">${badge(l)}<span class="text-xs text-sea/60">${esc(place(l.gu))} · ${l.years}년 사용</span></div>
     <p class="mt-2 font-bold">${esc(l.title)}</p><p class="font-display text-2xl">${won(l.price)}</p>
     <p class="text-xs text-sea/60 mt-1">엘리베이터 ${yn(l.elev)} · 사다리차 ${l.ladder ? '가능' : '불가'}</p>
     <div class="mt-3 flex flex-wrap gap-2">${btn('ldet', l.id, '자세히', 's')}${my ? `<span class="self-center font-bold text-cool">내 제안 ${won(my.price)} · ${QL[my.status]}</span>` : btn('oopen', l.id, l.kind === 'stock' ? '구매 제안' : '매입 제안', 'a')}</div></div></article>`;
@@ -1531,7 +1538,7 @@ const ACT = {
   deldone2: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:true }); loadDels(true); await load('adminPros'); render(); toast('예치금 환불 기록 후 탈퇴 처리했어요.'); }); },
   navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
   navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
-  notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(14),
+  notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(3),
   wallet: () => walletModal(), chargego: (id, el) => chargeGo(el),
   mypage: () => mypageModal(), profedit: profModal, pesave: (id, el) => peSave(el),
   pecert: c => toggleIn(pe.certs, c, 'pecert'), pecertadd: () => addCert('pecert', pe.certs), pearea: g => toggleIn(pe.areas, g, 'pearea'),
@@ -1679,21 +1686,32 @@ function watchNew() {
    ===================================================================== */
 const PWA = { prompt: null };
 const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const inApp = () => /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|; wv\)/i.test(navigator.userAgent);
+const isAndroid = () => /android/i.test(navigator.userAgent);
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 function instPlace() { const bar = $('#mbar'), h = bar && bar.style.display !== 'none' ? bar.offsetHeight : 0; $('#inst').style.bottom = (h + 12) + 'px'; }
 function instShow() {
   if (standalone() || innerWidth >= 768) return;
-  const until = +lsGet('hy_inst_hide') || 0; if (Date.now() < until) return;
-  if (!PWA.prompt && !isIOS()) return;
-  $('#inst-sub').textContent = PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : '공유 버튼 → 홈 화면에 추가';
+  const until = +lsGet('hy_inst_hide2') || 0; if (Date.now() < until) return;
+  $('#inst-sub').textContent = PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : inApp() ? '크롬·사파리로 열면 추가할 수 있어요' : isIOS() ? '공유 버튼 → 홈 화면에 추가' : '메뉴 → 홈 화면에 추가';
   instPlace(); $('#inst').style.display = '';
 }
-function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide', Date.now() + days * 864e5); }
+function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide2', Date.now() + days * 864e5); }
 async function installApp() {
   if (PWA.prompt) { PWA.prompt.prompt(); const r = await PWA.prompt.userChoice.catch(() => ({})); PWA.prompt = null; instHide(r.outcome === 'accepted' ? 365 : 7); return; }
   instHide(3);
+  if (inApp()) {
+    const url = location.origin + location.pathname, kakao = /KAKAOTALK/i.test(navigator.userAgent);
+    const ext = kakao ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url)
+      : isAndroid() ? 'intent://' + location.host + location.pathname + '#Intent;scheme=https;package=com.android.chrome;end' : '';
+    return openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
+    <p class="mt-2 text-sm leading-relaxed text-sea/70">카카오톡·네이버·인스타그램 앱 안에서는 홈 화면에 추가할 수 없어요. <b>${isIOS() ? '사파리' : '크롬(또는 삼성 인터넷)'}</b>${isIOS() ? '로' : '으로'} 열어서 추가해 주세요.</p>
+    ${ext ? `<a href="${ext}" class="mt-5 block w-full rounded-xl bg-brand py-3.5 text-center font-bold text-white">${isIOS() ? '사파리로' : '크롬으로'} 열기</a>` : ''}
+    <p class="mt-4 text-sm leading-relaxed">${ext ? '버튼이 안 되면 ' : ''}화면 오른쪽 위나 아래의 <b>⋯ 또는 ⋮ 메뉴</b> → <b>‘다른 브라우저로 열기’</b>를 눌러요.</p>
+    <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-ice py-3 font-bold">확인</button>`);
+  }
   if (!isIOS()) return openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
     <ol class="mt-4 space-y-3 text-sm">
       <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">1</span><span>오른쪽 위(삼성 인터넷은 아래)의 <b>메뉴 버튼</b> <span class="inline-block rounded border border-mist px-1.5">⋮</span> 또는 <span class="inline-block rounded border border-mist px-1.5">≡</span> 을 눌러요</span></li>
@@ -1735,15 +1753,15 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    시작
    ===================================================================== */
 (function init() {
-  const opts = GU.map(g => `<option>${g}</option>`).join('');
-  $('#gu').innerHTML = '<option value="">지역(구) 선택</option>' + opts; $('#qm-gu').insertAdjacentHTML('beforeend', opts); $('#qm-to').insertAdjacentHTML('beforeend', opts);
+  const opts = guOpts(GG_NEAR);
+  $('#gu').innerHTML = '<option value="">지역 선택</option>' + opts; $('#qm-gu').insertAdjacentHTML('beforeend', opts); $('#qm-to').insertAdjacentHTML('beforeend', guOpts(GG_ALL, '', [FAR]));
   $('#qm-ton').insertAdjacentHTML('beforeend', TONS.map(t => `<option>${t}</option>`).join(''));
   $('#svc').innerHTML = Object.values(KINDS).map(k => `<optgroup label="${k.name}">${k.svcs.map(c => `<option value="${c}">${SVC[c]}</option>`).join('')}</optgroup>`).join('');
   const short = c => c === 'freezer_sale' ? '매입·판매 (장터)' : SVC[c].replace('에어컨 ', '').replace('냉장·냉동고 ', '').replace('냉장·냉동 ', '');
   $('#qm-services').innerHTML = GROUPS.map(([title, codes, k]) => `<fieldset data-cat="${k}"><legend class="flex items-center gap-2 text-sm font-bold text-sub"><span class="grid h-7 w-7 place-items-center rounded-lg ${KINDS[k].color}">${svgI(KINDS[k].icon, 'h-4 w-4')}</span>${title}</legend><div class="mt-2 grid ${codes.length >= 3 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5">${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">${short(c)}</span></label>`).join('')}</div></fieldset>`).join('')
     + '<button type="button" id="qm-allcat" class="hidden text-sm font-bold text-brand underline">다른 서비스도 보기</button>';
   $('#qm-allcat').addEventListener('click', () => qCat(''));
-  ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">서울 전체</option>' + opts);
+  ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
   const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = ['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액 · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
   fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd();
   const z = C.BIZ || {}, ph = (v, d) => v ? esc(v) : d;
@@ -1758,7 +1776,8 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   <p class="mt-3 rounded-2xl bg-slate-50 p-3 text-[11px] text-slate-500 lg:text-xs">한여름은 당사자 간 매칭을 제공하는 중개 플랫폼이며, 거래 및 운송 자체의 당사자가 아닙니다. (14일 재점검 안심 보장제 운영)</p>
   <p class="mt-3">&copy; ${new Date().getFullYear()} 한여름. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
-  netState(); if (isIOS()) setTimeout(instShow, 4000);
+  netState(); setTimeout(instShow, 4000);
+  if (!standalone()) $('#hero-inst').classList.remove('hidden');
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
   try { const q = new URLSearchParams(location.search), go = q.get('go');
     if (go || q.has('app')) { q.delete('go'); q.delete('app'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }

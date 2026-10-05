@@ -12,11 +12,11 @@
 <meta name="apple-mobile-web-app-title" content="한여름">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:title" content="한여름 | 시원함의 모든 것">
-<meta property="og:description" content="서울 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭. 14일 재점검 안심 보장.">
+<meta property="og:description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭. 14일 재점검 안심 보장.">
 <meta property="og:image" content="https://hanyeoreum-kr.github.io/icon-512.png">
 <meta property="og:type" content="website">
 <title>한여름 | 시원함의 모든 것, 한여름에서 한 번에!</title>
-<meta name="description" content="서울 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭까지. 무료 견적 비교, 14일 재점검 안심 보장.">
+<meta name="description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭까지. 무료 견적 비교, 14일 재점검 안심 보장.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -98,13 +98,10 @@ if (window.tailwind) tailwind.config = {
 <section class="bg-gradient-to-b from-brand to-brand-700 text-white lg:bg-gradient-to-br">
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-7 lg:grid lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:gap-14 lg:px-8 lg:pb-28 lg:pt-16">
     <div>
-      <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울 전 지역 · 고객 견적 무료</span>
+      <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울 전 지역 + 경기 인접 · 고객 견적 무료</span>
       <h1 class="mt-3 text-[1.75rem] font-black leading-tight lg:mt-5 lg:text-[3.25rem] lg:leading-[1.15]"><span class="text-sky-200">시원함</span>의 모든 것,<br>한여름에서 <span class="text-amber-300">한 번에!</span></h1>
       <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">업소용 냉동·냉장</b> · <b class="text-white">용달</b>까지 검증된 기사님을 바로 연결해요.</p>
-      <div class="mt-5 flex gap-2 lg:hidden">
-        <a href="#quote" class="flex-1 rounded-2xl bg-sun py-3.5 text-center text-[15px] font-black text-white shadow-lg shadow-orange-900/20">⚡ 무료 견적 요청</a>
-        <button type="button" data-act="pros" class="rounded-2xl bg-white px-4 text-sm font-bold text-brand">기사님 찾기</button>
-        <button type="button" data-act="mkt" class="rounded-2xl bg-white/15 px-4 text-sm font-bold text-white">중고마켓</button></div>
+      <button type="button" id="hero-inst" data-act="install" class="hidden mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="mt-8 hidden rounded-3xl bg-white p-3 text-sea shadow-2xl lg:grid lg:grid-cols-[1.2fr_1fr_auto] lg:gap-2" aria-label="빠른 견적 요청">
         <label class="sr-only" for="svc">서비스</label><select id="svc" class="rounded-2xl bg-slate-50 px-4 py-4 font-bold"></select>
         <label class="sr-only" for="gu">지역</label><select id="gu" class="rounded-2xl bg-slate-50 px-4 py-4 font-bold"></select>
@@ -290,11 +287,11 @@ if (window.tailwind) tailwind.config = {
       <section data-step="1"><h3 class="text-xl font-bold">어떤 서비스가 필요하세요?</h3><div id="qm-services" class="mt-5 space-y-5"></div></section>
       <section data-step="2" class="hidden">
         <h3 class="text-xl font-bold">어디에서, 언제 필요하세요?</h3>
-        <label id="qm-gu-l" for="qm-gu" class="block mt-5 text-sm font-bold">서울시 구</label>
-        <select id="qm-gu" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">구를 선택하세요</option></select>
+        <label id="qm-gu-l" for="qm-gu" class="block mt-5 text-sm font-bold">작업 지역</label>
+        <select id="qm-gu" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">지역을 선택하세요</option></select>
         <div id="qm-truck" class="hidden">
-          <label for="qm-to" class="block mt-5 text-sm font-bold">도착지 (서울시 구)</label>
-          <select id="qm-to" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">구를 선택하세요</option></select>
+          <label for="qm-to" class="block mt-5 text-sm font-bold">도착지</label>
+          <select id="qm-to" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">지역을 선택하세요</option></select>
           <label for="qm-ton" class="block mt-5 text-sm font-bold">희망 차량</label>
           <select id="qm-ton" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="">차량을 선택하세요</option></select>
           <label class="mt-4 flex items-center gap-3 rounded-xl bg-ice px-4 py-3.5"><input id="qm-lift" type="checkbox" class="h-5 w-5 accent-brand"><span class="text-sm font-bold">리프트(파워게이트) 차량이 필요해요</span></label>
@@ -381,7 +378,7 @@ if (window.tailwind) tailwind.config = {
 <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=8"></script>
-<script src="app.js?v=8"></script>
+<script src="config.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
