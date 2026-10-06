@@ -181,7 +181,7 @@ if (window.tailwind) tailwind.config = {
       </div>
       <div class="grid grid-cols-2 gap-3 text-center lg:gap-4">
         <div class="col-span-2 rounded-3xl bg-sun p-6 text-white"><p class="text-sm font-bold text-white/90">견적 제출 · 중고 매입 제안 · 고객 이용</p><p class="mt-1 text-5xl font-black">0원</p><p class="mt-1 text-xs font-bold text-white/80">확정되기 전까지는 한 푼도 내지 않아요</p></div>
-        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</p><p class="mt-2 text-3xl font-black text-sky-300">3,000원</p><p class="mt-1 text-xs text-white/55">거래 확정 시 건당 정액</p></div>
+        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</p><p class="mt-2 text-3xl font-black text-sky-300">3,500원</p><p class="mt-1 text-xs text-white/55">거래 확정 시 건당 정액 · 부가세 포함</p></div>
         <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">냉장·냉동 철거 · 재고 판매</p><p class="mt-2 text-3xl font-black text-emerald-300">5%</p><p class="mt-1 text-xs text-white/55">확정 금액 기준 · 최대 10만 원</p></div>
       </div>
     </div>
@@ -203,7 +203,7 @@ if (window.tailwind) tailwind.config = {
         <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 판매</option><option value="freezer_sale">중고 매입</option></select>
         <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
         <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
-        <div class="mt-5 rounded-2xl bg-brand-50 p-5" aria-live="polite"><p class="text-sm text-sub">확정 시 차감 수수료</p><p id="fc-out" class="text-4xl font-black text-brand">3,000원</p><p id="fc-note" class="mt-1 text-sm text-sub"></p></div>
+        <div class="mt-5 rounded-2xl bg-brand-50 p-5" aria-live="polite"><p class="text-sm text-sub">확정 시 차감 수수료</p><p id="fc-out" class="text-4xl font-black text-brand">3,500원</p><p id="fc-note" class="mt-1 text-sm text-sub"></p></div>
       </div>
       <div class="rounded-3xl bg-white/10 p-6 lg:p-8">
         <h3 class="text-xl font-black">3단계면 바로 시작해요</h3>
@@ -378,7 +378,7 @@ if (window.tailwind) tailwind.config = {
 <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=12"></script>
-<script src="app.js?v=12"></script>
+<script src="config.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>

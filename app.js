@@ -86,8 +86,8 @@ const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold te
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
 const flat = code => /^(aircon|heat|kitchen)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
-const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3000 : 0;
-const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,000원' : '0원';
+const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
+const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
 
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3200); }
@@ -725,10 +725,10 @@ function proCard(p) {
     <div class="mt-3 grid grid-cols-[1fr_1.4fr] gap-2">${p.id === me() ? '<p class="col-span-2 text-center text-xs text-sub">내 프로필이에요</p>' : `${btn('pchat', p.id, '안심 채팅', 's', 'py-2.5')}${btn('preq', p.id, '견적 요청', 'a', 'py-2.5')}`}</div></article>`;
 }
 function renderPros() {
-  let ps = [...S.prosPub];
+  let ps = S.prosPub.filter(p => KINDS[p.kind || 'aircon']);
   const kinds = [['', '전체'], ...Object.entries(KINDS).map(([k, v]) => [k, v.name])];
   $('#fkinds-m').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="shrink-0 rounded-full border px-3.5 py-2 text-sm font-bold ${FS.kind === k ? 'border-brand bg-brand text-white' : 'border-mist bg-white text-slate-600'}">${t}</button>`).join('');
-  $('#fkinds-d').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="flex items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold ${FS.kind === k ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-50'}">${t}<span class="text-xs opacity-70">${k ? S.prosPub.filter(p => (p.kind || 'aircon') === k).length : S.prosPub.length}</span></button>`).join('');
+  $('#fkinds-d').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="flex items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold ${FS.kind === k ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-50'}">${t}<span class="text-xs opacity-70">${k ? ps.filter(p => (p.kind || 'aircon') === k).length : ps.length}</span></button>`).join('');
   $('#fchips').innerHTML = `<button type="button" data-act="ffree" aria-pressed="${FS.free}" class="rounded-2xl border px-3 py-2.5 text-sm font-bold ${FS.free ? 'border-brand bg-brand text-white' : 'border-mist bg-white'}">무료 견적</button>`;
   $('#ffree2').checked = FS.free;
   if (FS.kind) ps = ps.filter(p => (p.kind || 'aircon') === FS.kind);
@@ -748,7 +748,7 @@ function renderHome() {
         <span class="mt-4 hidden flex-wrap gap-1.5 lg:flex">${c.svcs.map(x => `<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">${SVC[x].replace('에어컨 ', '').replace('냉장·냉동고 ', '').replace('냉장·냉동 ', '')}</span>`).join('')}</span></span>
       <span class="text-xl text-slate-300 lg:hidden" aria-hidden="true">›</span><span class="hidden text-sm font-black text-brand lg:inline">견적 요청하기 →</span></button>`).join(''); }
   const hp = $('#home-pros'); if (!hp) return;
-  const top = [...S.prosPub].sort((a, b) => b.rating - a.rating || b.rating_count - a.rating_count).slice(0, 4);
+  const top = S.prosPub.filter(p => KINDS[p.kind || 'aircon']).sort((a, b) => b.rating - a.rating || b.rating_count - a.rating_count).slice(0, 4);
   hp.innerHTML = top.length ? top.map(p => `<button type="button" data-act="pdet" data-id="${p.id}" class="w-44 shrink-0 rounded-2xl bg-white p-4 text-left shadow-card transition lg:w-auto lg:rounded-3xl lg:p-5 lg:hover:-translate-y-1">
     ${proAvatar(p, 'h-12 w-12 text-base')}<b class="mt-3 block truncate">${esc(p.name)}</b><span class="block text-xs font-bold text-brand">${pkindLine(p)}</span>
     <span class="mt-1 block text-sm">${p.rating_count ? `<b class="text-amber-500">★ ${(+p.rating).toFixed(1)}</b> <span class="text-xs text-sub">후기 ${p.rating_count}</span>` : '<span class="text-xs text-sub">신규 기사님</span>'}</span><span class="mt-1 block truncate text-xs text-sub">${esc((p.areas || []).slice(0, 2).join(' · '))}</span></button>`).join('')
@@ -1124,9 +1124,9 @@ function proView() {
   const pc = pendingCharge();
   $('#pview').innerHTML = top + (on ? '' : '<p class="mt-4 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">휴무 중에는 새 견적·매입 제안을 낼 수 없고, 기사찾기에 휴무로 표시돼요.</p>') + `
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-br from-brand to-brand-800 p-6 text-white shadow-lg shadow-brand/30">
-      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3000 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
+      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
-    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·냉장냉동 수리·용달은 건당 3,000원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
+    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${kd.name} 분야 요청만 보여요. 나를 지정한 요청과 내 활동 지역 요청이 먼저 나와요.</p>
@@ -1774,7 +1774,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     + '<button type="button" id="qm-allcat" class="hidden text-sm font-bold text-brand underline">다른 서비스도 보기</button>';
   $('#qm-allcat').addEventListener('click', () => qCat(''));
   ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
-  const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = ['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액 · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
+  const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = ['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액(부가세 포함) · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
   fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd();
   const z = C.BIZ || {}, ph = (v, d) => v ? esc(v) : d;
   $('#foot').innerHTML = `<div class="lg:grid lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
