@@ -85,7 +85,7 @@ function moneyAdd(spec) {
   el.value = v ? String(v) : ''; el.dispatchEvent(new Event('input', { bubbles:true }));
 }
 /* 사업자 정보 (config.js 의 BIZ 값이 있으면 그것을 우선 사용) */
-const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동)', mailOrderNo:'' }, C.BIZ || {});
+const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'010-8748-2305', mailOrderNo:'' }, C.BIZ || {});
 const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
 const pad = n => String(n).padStart(2, '0');
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
@@ -1843,9 +1843,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   const z = BIZ, bizNoD = String(z.bizNo).replace(/\D/g, '');
   $('#foot').innerHTML = `<div class="lg:grid lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
     <div><p class="font-logo text-xl text-[#0C2D48] lg:text-2xl">한여름<span class="text-[#1AA7C7]">.</span></p>
-      <p class="mt-2">상호: ${esc(z.name)} | 대표: ${esc(z.ceo)} | 사업자등록번호: ${esc(z.bizNo)} <a class="underline" href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${bizNoD}" target="_blank" rel="noopener">사업자정보 확인</a></p>
-      <p>통신판매업 신고번호: ${z.mailOrderNo ? esc(z.mailOrderNo) : '신고 진행 중'} | 주소: ${esc(z.address)}</p>
-      <p>고객센터: ${C.CS_PHONE ? esc(C.CS_PHONE) + ' | ' : ''}이메일: ${esc(CS_EMAIL)} | 1:1 문의는 24시간 안에 답변해요</p></div>
+      <p class="mt-2">문의는 <button type="button" data-act="cs" class="font-bold text-sea underline">고객센터 1:1 문의</button>로 남겨 주세요. 24시간 안에 답변해요.</p>
+      <details class="mt-3 group"><summary class="inline-flex cursor-pointer list-none items-center gap-1 font-bold text-slate-500">사업자 정보 <span class="transition group-open:rotate-180" aria-hidden="true">▾</span></summary>
+        <div class="mt-2 space-y-0.5">
+          <p>상호: ${esc(z.name)} | 대표: ${esc(z.ceo)} | 사업자등록번호: ${esc(z.bizNo)} <a class="underline" href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${bizNoD}" target="_blank" rel="noopener">사업자정보 확인</a></p>
+          <p>통신판매업 신고번호: ${z.mailOrderNo ? esc(z.mailOrderNo) : '신고 진행 중'}</p>
+          <p>주소: ${esc(z.address)}</p>
+          <p>전화: ${esc(C.CS_PHONE || z.phone)} | 이메일: ${esc(CS_EMAIL)}</p>
+        </div></details></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">서비스</p><ul class="mt-3 space-y-2">${Object.entries(KINDS).map(([k, v]) => `<li><button type="button" data-act="qcat" data-id="${k}" class="hover:text-sea">${v.title}</button></li>`).join('')}<li><button type="button" data-act="mkt" class="hover:text-sea">중고마켓</button></li></ul></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">고객지원</p><ul class="mt-3 space-y-2"><li><button type="button" data-act="guarantee" class="hover:text-sea">14일 재점검 안심 보장</button></li><li><button type="button" data-act="cs" class="hover:text-sea">고객센터 · 1:1 문의</button></li><li><button type="button" data-act="gopro" class="hover:text-sea">기사님 등록</button></li><li><button type="button" data-act="install" class="hover:text-sea">앱 설치 안내</button></li></ul></div></div>
   <p class="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-bold text-slate-500"><a class="underline" href="${esc(TERMS_URL)}" target="_blank" rel="noopener">이용약관</a><a class="underline text-sea" href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a><a class="underline" href="${esc(TERMS_URL)}#c4" target="_blank" rel="noopener">예치금 환불정책</a><a class="underline" href="delete-account.html">회원 탈퇴 안내</a></p>
