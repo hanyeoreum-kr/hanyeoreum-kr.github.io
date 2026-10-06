@@ -17,23 +17,35 @@ const GG_ALL = ['수원시','성남시','고양시','용인시','부천시','안
 const FAR = '기타(지방)';
 const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
 const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
-const SVC = { aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
-/* 3대 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통) */
+const SVC = { aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
+/* 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통)
+   용달·화물(truck)은 운송주선업 허가 전까지 보류: KINDS_OFF 에서 KINDS 로 옮기면 다시 켜져요 */
 const KINDS = {
   aircon:{ name:'에어컨', title:'에어컨 수리·청소·설치', desc:'냉난방 에어컨 전문 기사님 매칭', pro:'에어컨 전문 기사님', subs:['수리', '설치', '세척', '냉난방 점검'], svcs:['aircon_repair', 'aircon_clean', 'aircon_install', 'aircon_check'], color:'bg-brand-50 text-brand', avatar:'bg-brand',
     icon:'<path d="M3 6h18v7H3z"/><path d="M6 10h12"/><path d="M7 17c0 1.5-1 2-1 3M12 17c0 1.5-1 2-1 3M17 17c0 1.5-1 2-1 3"/>' },
   cold:{ name:'냉장·냉동', title:'업소용 냉동·냉장고 수리·철거·매입', desc:'업소용 냉장고 · 제빙기 · 저온창고', pro:'업소용 냉장·냉동 전문 기사님', subs:['업소용 냉장고', '제빙기', '저온창고', '철거'], svcs:['cold_repair', 'freezer_removal', 'freezer_sale'], color:'bg-cyan-50 text-cyan-700', avatar:'bg-cyan-600',
-    icon:'<rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M5 10h14M9 6v1.5M9 13.5v3"/>' },
+    icon:'<rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M5 10h14M9 6v1.5M9 13.5v3"/>' }
+};
+const KINDS_ON = {
+  aircon:KINDS.aircon,
+  heat:{ name:'보일러·난방', title:'보일러 수리·교체·청소', desc:'가스·기름 보일러 · 온수 · 난방배관', pro:'보일러·난방 전문 기사님', subs:['보일러 수리', '보일러 교체', '난방배관 청소', '온수기'], svcs:['heat_repair', 'heat_install', 'heat_clean'], color:'bg-rose-50 text-rose-600', avatar:'bg-rose-500',
+    icon:'<path d="M12 2.5c1 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.6 1 2.5 2 3 0-3 .5-5.5.5-8z"/><path d="M5 21h14"/>' },
+  cold:KINDS.cold,
+  kitchen:{ name:'주방설비', title:'업소용 주방설비 수리·청소', desc:'식기세척기 · 후드·덕트 · 가스레인지', pro:'업소용 주방설비 전문 기사님', subs:['식기세척기', '후드·덕트 청소', '가스레인지·오븐', '기타 주방설비'], svcs:['kitchen_repair', 'kitchen_clean'], color:'bg-amber-50 text-amber-700', avatar:'bg-amber-500',
+    icon:'<path d="M4 10h16v10H4z"/><path d="M4 14h16"/><path d="M8 3v4M12 3v4M16 3v4"/>' }
+};
+const KINDS_OFF = {
   truck:{ name:'용달·화물', title:'용달·화물 기사 바로 매칭', desc:'설비 운반 · 소형 이사 · 화물', pro:'용달·화물 기사님', subs:['설비 운반', '소형 이사', '일반 화물'], svcs:['truck'], color:'bg-orange-50 text-orange-700', avatar:'bg-orange-500',
     icon:'<path d="M2 7h11v9H2z"/><path d="M13 10h4l3 3v3h-7z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/>' }
 };
+Object.keys(KINDS).forEach(k => delete KINDS[k]); Object.assign(KINDS, KINDS_ON);
 const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
-const kindOf = code => String(code).startsWith('aircon') ? 'aircon' : code === 'truck' ? 'truck' : 'cold';
+const kindOf = code => { const c = String(code); return c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
-const CERTS = ['피복아크용접기능사','온수온돌기능사','공조냉동기계기능사','냉동기계산업기사','비파괴검사 검증','고압 세척 장비 보유','진공펌프·가스회수 장비 보유'];
+const CERTS = ['피복아크용접기능사','온수온돌기능사','가스기능사','에너지관리기능사','가스시설시공업 등록','공조냉동기계기능사','냉동기계산업기사','비파괴검사 검증','고압 세척 장비 보유','진공펌프·가스회수 장비 보유'];
 const SL = { bad:'🙁 별로예요', good:'🙂 만족해요', great:'😄 최고예요' };
 const TAGS = { bad:['약속 시간 불응','마무리가 지저분함','작업 후 문제 발생'], good:['친절하고 설명이 자세함','약속 시간 준수','깔끔한 작업'], great:['전문성과 완벽한 시공','높은 가성비','친절한 사후 안내'] };
 const RWL = { requested:'접수됨', visit_scheduled:'방문 예정', resolved:'해결 완료' };
@@ -73,7 +85,7 @@ const row = (k, v) => `<div class="flex justify-between gap-4 py-2 border-b bord
 const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>`;
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
-const flat = code => String(code).startsWith('aircon') || ['truck', 'cold_repair'].includes(code);
+const flat = code => /^(aircon|heat|kitchen)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
 const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3000 : 0;
 const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,000원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
@@ -994,8 +1006,8 @@ async function sendChatPhoto(f) {
   catch (e) { toast(errMsg(e)); }
 }
 function directModal(tid) {
-  const t = S.thr.find(x => x.id === +tid), p = proPub(t.u2) || { fields:[], areas:[] }, codes = ['aircon_install', 'aircon_repair', 'aircon_clean', 'freezer_removal'];
-  const guess = { '에어컨 설치':'aircon_install', '이전설치':'aircon_install', '에어컨 수리':'aircon_repair', '업소용 수리':'aircon_repair', '에어컨 청소':'aircon_clean', '냉동고 매매·철거':'freezer_removal' }[(p.fields || [])[0]];
+  const t = S.thr.find(x => x.id === +tid), p = proPub(t.u2) || { fields:[], areas:[] }, codes = (KINDS[p.kind] || KINDS.aircon).svcs.filter(c => c !== 'freezer_sale');
+  const guess = codes[0];
   const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, x) => `<label for="${f}" class="block mt-4 text-sm font-bold">${x}</label>`;
   openM(head('합의 내용으로 계약하기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님과 채팅으로 합의한 내용을 계약으로 등록해요.</p>
     <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 계약 채팅방이 열려요.</p>

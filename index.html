@@ -12,11 +12,11 @@
 <meta name="apple-mobile-web-app-title" content="한여름">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:title" content="한여름 | 시원함의 모든 것">
-<meta property="og:description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭. 14일 재점검 안심 보장.">
+<meta property="og:description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 보일러·주방설비 기사 매칭. 14일 재점검 안심 보장.">
 <meta property="og:image" content="https://hanyeoreum-kr.github.io/icon-512.png">
 <meta property="og:type" content="website">
 <title>한여름 | 시원함의 모든 것, 한여름에서 한 번에!</title>
-<meta name="description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 용달·화물 기사 매칭까지. 무료 견적 비교, 14일 재점검 안심 보장.">
+<meta name="description" content="서울·경기 에어컨 수리·청소·설치, 업소용 냉동·냉장 수리·철거·매입, 보일러·업소용 주방설비 기사 매칭까지. 무료 견적 비교, 14일 재점검 안심 보장.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -100,7 +100,7 @@ if (window.tailwind) tailwind.config = {
     <div>
       <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울 전 지역 + 경기 인접 · 고객 견적 무료</span>
       <h1 class="mt-3 text-[1.75rem] font-black leading-tight lg:mt-5 lg:text-[3.25rem] lg:leading-[1.15]"><span class="text-sky-200">시원함</span>의 모든 것,<br>한여름에서 <span class="text-amber-300">한 번에!</span></h1>
-      <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">업소용 냉동·냉장</b> · <b class="text-white">용달</b>까지 검증된 기사님을 바로 연결해요.</p>
+      <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">업소용 냉장·주방설비</b>까지 검증된 기사님을 바로 연결해요.</p>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="mt-8 hidden rounded-3xl bg-white p-3 text-sea shadow-2xl lg:grid lg:grid-cols-[1.2fr_1fr_auto] lg:gap-2" aria-label="빠른 견적 요청">
         <label class="sr-only" for="svc">서비스</label><select id="svc" class="rounded-2xl bg-slate-50 px-4 py-4 font-bold"></select>
@@ -113,14 +113,14 @@ if (window.tailwind) tailwind.config = {
       <div class="absolute right-6 top-0 w-[340px] rounded-3xl bg-white p-5 text-sea shadow-2xl"><p class="text-xs font-bold text-sub">견적 도착 알림 · 예시</p>
         <div class="mt-3 flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-full bg-brand font-black text-white">시</span><span class="flex-1"><b class="block">에어컨 기사님</b><span class="text-xs text-sub">분해 세척 · 송파구</span></span><b class="text-lg text-brand">90,000원</b></div></div>
       <div class="absolute left-0 top-32 w-[300px] rounded-3xl bg-sea p-5 text-white shadow-2xl"><div class="flex items-center gap-3"><span class="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-xl font-black">14</span><span><b class="block">14일 재점검 보장</b><span class="text-xs text-white/60">같은 문제가 생기면 재점검</span></span></div></div>
-      <div class="absolute bottom-0 right-0 w-[320px] rounded-3xl bg-white p-5 text-sea shadow-2xl"><p class="text-xs font-bold text-orange-600">용달·화물 매칭 · 예시</p><b class="mt-1 block">1톤 리프트 · 마포구 → 은평구</b><p class="text-xs text-sub">업소용 냉장고 1대 운반</p></div>
+      <div class="absolute bottom-0 right-0 w-[320px] rounded-3xl bg-white p-5 text-sea shadow-2xl"><p class="text-xs font-bold text-rose-600">보일러 · 예시</p><b class="mt-1 block">보일러 교체 · 마포구</b><p class="text-xs text-sub">온수가 미지근해요 · 견적 3건 도착</p></div>
     </div>
   </div>
 </section>
 
 <!-- 3대 카테고리 -->
 <section id="services" class="mx-auto -mt-10 max-w-6xl px-4 lg:-mt-14 lg:px-8">
-  <div id="cats" class="grid gap-3 lg:grid-cols-3 lg:gap-6"></div>
+  <div id="cats" class="grid gap-3 lg:grid-cols-2 lg:gap-6"></div>
 </section>
 
 <!-- 14일 보장 · 비성수기 -->
@@ -132,11 +132,11 @@ if (window.tailwind) tailwind.config = {
   <div class="rounded-3xl border border-brand-100 bg-white p-5 shadow-card lg:p-8">
     <p class="text-xs font-bold text-brand">비성수기 안내</p>
     <h2 class="mt-1 text-lg font-black lg:text-xl">지금 예약하면 대기 없이 받아요</h2>
-    <p class="mt-1 text-sm leading-relaxed text-sub">여름 성수기에는 몇 주씩 밀려요. 미리 점검·청소하고, 폐업 설비 정리와 운반도 지금 맡겨 보세요.</p>
+    <p class="mt-1 text-sm leading-relaxed text-sub">여름 성수기에는 몇 주씩 밀려요. 미리 점검·청소하고, 폐업 설비 정리, 겨울 전 보일러 점검도 지금 맡겨 보세요.</p>
     <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold lg:text-sm">
       <a href="#quote" data-svc="aircon_check" class="rounded-2xl bg-slate-50 py-3 hover:bg-brand-50">냉난방 점검</a>
       <a href="#quote" data-svc="freezer_removal" class="rounded-2xl bg-slate-50 py-3 hover:bg-brand-50">설비 철거</a>
-      <a href="#quote" data-svc="truck" class="rounded-2xl bg-slate-50 py-3 hover:bg-brand-50">설비 운반</a>
+      <a href="#quote" data-svc="heat_repair" class="rounded-2xl bg-slate-50 py-3 hover:bg-brand-50">보일러 점검</a>
     </div>
   </div>
 </section>
@@ -181,14 +181,14 @@ if (window.tailwind) tailwind.config = {
       </div>
       <div class="grid grid-cols-2 gap-3 text-center lg:gap-4">
         <div class="col-span-2 rounded-3xl bg-sun p-6 text-white"><p class="text-sm font-bold text-white/90">견적 제출 · 중고 매입 제안 · 고객 이용</p><p class="mt-1 text-5xl font-black">0원</p><p class="mt-1 text-xs font-bold text-white/80">확정되기 전까지는 한 푼도 내지 않아요</p></div>
-        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">에어컨 · 냉장냉동 수리 · 용달</p><p class="mt-2 text-3xl font-black text-sky-300">3,000원</p><p class="mt-1 text-xs text-white/55">거래 확정 시 건당 정액</p></div>
+        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</p><p class="mt-2 text-3xl font-black text-sky-300">3,000원</p><p class="mt-1 text-xs text-white/55">거래 확정 시 건당 정액</p></div>
         <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">냉장·냉동 철거 · 재고 판매</p><p class="mt-2 text-3xl font-black text-emerald-300">5%</p><p class="mt-1 text-xs text-white/55">확정 금액 기준 · 최대 10만 원</p></div>
       </div>
     </div>
 
     <ul class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
       <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sun/20 text-lg" aria-hidden="true">🆓</span><h3 class="mt-3 font-bold">견적은 몇 번이든 무료</h3><p class="mt-1 text-sm leading-relaxed text-white/65">계약이 안 돼도 비용이 없어요. 부담 없이 여러 요청에 견적을 내 보세요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-lg" aria-hidden="true">🎯</span><h3 class="mt-3 font-bold">내 분야 요청만 쏙</h3><p class="mt-1 text-sm leading-relaxed text-white/65">에어컨 · 냉장냉동 · 용달 중 내 분야 요청만 보여요. 내 활동 지역 요청이 먼저 떠요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-lg" aria-hidden="true">🎯</span><h3 class="mt-3 font-bold">내 분야 요청만 쏙</h3><p class="mt-1 text-sm leading-relaxed text-white/65">에어컨 · 보일러 · 냉장냉동 · 주방설비 중 내 분야 요청만 보여요. 내 활동 지역 요청이 먼저 떠요.</p></li>
       <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-300/20 text-lg" aria-hidden="true">⭐</span><h3 class="mt-3 font-bold">나를 지정한 요청</h3><p class="mt-1 text-sm leading-relaxed text-white/65">기사님 몰아보기에서 고객이 직접 골라 요청하면 나만 보고 견적을 낼 수 있어요.</p></li>
       <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-300/20 text-lg" aria-hidden="true">🔔</span><h3 class="mt-3 font-bold">새 요청 바로 알림</h3><p class="mt-1 text-sm leading-relaxed text-white/65">휴대폰 홈 화면에 앱으로 설치하면 새 요청과 메시지를 알림으로 받아요.</p></li>
       <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-lg" aria-hidden="true">🧾</span><h3 class="mt-3 font-bold">차감 내역이 투명해요</h3><p class="mt-1 text-sm leading-relaxed text-white/65">충전 · 차감 내역이 건별로 남고, 잔액은 언제든 확인할 수 있어요.</p></li>
@@ -200,7 +200,7 @@ if (window.tailwind) tailwind.config = {
         <h3 class="text-xl font-black">수수료 미리 계산해 보기</h3>
         <p class="mt-1 text-sm text-sub">예상 거래 금액을 넣으면 확정 시 차감되는 수수료를 바로 알려드려요.</p>
         <label for="fc-svc" class="mt-5 block text-sm font-bold">서비스 종류</label>
-        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 냉장냉동 수리 · 용달</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 판매</option><option value="freezer_sale">중고 매입</option></select>
+        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 판매</option><option value="freezer_sale">중고 매입</option></select>
         <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
         <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
         <div class="mt-5 rounded-2xl bg-brand-50 p-5" aria-live="polite"><p class="text-sm text-sub">확정 시 차감 수수료</p><p id="fc-out" class="text-4xl font-black text-brand">3,000원</p><p id="fc-note" class="mt-1 text-sm text-sub"></p></div>
@@ -378,7 +378,7 @@ if (window.tailwind) tailwind.config = {
 <div id="toast" role="status" aria-live="polite" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-[70] max-w-[90vw] rounded-full bg-sea text-white text-sm font-bold px-5 py-3 shadow-xl"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=11"></script>
-<script src="app.js?v=11"></script>
+<script src="config.js?v=12"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
