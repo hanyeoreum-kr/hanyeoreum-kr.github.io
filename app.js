@@ -1246,7 +1246,7 @@ function lowModal(need) {
 }
 function walletModal(keep) {
   if (!S.pro) return;
-  const p = S.pro, pc = pendingCharge(), list = S.led.filter(l => l.pro_id === me()).slice(0, 20), bank = C.BANK || {};
+  const p = S.pro, pc = pendingCharge(), list = S.led.filter(l => l.pro_id === me()).slice(0, 20), bank = Object.assign({ name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, C.BANK || {});
   openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p></div>
     <p class="mt-3 text-sm text-sea/75 leading-relaxed">거래가 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
     <h3 class="mt-5 font-bold">충전하기</h3>
