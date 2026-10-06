@@ -86,6 +86,10 @@ function moneyAdd(spec) {
 }
 /* 사업자 정보 (config.js 의 BIZ 값이 있으면 그것을 우선 사용) */
 const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'010-8748-2305', mailOrderNo:'' }, C.BIZ || {});
+/* 충전 계좌: config.js 의 BANK 값이 비어 있거나 예시 글자면 아래 기본값을 써요 */
+const BANK = (() => { const d = { name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, c = C.BANK || {}, ok = v => typeof v === 'string' && v.trim() && !/YOUR|OOO|○|예시|은행명|계좌번호|예금주/.test(v); return { name:ok(c.name) ? c.name : d.name, account:ok(c.account) ? c.account : d.account, holder:ok(c.holder) ? c.holder : d.holder }; })();
+/* 토스 카드결제: 실제 운영 키(live_)가 들어 있을 때만 켜요. 테스트 키(test_)면 계좌이체 충전으로 보여요 */
+const TOSS_ON = typeof C.TOSS_CLIENT_KEY === 'string' && /^live_/.test(C.TOSS_CLIENT_KEY.trim());
 const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
 const pad = n => String(n).padStart(2, '0');
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
@@ -1246,11 +1250,11 @@ function lowModal(need) {
 }
 function walletModal(keep) {
   if (!S.pro) return;
-  const p = S.pro, pc = pendingCharge(), list = S.led.filter(l => l.pro_id === me()).slice(0, 20), bank = Object.assign({ name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, C.BANK || {});
+  const p = S.pro, pc = pendingCharge(), list = S.led.filter(l => l.pro_id === me()).slice(0, 20), bank = BANK;
   openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p></div>
     <p class="mt-3 text-sm text-sea/75 leading-relaxed">거래가 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
     <h3 class="mt-5 font-bold">충전하기</h3>
-    ${C.TOSS_CLIENT_KEY ? tossBlock() : pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
+    ${TOSS_ON ? tossBlock() : pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
     <ol class="mt-2 space-y-1 rounded-xl bg-ice p-4 text-sm"><li>1. 아래 계좌로 충전할 금액을 입금해요.</li><li class="font-bold">${esc(bank.name || '')} ${esc(bank.account || '')} (예금주 ${esc(bank.holder || '')})</li><li>2. 입금한 금액과 입금자명을 적고 충전 신청을 눌러요.</li><li>3. 관리자가 입금을 확인하면 예치금에 반영돼요.</li></ol>
     <fieldset class="mt-3"><legend class="text-sm font-bold">입금 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
     <label for="ch-name" class="block mt-3 text-sm font-bold">입금자명</label><input id="ch-name" maxlength="20" value="${esc(p.name)}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
