@@ -18,7 +18,7 @@ window.HY_CONFIG = {
   TOSS_CLIENT_KEY: '',
 
   // 기사 예치금 충전 계좌 (토스 키가 없을 때만 쓰여요 · 관리자가 입금 확인 후 승인)
-  BANK: { name: '은행명', account: '000-0000-0000-00', holder: '예금주' },
+  BANK: { name: '은행명', account: '3333-38-5718558', holder: '예금주' },
 
   // 간편 로그인: Supabase에서 켠 것만 적으세요. 예) ['kakao', 'google']
   SOCIAL: [],
