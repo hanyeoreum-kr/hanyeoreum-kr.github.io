@@ -259,6 +259,8 @@ function refreshOpen(ks) {
 /* =====================================================================
    로그인 · 회원
    ===================================================================== */
+const sessionStorageGet = k => { try { return sessionStorage.getItem(k); } catch (_) { return null; } };
+const sessionStorageSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (_) {} };
 async function onSession(session) {
   const prevId = me();
   S.user = session ? session.user : null;
@@ -272,6 +274,10 @@ async function onSession(session) {
   if (prevId !== me()) subscribe();
   if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {});
   if (S.user) handleTossReturn();
+  if (S.user && S.pro && !S.pro.biz_doc && !S.admin) {
+    const sent = await flushPendingDoc();
+    if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
+  }
   updateAuthUI(); showView(S.view === 'pros' || S.view === 'market' ? S.view : 'main');
 }
 function updateAuthUI() {
@@ -287,6 +293,20 @@ function updateAuthUI() {
 }
 function needLogin(msg) { if (S.user) return false; toast(msg || '로그인 후 이용할 수 있어요.'); authModal('login'); return true; }
 
+let auDoc = null;
+/* 가입할 때 고른 사업자등록증을 브라우저에 잠시 보관했다가, 로그인되면 자동으로 제출해요 */
+const pendDoc = (() => {
+  const db = () => new Promise((res, rej) => { try { const r = indexedDB.open('hy_pending', 1); r.onupgradeneeded = () => r.result.createObjectStore('doc'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } });
+  const run = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('doc', mode), st = t.objectStore('doc'), q = fn(st); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); })).catch(() => null);
+  return { save:(email, file) => run('readwrite', st => st.put({ email, file, name:file.name, at:Date.now() }, 'biz')), get:() => run('readonly', st => st.get('biz')), clear:() => run('readwrite', st => st.delete('biz')) };
+})();
+async function flushPendingDoc() {
+  if (!S.user || !S.pro || S.pro.biz_doc) return false;
+  const p = await pendDoc.get();
+  if (!p || !p.file || (p.email || '').toLowerCase() !== (S.user.email || '').toLowerCase()) return false;
+  try { const f = p.file instanceof File ? p.file : new File([p.file], p.name || 'bizdoc', { type:p.file.type }); await uploadBizDoc(f); await pendDoc.clear(); await load('pro'); toast('사업자등록증을 제출했어요. 확인 후 승인해 드릴게요.'); return true; }
+  catch (e) { console.warn('pending doc', e); return false; }
+}
 let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', subs:new Set(), ton:'', lift:false };
 /* 기사 전문 분야 선택 (가입 · 기사 전환 공통) */
 const specHTML = (st, pfx) => `<p class="mt-4 text-sm font-bold">전문 분야 <span class="text-sun">(필수)</span></p><div class="mt-2 grid gap-2">${Object.entries(KINDS).map(([k, v]) => `<div class="rounded-2xl border ${st.kind === k ? 'border-brand bg-brand-50' : 'border-mist'} p-3.5">
@@ -325,7 +345,12 @@ function renderAuth() {
       ${pro ? `<div id="au-spec">${specHTML(au, 'au')}</div>
         ${credBlock(au.certs, 'acert')}${freeToggle(au.free, 'afree')}
         <p class="mt-4 text-sm font-bold">활동 가능 지역 <span class="text-xs font-normal text-sea/60">(1곳 이상)</span></p>${areaGrid(au.areas, 'aarea')}
-        <p class="mt-4 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">📄 <b>사업자등록증</b>은 메일 인증 후 로그인하면 기사 화면에서 바로 올릴 수 있어요. 관리자가 사업자등록증을 확인하고 승인하면 견적을 낼 수 있어요.</p>` : ''}
+        <label class="mt-4 block text-sm font-bold">사업자등록증 <span class="text-xs font-normal text-sea/60">(필수 · 사진 또는 PDF · 10MB 이하)</span></label>
+        <label class="mt-2 flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed ${auDoc ? 'border-cool bg-cool/5' : 'border-sun/60 bg-sun/5'} px-4 py-5 text-center hover:bg-mist">
+          <span id="au-doc-name" class="font-bold">${auDoc ? '✅ ' + esc(auDoc.name || '사업자등록증') : '📄 사업자등록증 올리기'}</span>
+          <span class="text-xs text-sea/60">${auDoc ? '다른 파일로 바꾸려면 다시 누르세요' : '휴대폰으로 찍은 사진도 괜찮아요'}</span>
+          <input id="au-doc" type="file" accept="image/*,application/pdf" class="sr-only"></label>
+        <p class="mt-1 text-xs text-sea/60">관리자만 볼 수 있는 비공개 보관함에 저장되고, 확인 후 승인되면 견적을 낼 수 있어요. 주민번호 뒷자리가 보이면 가린 뒤 올려 주세요.</p>` : ''}
       ${common}
       <div class="mt-4 rounded-2xl border border-mist p-3 text-sm space-y-2">
         <label class="flex items-start gap-2 font-bold"><input id="au-agree" type="checkbox" data-act="agreeall" class="mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>아래 필수 항목에 모두 동의해요</span></label>
@@ -352,17 +377,18 @@ async function alogin(el) {
 async function asignup(el) {
   saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '';
   const err = !name ? (pro ? '상호명 또는 기사명을 입력해 주세요.' : '이름을 입력해 주세요.') : !emailOk(email) ? '이메일 형식을 확인해 주세요.' : !pwOk(pw) ? '비밀번호는 8자 이상, 영문과 숫자를 모두 넣어 주세요.'
-    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && specErr(au) ? specErr(au) : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : !au.agree ? '필수 약관 3개에 모두 동의해 주세요.' : '';
+    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && specErr(au) ? specErr(au) : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : pro && !auDoc ? '사업자등록증 사진이나 PDF를 올려 주세요.' : !au.agree ? '필수 약관 3개에 모두 동의해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
     if (pro) Object.assign(data, { kind:au.kind, fields:specFields(au), ton:au.kind === 'truck' ? au.ton : null, lift:au.kind === 'truck' && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
+    if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
     const { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
-    if (error) return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error));
-    track('signup');
+    if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
+    track('signup'); auDoc = null;
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', subs:new Set(), ton:'', lift:false };
-    if (res && res.session) { closeM(); toast(pro ? '가입했어요. 기사 화면에서 사업자등록증을 올려 주세요.' : '가입을 환영해요!'); return; }
-    openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 기사 회원은 인증 후 로그인해서 사업자등록증을 올려 주세요. 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
+    if (res && res.session) { closeM(); toast(pro ? '가입했어요. 사업자등록증을 확인한 뒤 승인해 드릴게요.' : '가입을 환영해요!'); return; }
+    openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 인증 후 이 휴대폰(브라우저)에서 로그인하면 올려 두신 사업자등록증이 자동으로 제출돼요. 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
   });
 }
 async function asocial(p) {
@@ -1670,6 +1696,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('change', e => {
   if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
   if (e.target.id === 'chat-photo') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
+  if (e.target.id === 'au-doc') { const f = e.target.files[0]; e.target.value = ''; if (f) { const er = docErr(f); if (er) setErr(er); else { auDoc = f; setErr(''); saveAuth(); renderAuth(); } } }
   if (e.target.id === 'ph-file') { const f = e.target.files[0]; e.target.value = ''; if (f) phPick(f); }
   if (e.target.id === 'sp-file') { for (const f of e.target.files) { if (sp.length >= spMax()) { setErr(sellBulk ? '일괄 판매는 사진을 최대 20장까지 올릴 수 있어요.' : '사진은 최대 5장까지 올릴 수 있어요. 여러 대라면 ‘여러 대 일괄 판매’를 눌러 주세요 (최대 20장).'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); bkDraw(); }
 });
