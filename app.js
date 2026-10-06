@@ -74,6 +74,16 @@ document.addEventListener('input', e => {
   t.value = d ? (+d).toLocaleString('ko-KR') : '';
   const h = document.getElementById(t.id + '-hint'); if (h) h.textContent = d ? '= ' + manwon(+d) : '';
 });
+/* 금액 단위표 + 빠른 입력 버튼 (판매·제안 금액 입력칸 아래) */
+const UNITS = [[1000, '천 원'], [10000, '만 원'], [100000, '십만 원'], [1000000, '백만 원'], [10000000, '천만 원']];
+const unitTable = id => `<div class="mt-2 rounded-xl border border-mist p-3"><p class="text-xs font-bold text-sea/60">숫자 단위표</p>
+  <table class="mt-1 w-full text-sm tabular-nums"><tbody>${UNITS.map(([n, t]) => `<tr class="border-b border-dashed border-mist last:border-0"><td class="py-1 text-right font-bold">${n.toLocaleString('ko-KR')}</td><td class="py-1 pl-4 text-sea/70">${t}</td></tr>`).join('')}</tbody></table>
+  <div class="mt-2 flex flex-wrap gap-1.5">${[10000, 50000, 100000, 500000, 1000000].map(n => `<button type="button" data-act="madd" data-id="${id}:${n}" class="rounded-full bg-ice px-3 py-1.5 text-xs font-bold hover:bg-mist">+${manwon(n).replace(' 원', '')}</button>`).join('')}<button type="button" data-act="madd" data-id="${id}:0" class="rounded-full px-3 py-1.5 text-xs font-bold text-sea/50 underline">지우기</button></div></div>`;
+function moneyAdd(spec) {
+  const [id, n] = String(spec).split(':'), el = document.getElementById(id); if (!el) return;
+  const v = +n ? moneyVal('#' + id) + +n : 0;
+  el.value = v ? String(v) : ''; el.dispatchEvent(new Event('input', { bubbles:true }));
+}
 /* 사업자 정보 (config.js 의 BIZ 값이 있으면 그것을 우선 사용) */
 const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동)', mailOrderNo:'' }, C.BIZ || {});
 const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
@@ -595,8 +605,7 @@ const mrow = l => `<div class="flex items-start gap-2 py-3 sm:py-4 border-b bord
 function renderMarket() {
   const mine = S.lst.filter(l => l.seller_id === me()).length;
   $('#mtabs').innerHTML = [['all', '전체'], ['mine', `내 판매글 (${mine})`], ['fav', `관심 (${FAV.size})`]].map(([k, t]) => `<button type="button" data-act="mtab" data-id="${k}" aria-pressed="${MK.tab === k}" class="shrink-0 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${MK.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`).join('');
-  $('#mchips').innerHTML = ['A', 'B', 'C'].map(g => `<button type="button" data-act="mgr" data-id="${g}" aria-pressed="${MK.grades.has(g)}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.grades.has(g) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${g}급</button>`).join('')
-    + `<button type="button" data-act="mfree" aria-pressed="${MK.free}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.free ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">🚚 무료 출장 견적 가능만</button>`;
+  $('#mchips').innerHTML = ['A', 'B', 'C'].map(g => `<button type="button" data-act="mgr" data-id="${g}" aria-pressed="${MK.grades.has(g)}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.grades.has(g) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${g}급</button>`).join('');
   let rows = S.lst.filter(l => MK.tab === 'mine' ? l.seller_id === me() : l.status !== 'closed');
   if (MK.tab === 'fav') rows = rows.filter(l => FAV.has(l.id));
   if (MK.grades.size) rows = rows.filter(l => MK.grades.has(l.grade));
@@ -639,7 +648,7 @@ function bkDraw() {
   document.querySelectorAll('[data-act="smode"]').forEach(b => { const on = (b.dataset.id === 'bulk') === sellBulk; b.setAttribute('aria-pressed', on); b.className = `rounded-xl py-3 text-sm font-bold ${on ? 'bg-sea text-white' : 'text-sea/60'}`; });
   $('#sl-title-l').textContent = sellBulk ? '판매글 제목 (비워 두면 자동으로 만들어요)' : '제품명';
   $('#sl-price-l').textContent = sellBulk ? '일괄 희망 가격 · 전체 합계(원)' : '희망 판매 가격(원)';
-  $('#sl-years-l').textContent = sellBulk ? '대표 연식 (제조 연도 4자리)' : '연식 (제조 연도 4자리)';
+  $('#sl-years-l').textContent = sellBulk ? '대표 연식 (몇 년식인가요?)' : '연식 (몇 년식인가요?)';
   $('#sp-lab').textContent = sellBulk ? `사진 추가하기 (최대 20장 · 물건마다 찍어 주세요) ${sp.length ? sp.length + '/20' : ''}` : `사진 추가하기 (최대 5장) ${sp.length ? sp.length + '/5' : ''}`;
   $('#bk-chips').innerHTML = ITEMS.map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
   $('#bk-list').innerHTML = bk.length ? bk.map((x, i) => `<li class="flex items-center gap-2 rounded-xl bg-white px-3 py-2"><span class="min-w-0 flex-1 truncate text-sm font-bold">${esc(x.n)}</span>
@@ -661,9 +670,9 @@ function sellModal(kind) {
     <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span id="sp-lab" class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
     <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
     <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
-    <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label>${moneyInp('sl-price', '', inp)}
+    <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label>${moneyInp('sl-price', '', inp)}${unitTable('sl-price')}
     <fieldset class="mt-4"><legend class="text-sm font-bold">제품 상태</legend><div class="mt-2 grid grid-cols-3 gap-2">${Object.keys(GR).map(k => `<label class="relative"><input type="radio" name="sg" value="${k}" class="peer sr-only"><span class="block rounded-xl border-2 border-mist py-3 text-center cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool"><b>${GR[k][0]}</b><br><span class="text-xs text-sea/60">${GR[k][1]}</span></span></label>`).join('')}</div></fieldset>
-    <label id="sl-years-l" for="sl-years" class="block mt-4 text-sm font-bold">연식 (제조 연도 4자리)</label><input id="sl-years" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="예) 2024" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" class="${inp}"><p class="mt-1 text-xs text-sea/60">제품 라벨에 적힌 제조 연도를 넣어 주세요. 모르면 대략적인 연도도 괜찮아요.</p>
+    <label id="sl-years-l" for="sl-years" class="block mt-4 text-sm font-bold">연식 (몇 년식인가요?)</label><div class="relative mt-2"><input id="sl-years" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="예) 2024" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" class="w-full rounded-xl bg-ice px-4 py-3.5 pr-16"><span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 font-bold text-sea/60">년식</span></div><p class="mt-1 text-xs text-sea/60">제품 라벨에 적힌 제조 연도 4자리를 넣어 주세요. 예) 2024 → <b>2024년식</b></p>
     ${lab('sl-gu', '매장 위치 (서울·경기 인접)')}<select id="sl-gu" class="${inp}"><option value="">지역을 선택하세요</option>${guOpts(GG_NEAR)}</select>
     <input id="sl-loc" maxlength="40" aria-label="상세 위치" placeholder="상세 위치 예) 삼성역 인근 1층 (번지까지는 적지 마세요)" class="${inp}">
     <div class="mt-4 grid grid-cols-2 gap-3"><div><label for="sl-elev" class="text-sm font-bold">엘리베이터</label><select id="sl-elev" class="${inp}"><option value="">선택</option><option value="y">있음</option><option value="n">없음</option></select></div>
@@ -677,7 +686,7 @@ async function ssend(el) {
   const g = id => $(id).value.trim(), grade = document.querySelector('input[name="sg"]:checked')?.value, price = moneyVal('#sl-price'), years = $('#sl-years').value.trim();
   if (sellBulk && !g('#sl-title') && bk.length) $('#sl-title').value = (bk.length > 1 ? `${bk[0].n} 외 ${bk.length - 1}종 일괄 (총 ${bk.reduce((t, x) => t + x.q, 0)}대)` : `${bk[0].n} ${bk[0].q}대 일괄`).slice(0, 40);
   const err = sp.length > spMax() ? `사진이 ${sp.length}장이에요. 한 대 판매는 5장까지예요. 사진을 줄이거나 ‘여러 대 일괄 판매’를 눌러 주세요.` : sellBulk && !bk.length ? '일괄 판매할 물건 종목을 담아 주세요.' : sellBulk && bk.length === 1 && bk[0].q < 2 ? '일괄 판매는 2대 이상일 때 써 주세요. 한 대면 ‘한 대만 팔기’를 눌러 주세요.' : !g('#sl-title') ? '제품명을 입력해 주세요.' : !(price >= 1000) ? '희망 판매 가격을 입력해 주세요.' : !grade ? '제품 상태(A/B/C급)를 선택해 주세요.'
-    : !/^\d{4}$/.test(years) || +years < 1980 || +years > new Date().getFullYear() ? `연식은 제조 연도 4자리로 입력해 주세요. (예: 2024, 1980~${new Date().getFullYear()})` : !g('#sl-gu') ? '매장 위치를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
+    : !/^\d{4}$/.test(years) || +years < 1980 || +years > new Date().getFullYear() ? `연식은 몇 년식인지 4자리로 입력해 주세요. (예: 2024년식, 1980~${new Date().getFullYear()})` : !g('#sl-gu') ? '매장 위치를 선택해 주세요.' : !$('#sl-elev').value || !$('#sl-lad').value ? '엘리베이터와 사다리차 여부를 선택해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     el.textContent = '올리는 중...';
@@ -782,8 +791,7 @@ function renderPros() {
   const kinds = [['', '전체'], ...Object.entries(KINDS).map(([k, v]) => [k, v.name])];
   $('#fkinds-m').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="shrink-0 rounded-full border px-3.5 py-2 text-sm font-bold ${FS.kind === k ? 'border-brand bg-brand text-white' : 'border-mist bg-white text-slate-600'}">${t}</button>`).join('');
   $('#fkinds-d').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="flex items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold ${FS.kind === k ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-50'}">${t}<span class="text-xs opacity-70">${k ? ps.filter(p => (p.kind || 'aircon') === k).length : ps.length}</span></button>`).join('');
-  $('#fchips').innerHTML = `<button type="button" data-act="ffree" aria-pressed="${FS.free}" class="rounded-2xl border px-3 py-2.5 text-sm font-bold ${FS.free ? 'border-brand bg-brand text-white' : 'border-mist bg-white'}">무료 견적</button>`;
-  $('#ffree2').checked = FS.free;
+  $('#fchips').innerHTML = '';
   if (FS.kind) ps = ps.filter(p => (p.kind || 'aircon') === FS.kind);
   if (FS.free) ps = ps.filter(p => p.free);
   if (FS.gu) ps = ps.filter(p => (p.areas || []).includes(FS.gu));
@@ -1558,6 +1566,7 @@ const ACT = {
   gopro: () => S.user ? (isPro() ? setMode('pro') : becomeProModal()) : authModal('signup', 'pro'),
   barea: g => toggleIn(bp.areas, g, 'barea'), bcert: c => toggleIn(bp.certs, c, 'bcert'), bcertadd: () => addCert('bcert', bp.certs),
   bfree: () => { bp.free = !bp.free; const b = document.querySelector('[data-act="bfree"]'); b.setAttribute('aria-pressed', bp.free); b.className = chipCls(bp.free); },
+  madd: id => moneyAdd(id),
   phdel: (id, el) => busy(el, async () => { const { error } = await sb.from('pro_photos').delete().eq('id', me()); if (error) throw error; delete S.proPh[me()]; phRedraw(); render(); toast('프로필 사진을 지웠어요.'); }),
   bpsend: (id, el) => bpSend(el), bdsend: (id, el) => bdSend(el), bdview: () => S.pro && S.pro.biz_doc && openBizDoc(S.pro.biz_doc),
   agreeall: (id, el) => document.querySelectorAll('.au-c').forEach(c => c.checked = el.checked),
@@ -1677,7 +1686,7 @@ document.addEventListener('submit', e => {
 $('#mq').addEventListener('input', e => { MK.q = e.target.value.trim().toLowerCase(); renderMarket(); });
 $('#msort').addEventListener('change', e => { MK.sort = e.target.value; renderMarket(); });
 ['fg', 'fsort', 'fg2', 'fsort2'].forEach(id => $('#' + id).addEventListener('change', e => { FS[e.target.dataset.f] = e.target.value; ['fg', 'fg2'].forEach(x => $('#' + x).value = FS.gu); ['fsort', 'fsort2'].forEach(x => $('#' + x).value = FS.sort); renderPros(); }));
-$('#ffree2').addEventListener('change', e => { FS.free = e.target.checked; renderPros(); });
+
 
 /* 타이머 표시 · 기한 지난 자동 확정 처리 */
 let hkAt = 0;
