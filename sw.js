@@ -1,7 +1,7 @@
 /* 한여름 서비스워커 — 항상 최신 화면을 먼저 받고, 인터넷이 끊겼을 때만 저장본을 보여줘요. */
-const CACHE = 'hy-v25';
+const CACHE = 'hy-v26';
 const CDN = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
-const CORE = ['./', 'index.html', 'app.js?v=25', 'config.js?v=13', 'manifest.json', 'icon-192.png', 'icon-512.png', 'terms.html', 'privacy.html', 'refund.html', 'legal.css', 'delete-account.html'];
+const CORE = ['./', 'index.html', 'app.js?v=26', 'config.js?v=13', 'manifest.json', 'icon-192.png', 'icon-512.png', 'terms.html', 'privacy.html', 'refund.html', 'legal.css', 'delete-account.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}));
@@ -29,11 +29,19 @@ self.addEventListener('fetch', e => {
     }).catch(() => caches.match(req, { ignoreSearch: req.mode === 'navigate' }).then(r => r || caches.match('index.html')))
   );
 });
+// 서버에서 보낸 푸시 알림 (앱을 닫아 두어도 와요)
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
+  const title = d.title ? '한여름 · ' + d.title : '한여름';
+  e.waitUntil(self.registration.showNotification(title, { body: d.body || '새 소식이 있어요', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || 'hy-' + Date.now(), data: { url: d.url || './' }, vibrate: [120, 60, 120] }));
+});
 // 알림을 누르면 열려 있는 한여름 화면으로, 없으면 새로 열어요
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || './';
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
     const w = list.find(c => c.url.startsWith(self.registration.scope));
-    return w ? w.focus() : self.clients.openWindow('./');
+    return w ? w.focus() : self.clients.openWindow(url);
   }));
 });

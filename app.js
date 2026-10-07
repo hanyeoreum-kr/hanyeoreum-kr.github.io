@@ -274,6 +274,10 @@ async function onSession(session) {
   if (prevId !== me()) subscribe();
   if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {});
   if (S.user) handleTossReturn();
+  if (S.user) setTimeout(async () => {
+    if (canNote() && Notification.permission === 'granted') pushSubscribe();
+    else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 계약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
+  }, 800);
   if (S.user && S.pro && !S.pro.biz_doc && !S.admin) {
     const sent = await flushPendingDoc();
     if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
@@ -1747,10 +1751,26 @@ function track(kind, path) {
 let W = null, nBadge = 0; const baseTitle = document.title;
 const canNote = () => 'Notification' in window && window.isSecureContext;
 const notifBtn = () => canNote() && Notification.permission === 'default' ? `<button type="button" data-act="notifon" class="rounded-xl border-2 border-sun/60 bg-sun/10 font-bold px-4 py-2.5 text-sm text-sea">🔔 알림 켜기</button>` : '';
+/* 앱을 닫아도 오는 푸시 알림 (Web Push). 공개키는 config.js 의 VAPID_PUBLIC_KEY 가 있으면 그것을 써요 */
+const VAPID_PUB = C.VAPID_PUBLIC_KEY || 'BOz7NrzRKbibpXKeN5D6Z9qcIXMRESo5n3ALslPgtyg04mCkJ22-QKHLsmulLMqGMH5Q1qfJtvYNbSKUTPLPYYs';
+const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
+async function pushSubscribe() {
+  try {
+    if (!S.user || !sb || !canNote() || Notification.permission !== 'granted' || !('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64u(VAPID_PUB) });
+    const j = sub.toJSON();
+    const { error } = await sb.from('push_subs').upsert({ user_id:me(), endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, ua:navigator.userAgent.slice(0, 200), updated_at:new Date().toISOString() }, { onConflict:'endpoint' });
+    if (error) { console.warn('push save', error.message); return false; }
+    return true;
+  } catch (e) { console.warn('push', e); return false; }
+}
 async function notifOn() {
   if (!canNote()) return toast(isIOS() && !standalone() ? '아이폰은 홈 화면에 추가한 앱에서 알림을 켤 수 있어요.' : '이 브라우저는 알림을 지원하지 않아요.');
   const r = await Notification.requestPermission().catch(() => 'denied');
-  toast(r === 'granted' ? '알림을 켰어요. 새 소식이 오면 알려 드릴게요.' : '알림이 꺼져 있어요. 브라우저 설정에서 허용할 수 있어요.');
+  const ok = r === 'granted' && await pushSubscribe();
+  toast(r === 'granted' ? (ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림을 켰어요. (앱이 열려 있을 때 알려 드려요)') : '알림이 꺼져 있어요. 휴대폰 설정 → 앱/사이트 알림에서 허용할 수 있어요.');
   render(); refreshOpen(['con']);
 }
 function phoneNote(t, b) {
