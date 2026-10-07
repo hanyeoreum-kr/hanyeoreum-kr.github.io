@@ -85,7 +85,7 @@ function moneyAdd(spec) {
   el.value = v ? String(v) : ''; el.dispatchEvent(new Event('input', { bubbles:true }));
 }
 /* 사업자 정보 (config.js 의 BIZ 값이 있으면 그것을 우선 사용) */
-const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'010-8748-2305', mailOrderNo:'' }, C.BIZ || {});
+const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'010-8748-2305', mailOrderNo:'제2026-서울중랑-1254호' }, C.BIZ || {});
 /* 충전 계좌: config.js 의 BANK 값이 비어 있거나 예시 글자면 아래 기본값을 써요 */
 const BANK = (() => { const d = { name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, c = C.BANK || {}, ok = v => typeof v === 'string' && v.trim() && !/YOUR|OOO|○|예시|은행명|계좌번호|예금주/.test(v); return { name:ok(c.name) ? c.name : d.name, account:ok(c.account) && /[1-9]/.test(c.account) ? c.account : d.account, holder:ok(c.holder) ? c.holder : d.holder }; })();
 /* 토스 카드결제: 실제 운영 키(live_)가 들어 있을 때만 켜요. 테스트 키(test_)면 계좌이체 충전으로 보여요 */
