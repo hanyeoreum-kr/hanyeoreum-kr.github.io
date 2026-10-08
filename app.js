@@ -1257,7 +1257,7 @@ function proView() {
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${kd.name} 분야 요청만 보여요. 나를 지정한 요청과 내 활동 지역 요청이 먼저 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
-    ${kind === 'cold' ? `<h2 class="mt-10 text-2xl font-black">중고 냉동·냉장고 매입</h2><p class="mt-1 text-sm text-sub">매입 제안은 무료이고 매입 수수료도 0원이에요.</p>
+    ${myKinds.includes('cold') ? `<h2 class="mt-10 text-2xl font-black">중고 냉동·냉장고 매입</h2><p class="mt-1 text-sm text-sub">매입 제안은 무료이고 매입 수수료도 0원이에요.</p>
     <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${S.lst.filter(l => l.status === 'open' && l.seller_id !== me()).map(proListing).join('') || empty('지금 올라온 판매글이 없어요.')}</div>
     <div class="mt-10 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-black">내 재고 판매</h2>${btn('stockopen', '', '재고 판매글 올리기', 'a')}</div>
     <p class="mt-1 text-sm text-sub">보유 중인 중고 재고를 소비자나 다른 업체에 팔 수 있어요. 거래 확정 시 거래금액의 5%(건당 최대 10만 원)만 차감돼요.</p>
