@@ -284,6 +284,7 @@ async function onSession(session) {
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
     else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 계약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
   }, 800);
+  if (S.user && S.pro && !(S.pro.kinds || []).length) { const mk = ((S.user.user_metadata || {}).kinds || []).filter(k => KINDS[k] || k === 'truck'); if (mk.length) saveKinds(mk); }
   if (S.user && S.pro && !S.pro.biz_doc && !S.admin) {
     const sent = await flushPendingDoc();
     if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
@@ -317,19 +318,22 @@ async function flushPendingDoc() {
   try { const f = p.file instanceof File ? p.file : new File([p.file], p.name || 'bizdoc', { type:p.file.type }); await uploadBizDoc(f); await pendDoc.clear(); await load('pro'); toast('사업자등록증을 제출했어요. 확인 후 승인해 드릴게요.'); return true; }
   catch (e) { console.warn('pending doc', e); return false; }
 }
-let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', subs:new Set(), ton:'', lift:false };
+let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
 /* 기사 전문 분야 선택 (가입 · 기사 전환 공통) */
-const specHTML = (st, pfx) => `<p class="mt-4 text-sm font-bold">전문 분야 <span class="text-sun">(필수)</span></p><div class="mt-2 grid gap-2">${Object.entries(KINDS).map(([k, v]) => `<div class="rounded-2xl border ${st.kind === k ? 'border-brand bg-brand-50' : 'border-mist'} p-3.5">
-  <button type="button" data-act="${pfx}kind" data-id="${k}" aria-pressed="${st.kind === k}" class="flex w-full items-center gap-3 text-left"><span class="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${st.kind === k ? 'border-brand' : 'border-slate-300'}">${st.kind === k ? '<i class="h-2.5 w-2.5 rounded-full bg-brand"></i>' : ''}</span><b class="text-sm">${v.pro}</b></button>
-  ${st.kind !== k ? '' : k === 'truck' ? `<div class="mt-3 grid gap-2"><label for="${pfx}-ton" class="sr-only">차량 톤수</label><select id="${pfx}-ton" class="w-full rounded-xl border border-mist bg-white px-3 py-3 font-medium"><option value="">차량 톤수 선택</option>${TONS.map(t => `<option${st.ton === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
-    <label class="flex items-center gap-2 text-sm font-bold"><input id="${pfx}-lift" type="checkbox" class="h-5 w-5 accent-brand"${st.lift ? ' checked' : ''}>리프트(파워게이트) 보유</label>
-    <div class="flex flex-wrap gap-1.5">${v.subs.map(x => `<button type="button" data-act="${pfx}sub" data-id="${x}" aria-pressed="${st.subs.has(x)}" class="${chipCls(st.subs.has(x))}">${x}</button>`).join('')}</div></div>`
-    : `<div class="mt-3 flex flex-wrap gap-1.5">${v.subs.map(x => `<button type="button" data-act="${pfx}sub" data-id="${x}" aria-pressed="${st.subs.has(x)}" class="${chipCls(st.subs.has(x))}">${x}</button>`).join('')}</div>`}</div>`).join('')}</div>`;
+/* 기사 전문 분야: 여러 분야를 고를 수 있어요 (첫 번째가 대표 분야) */
+const proKinds = p => { const ks = Array.isArray(p && p.kinds) && p.kinds.length ? p.kinds : [(p && p.kind) || 'aircon']; return [...new Set(ks)]; };
+const kindsOrdered = st => Object.keys(KINDS).filter(k => st.kinds && st.kinds.has(k));
+const subChips = (st, pfx, v) => `<div class="mt-3 flex flex-wrap gap-1.5">${v.subs.map(x => `<button type="button" data-act="${pfx}sub" data-id="${x}" aria-pressed="${st.subs.has(x)}" class="${chipCls(st.subs.has(x))}">${x}</button>`).join('')}</div>`;
+const specHTML = (st, pfx) => `<p class="mt-4 text-sm font-bold">작업 가능 분야 <span class="text-sun">(필수 · 여러 개 선택 가능)</span></p><p class="mt-1 text-xs text-sea/60">가능한 분야를 모두 고르면 그 분야의 견적 요청이 전부 알림으로 와요.</p><div class="mt-2 grid gap-2">${Object.entries(KINDS).map(([k, v]) => { const on = st.kinds.has(k); return `<div class="rounded-2xl border ${on ? 'border-brand bg-brand-50' : 'border-mist'} p-3.5">
+  <button type="button" data-act="${pfx}kind" data-id="${k}" aria-pressed="${on}" class="flex w-full items-center gap-3 text-left"><span class="grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 ${on ? 'border-brand bg-brand text-white' : 'border-slate-300'}">${on ? '<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3.5" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' : ''}</span><b class="text-sm">${v.pro}</b></button>
+  ${!on ? '' : k === 'truck' ? `<div class="mt-3 grid gap-2"><label for="${pfx}-ton" class="sr-only">차량 톤수</label><select id="${pfx}-ton" class="w-full rounded-xl border border-mist bg-white px-3 py-3 font-medium"><option value="">차량 톤수 선택</option>${TONS.map(t => `<option${st.ton === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
+    <label class="flex items-center gap-2 text-sm font-bold"><input id="${pfx}-lift" type="checkbox" class="h-5 w-5 accent-brand"${st.lift ? ' checked' : ''}>리프트(파워게이트) 보유</label>${subChips(st, pfx, v)}</div>`
+    : subChips(st, pfx, v)}</div>`; }).join('')}</div>`;
 function specRead(st, pfx) { const t = $('#' + pfx + '-ton'), l = $('#' + pfx + '-lift'); if (t) st.ton = t.value; if (l) st.lift = l.checked; }
-function specErr(st) { return !st.kind ? '전문 분야를 선택해 주세요.' : st.kind === 'truck' ? (!st.ton ? '차량 톤수를 선택해 주세요.' : '') : !st.subs.size ? '세부 분야를 1개 이상 골라 주세요.' : ''; }
-function specKind(st, pfx, k) { specRead(st, pfx); st.kind = k; st.subs = new Set(); const box = $('#' + pfx + '-spec'); if (box) box.innerHTML = specHTML(st, pfx); }
+function specErr(st) { const ks = kindsOrdered(st); if (!ks.length) return '작업 가능 분야를 1개 이상 선택해 주세요.'; if (ks.includes('truck') && !st.ton) return '차량 톤수를 선택해 주세요.'; const miss = ks.find(k => k !== 'truck' && !KINDS[k].subs.some(x => st.subs.has(x))); return miss ? `${KINDS[miss].name} 분야의 세부 작업을 1개 이상 골라 주세요.` : ''; }
+function specKind(st, pfx, k) { specRead(st, pfx); if (st.kinds.has(k)) { st.kinds.delete(k); (KINDS[k] ? KINDS[k].subs : []).forEach(x => { if (!kindsOrdered(st).some(o => KINDS[o].subs.includes(x))) st.subs.delete(x); }); } else st.kinds.add(k); st.kind = kindsOrdered(st)[0] || ''; const box = $('#' + pfx + '-spec'); if (box) box.innerHTML = specHTML(st, pfx); }
 function specSub(st, pfx, x, b) { st.subs.has(x) ? st.subs.delete(x) : st.subs.add(x); if (b) { b.setAttribute('aria-pressed', st.subs.has(x)); b.className = chipCls(st.subs.has(x)); } }
-const specFields = st => st.subs.size ? [...st.subs] : st.kind === 'truck' ? ['설비 운반'] : [];
+const specFields = st => st.subs.size ? [...st.subs] : st.kinds.has('truck') ? ['설비 운반'] : [];
 const PROV = { kakao:'카카오', google:'구글', naver:'네이버' };
 /* 간편 로그인: 카카오(Supabase 기본 기능) · 네이버(Edge Function naver-login) — 설정이 켜진 것만 버튼이 보여요 */
 const NAVER_FN = (C.SUPABASE_URL || '') + '/functions/v1/naver-login';
@@ -406,12 +410,12 @@ async function asignup(el) {
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
-    if (pro) Object.assign(data, { kind:au.kind, fields:specFields(au), ton:au.kind === 'truck' ? au.ton : null, lift:au.kind === 'truck' && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
+    if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
     const { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
     if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
     track('signup'); auDoc = null;
-    au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', subs:new Set(), ton:'', lift:false };
+    au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
     if (res && res.session) { closeM(); toast(pro ? '가입했어요. 사업자등록증을 확인한 뒤 승인해 드릴게요.' : '가입을 환영해요!'); return; }
     openM(head('메일함을 확인해 주세요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 인증 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.${pro ? ' 인증 후 이 휴대폰(브라우저)에서 로그인하면 올려 두신 사업자등록증이 자동으로 제출돼요. 관리자 승인이 끝나면 견적을 낼 수 있어요.' : ''}</p><div class="mt-4">${btn('auth', '', '로그인 화면으로', 's')}</div>`);
   });
@@ -483,7 +487,7 @@ let bp = null;
 function becomeProModal() {
   if (needLogin('기사 등록은 로그인 후 할 수 있어요.')) return;
   if (isPro()) { setMode('pro'); return; }
-  bp = bp || { areas:new Set(), certs:new Set(), free:false, kind:'', subs:new Set(), ton:'', lift:false };
+  bp = bp || { areas:new Set(), certs:new Set(), free:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
   const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
   openM(head('기사·업체로 등록') + `<p class="text-sm text-sea/70">정보를 보내면 관리자가 확인하고 승인해요. 승인되면 견적을 낼 수 있어요.</p>
     ${photoBlock(bpPhoto ? { name:'?', photo:URL.createObjectURL(bpPhoto), _local:true } : null)}
@@ -503,7 +507,8 @@ async function bpSend(el) {
   if (doc && docErr(doc)) return setErr(docErr(doc));
   if (!doc && !S.admin) return setErr('사업자등록증을 올려 주세요.');
   await busy(el, async () => {
-    await rpc('become_pro', { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:bp.kind, p_ton:bp.kind === 'truck' ? bp.ton : null, p_lift:bp.kind === 'truck' && bp.lift });
+    await rpc('become_pro', { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift });
+    await saveKinds(kindsOrdered(bp));
     if (doc) await uploadBizDoc(doc);
     if (bpPhoto) { try { await savePhoto(bpPhoto); } catch (e) { console.warn('photo', e); } bpPhoto = null; }
     if (S.admin) await rpc('admin_set_approval', { p_pro:me(), p_approve:true });   // 관리자 본인은 바로 승인
@@ -833,7 +838,7 @@ async function phPick(f) {
 const photoBlock = p => `<div id="ph-box" class="mt-4 flex items-center gap-4 rounded-2xl bg-ice p-4">${proAvatar(p || { name:'?' }, 'h-20 w-20 text-3xl')}
   <div class="min-w-0 flex-1"><p class="font-bold">프로필 사진 <span class="text-xs font-normal text-sea/60">(1장)</span></p><p class="mt-0.5 text-xs text-sea/60">얼굴이나 가게 사진을 올리면 고객이 더 믿고 골라요.</p>
   <label class="mt-2 inline-block cursor-pointer rounded-xl bg-white px-4 py-2 text-sm font-bold border border-mist hover:bg-mist">${p && proPhoto(p) ? '사진 바꾸기' : '사진 올리기'}<input id="ph-file" type="file" accept="image/*" class="sr-only"></label>${p && proPhoto(p) && !p._local ? ' <button type="button" data-act="phdel" class="ml-1 text-xs font-bold text-sea/50 underline">삭제</button>' : ''}</div></div>`;
-const pkindLine = p => `${(KINDS[p.kind] || KINDS.aircon).name}${p.kind === 'truck' && p.ton ? ` · ${esc(p.ton)}${p.lift ? ' 리프트' : ''}` : ''}`;
+const pkindLine = p => `${proKinds(p).filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || (KINDS[p.kind] || KINDS.aircon).name}${p.kind === 'truck' && p.ton ? ` · ${esc(p.ton)}${p.lift ? ' 리프트' : ''}` : ''}`;
 function proCard(p) {
   return `<article class="flex flex-col rounded-3xl bg-white p-4 shadow-card lg:p-6">
     <button type="button" data-act="pdet" data-id="${p.id}" class="flex w-full flex-col gap-3 text-left">
@@ -850,9 +855,9 @@ function renderPros() {
   let ps = S.prosPub.filter(p => KINDS[p.kind || 'aircon']);
   const kinds = [['', '전체'], ...Object.entries(KINDS).map(([k, v]) => [k, v.name])];
   $('#fkinds-m').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="shrink-0 rounded-full border px-3.5 py-2 text-sm font-bold ${FS.kind === k ? 'border-brand bg-brand text-white' : 'border-mist bg-white text-slate-600'}">${t}</button>`).join('');
-  $('#fkinds-d').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="flex items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold ${FS.kind === k ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-50'}">${t}<span class="text-xs opacity-70">${k ? ps.filter(p => (p.kind || 'aircon') === k).length : ps.length}</span></button>`).join('');
+  $('#fkinds-d').innerHTML = kinds.map(([k, t]) => `<button type="button" data-act="fkind" data-id="${k}" aria-pressed="${FS.kind === k}" class="flex items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-bold ${FS.kind === k ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-50'}">${t}<span class="text-xs opacity-70">${k ? ps.filter(p => proKinds(p).includes(k)).length : ps.length}</span></button>`).join('');
   $('#fchips').innerHTML = '';
-  if (FS.kind) ps = ps.filter(p => (p.kind || 'aircon') === FS.kind);
+  if (FS.kind) ps = ps.filter(p => proKinds(p).includes(FS.kind));
   if (FS.free) ps = ps.filter(p => p.free);
   if (FS.gu) ps = ps.filter(p => (p.areas || []).includes(FS.gu));
   ps.sort(FS.sort === 'reviews' ? (a, b) => b.rating_count - a.rating_count : FS.sort === 'done' ? (a, b) => (b.done || 0) - (a.done || 0) : FS.sort === 'new' ? (a, b) => T(b.created_at) - T(a.created_at) : (a, b) => b.rating - a.rating || b.rating_count - a.rating_count);
@@ -1230,7 +1235,7 @@ function proView() {
   const p = S.pro; if (!p) { $('#pview').innerHTML = empty('기사 정보를 불러오는 중이에요.'); return; }
   const on = p.online !== false, ok = p.approval === 'APPROVED';
   const kd = KINDS[p.kind] || KINDS.aircon;
-  const top = `<div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm font-bold text-brand">${kd.pro}${p.kind === 'truck' && p.ton ? ` · ${esc(p.ton)}${p.lift ? ' 리프트' : ''}` : ''}</p><h1 class="text-2xl font-black lg:text-3xl">${esc(p.name)} 기사님</h1><p class="mt-1 text-sm text-sub">${prate({ rating:p.rating_count ? p.rating_sum / p.rating_count : 0, rating_count:p.rating_count })}</p></div>
+  const top = `<div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm font-bold text-brand">${proKinds(p).filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.pro}${p.kind === 'truck' && p.ton ? ` · ${esc(p.ton)}${p.lift ? ' 리프트' : ''}` : ''}</p><h1 class="text-2xl font-black lg:text-3xl">${esc(p.name)} 기사님</h1><p class="mt-1 text-sm text-sub">${prate({ rating:p.rating_count ? p.rating_sum / p.rating_count : 0, rating_count:p.rating_count })}</p></div>
     <div class="flex flex-wrap items-center gap-2">${notifBtn()}${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
   if (!ok) {
     $('#pview').innerHTML = top + (p.approval === 'PENDING'
@@ -1238,8 +1243,8 @@ function proView() {
       : `<div class="mt-6 rounded-3xl bg-red-50 p-6"><p class="font-bold text-red-700 text-lg">기사 등록이 승인되지 않았어요</p><p class="mt-2 text-sm text-sea/80">자세한 내용은 고객센터로 문의해 주세요.</p><div class="mt-4">${btn('inqnew', '', '고객센터 문의', 'a')}</div></div>`);
     return;
   }
-  const kind = p.kind || 'aircon';
-  const open = S.req.filter(r => r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || (!r.target_pro && kindOf(r.service) === kind)))
+  const myKinds = proKinds(p);
+  const open = S.req.filter(r => r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || (!r.target_pro && myKinds.includes(kindOf(r.service)))))
     .sort((a, b) => ((b.target_pro === me()) - (a.target_pro === me())) || ((p.areas || []).includes(b.gu) - (p.areas || []).includes(a.gu)) || b.id - a.id);
   const mineQ = S.quo.filter(q => q.pro_id === me()), cons = S.con.filter(c => c.provider_id === me());
   const pc = pendingCharge();
@@ -1392,6 +1397,8 @@ async function toggleOnline(el) {
   await busy(el, async () => { const v = S.pro.online === false; const { error } = await sb.from('pros').update({ online:v }).eq('id', me()); if (error) throw error; S.pro.online = v; render(); toast(v ? '영업중으로 바꿨어요.' : '휴무로 바꿨어요.'); });
 }
 async function savePro(patch) { const { error } = await sb.from('pros').update(patch).eq('id', me()); if (error) throw error; Object.assign(S.pro, patch); }
+/* 여러 분야 저장 (kinds 칸이 아직 없으면 조용히 넘어가요) */
+async function saveKinds(ks) { if (!ks || !ks.length || !me()) return; try { await rpc('set_my_kinds', { p_kinds:ks }); if (S.pro) S.pro.kinds = ks; } catch (_) { try { const { error } = await sb.from('pros').update({ kinds:ks }).eq('id', me()); if (!error && S.pro) S.pro.kinds = ks; } catch (__) {} } }
 function mypageModal(keep) {
   const p = S.pro, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3';
   openM(head('마이페이지') + `<p class="text-sm text-sea/70">기사찾기와 받은 견적에서 고객에게 보이는 내용이에요.</p>${photoBlock(p)}
@@ -1409,7 +1416,7 @@ function mypageModal(keep) {
 }
 let pe = null;
 function profModal() {
-  const p = S.pro; pe = { certs:new Set(p.certs || []), areas:new Set(p.areas || []), free:!!p.free, kind:p.kind || 'aircon', subs:new Set((p.fields || []).filter(f => (KINDS[p.kind || 'aircon'].subs).includes(f))), ton:p.ton || '', lift:!!p.lift };
+  const p = S.pro; const pk = proKinds(p).filter(k => KINDS[k]); pe = { certs:new Set(p.certs || []), areas:new Set(p.areas || []), free:!!p.free, kind:pk[0] || 'aircon', kinds:new Set(pk), subs:new Set((p.fields || []).filter(f => pk.some(k => KINDS[k].subs.includes(f)))), ton:p.ton || '', lift:!!p.lift };
   openM(head('프로필 수정') + `${photoBlock(p)}<label for="pe-name" class="block mt-4 text-sm font-bold">상호명 / 기사명</label><input id="pe-name" maxlength="30" value="${esc(p.name)}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
     <div id="pe-spec">${specHTML(pe, 'pe')}</div>
     ${credBlock(pe.certs, 'pecert')}${freeToggle(pe.free, 'pefree')}
@@ -1422,7 +1429,7 @@ async function peSave(el) {
   if (!name) return setErr('상호명 또는 기사명을 입력해 주세요.');
   specRead(pe, 'pe'); if (specErr(pe)) return setErr(specErr(pe));
   if (!pe.areas.size) return setErr('활동 가능 지역을 1곳 이상 선택해 주세요.');
-  await busy(el, async () => { await savePro({ name, kind:pe.kind, ton:pe.kind === 'truck' ? pe.ton : null, lift:pe.kind === 'truck' && pe.lift, fields:specFields(pe), areas:[...pe.areas], certs:[...pe.certs].slice(0, 20), free:pe.free }); closeM(); render(); toast('프로필을 저장했어요.'); });
+  await busy(el, async () => { await saveKinds(kindsOrdered(pe)); await savePro({ name, kind:kindsOrdered(pe)[0], ton:pe.kinds.has('truck') ? pe.ton : null, lift:pe.kinds.has('truck') && pe.lift, fields:specFields(pe), areas:[...pe.areas], certs:[...pe.certs].slice(0, 20), free:pe.free }); closeM(); render(); toast('프로필을 저장했어요.'); });
 }
 
 /* =====================================================================
@@ -1573,7 +1580,7 @@ function areqModal(id) {
   id = +id; const r = S.adminReq.find(x => x.id === id); if (!r) return;
   const c = custOf(r), qs = reqQs(id).slice().sort((a, b) => a.price - b.price), st = RST[reqState(r)];
   const pname = pid => (S.adminPros.find(p => p.id === pid) || {}).name || '기사';
-  const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && p.kind === kind && (!(p.areas || []).length || p.areas.includes(r.gu)));
+  const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && proKinds(p).includes(kind) && (!(p.areas || []).length || p.areas.includes(r.gu)));
   const rows = [['서비스', SVC[r.service] || r.service], ['지역', place(r.gu) + (r.to_gu ? ' → ' + place(r.to_gu) : '')], ['희망일', r.wish_date || '-'], ['접수', fmtT(r.created_at) + ' (' + ago(r.created_at) + ')'], ['고객', (c.name || '고객') + (c.email ? ' · ' + c.email : '')], ...(r.ton ? [['차량', r.ton + (r.lift ? ' · 리프트' : '')]] : []), ...(r.target_pro ? [['지정 기사', pname(r.target_pro)]] : [])];
   openM(head(reqCode(r.id)) + `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}</span>
     <dl class="mt-3 grid grid-cols-[72px_1fr] gap-y-1.5 text-sm">${rows.map(([k, v]) => `<dt class="text-sea/60">${k}</dt><dd class="font-bold">${esc(v)}</dd>`).join('')}</dl>
