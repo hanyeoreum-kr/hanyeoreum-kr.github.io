@@ -346,7 +346,7 @@ async function socialCheck() {
 const SOC_STYLE = { kakao:'bg-[#FEE500] text-[#191919]', naver:'bg-[#03C75A] text-white', google:'border-2 border-mist bg-white text-sea' };
 const SOC_ICON = { kakao:'<svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>', naver:'<svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M16.3 12.8 7.4 0H0v24h7.7V11.2L16.6 24H24V0h-7.7z"/></svg>', google:'G' };
 function saveAuth() { specRead(au, 'au'); ['name', 'email', 'pw', 'pw2', 'biz'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const cs = [...document.querySelectorAll('.au-c')]; if (cs.length) au.agree = cs.every(c => c.checked); }
-function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); menuCur = 'auth'; }
+function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); if (!SOC.length) socialCheck(); }
 const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격증 · 장비 보유 <span class="text-xs font-normal text-sea/60">(선택)</span></p>
   <div id="${act}-chips" class="mt-2 flex flex-wrap gap-1.5">${[...CERTS, ...[...set].filter(c => !CERTS.includes(c))].map(c => chip(act, c, set.has(c))).join('')}</div>
   <div class="mt-2 flex gap-2"><input id="${act}-in" maxlength="30" aria-label="자격증·장비 직접 입력" placeholder="직접 입력 (예: 가스용접기능사)" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3"><button type="button" data-act="${act}add" class="${B.s} shrink-0">+ 추가</button></div>
@@ -385,6 +385,7 @@ function renderAuth() {
         </div>
       </div>
       ${errBox()}${btn('asignup', '', '가입하기', 'a', 'mt-2 w-full')}`));
+  menuCur = 'auth';
 }
 const emailOk = e => /^\S+@\S+\.\S+$/.test(e);
 const pwOk = p => p.length >= 8 && /[A-Za-z]/.test(p) && /\d/.test(p);
@@ -1986,9 +1987,9 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   netState(); setTimeout(instShow, 4000);
   if (!standalone()) $('#hero-inst').classList.remove('hidden');
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
-  try { const q = new URLSearchParams(location.search), go = q.get('go');
-    if (go || q.has('app')) { q.delete('go'); q.delete('app'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
-    if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote({}); else if (go === 'delete') delModal(); }, 1500);
+  try { const q = new URLSearchParams(location.search), go = q.get('go'), gcat = q.get('cat');
+    if (go || q.has('app')) { q.delete('go'); q.delete('app'); q.delete('cat'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+    if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote(gcat && KINDS[gcat] ? { cat:gcat } : {}); else if (go === 'delete') delModal(); }, 1500);
   } catch (e) {}
   if (!sb) { $('#setup-warn').classList.remove('hidden'); render(); return; }
   render(); socialCheck();
