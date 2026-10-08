@@ -164,7 +164,7 @@ const isPhotoUrl = u => typeof u === 'string' && /^https:\/\//.test(u);
    ===================================================================== */
 const S = {
   user:null, profile:null, pro:null, admin:false, mode:'customer', view:'main', autoH:24,
-  req:[], quo:[], con:[], thr:[], rew:[], lst:[], off:[], inq:[], ntf:[], led:[], chg:[], inc:[], aud:[], prosPub:[], adminPros:[], myRev:[], proPh:{},
+  req:[], quo:[], adminReq:[], adminQuo:[], custNm:{}, con:[], thr:[], rew:[], lst:[], off:[], inq:[], ntf:[], led:[], chg:[], inc:[], aud:[], prosPub:[], adminPros:[], myRev:[], proPh:{},
   msgs:{}, inqMsgs:{}
 };
 const me = () => S.user && S.user.id;
@@ -191,6 +191,8 @@ const Q = {
   aud: () => sb.from('audit_log').select('*').order('id', { ascending:false }).limit(100),
   myRev: () => sb.from('reviews').select('id, contract_id, pro_id, mood, stars, tags, body, created_at').order('id', { ascending:false }).limit(500),
   adminPros: () => sb.from('pros').select('*').order('created_at', { ascending:false }).limit(1000),
+  adminReq: () => sb.from('requests').select('*').order('id', { ascending:false }).limit(1000),
+  adminQuo: () => sb.from('quotes').select('id, request_id, pro_id, price, status, created_at').order('id', { ascending:false }).limit(3000),
   pro: () => sb.from('pros').select('*').eq('id', me()).maybeSingle(),
   profile: () => sb.from('profiles').select('*').eq('id', me()).maybeSingle()
 };
@@ -205,6 +207,8 @@ async function load(key) {
   if (key === 'pro') { S.pro = data || null; return; }
   if (key === 'profile') { S.profile = data || null; return; }
   if (key === 'myRev') { S.myRev = data || []; return; }
+  if (key === 'adminReq') { S.adminReq = data || []; const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
+    for (let i = 0; i < ids.length; i += 200) { const { data:ps } = await sb.from('profiles').select('id, name, email').in('id', ids.slice(i, i + 200)); (ps || []).forEach(p => S.custNm[p.id] = p); } return; }
   if (key === 'proPh') { S.proPh = Object.fromEntries((data || []).map(x => [x.id, x.url])); return; }
   S[key] = data || [];
 }
@@ -212,7 +216,7 @@ async function loadAll() {
   const keys = [...PUBLIC];
   if (S.user) {
     keys.push(...PRIVATE, 'pro', 'profile');
-    if (S.admin) keys.push('led', 'chg', 'inc', 'aud', 'adminPros');
+    if (S.admin) keys.push('led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo');
   }
   await Promise.all(keys.map(load));
   if (S.user && S.pro) await Promise.all([load('led'), load('chg')]);
@@ -228,6 +232,8 @@ function queueLoad(key) {
     const ks = [...pendingLoads]; pendingLoads.clear();
     if (ks.includes('prosPub') && S.user) ks.push('pro');
     if (ks.includes('prosPub') && S.admin) ks.push('adminPros');
+    if (S.admin && ks.includes('req')) ks.push('adminReq');
+    if (S.admin && ks.includes('quo')) ks.push('adminQuo');
     if (ks.includes('led') || ks.includes('chg')) { if (S.admin) ks.push('inc'); }
     await Promise.all([...new Set(ks)].map(load));
     render(); refreshOpen(ks); watchNew();
@@ -265,7 +271,7 @@ async function onSession(session) {
   const prevId = me();
   S.user = session ? session.user : null;
   S.admin = false; S.pro = null; S.profile = null;
-  PRIVATE.concat(['led', 'chg', 'inc', 'aud', 'adminPros']).forEach(k => S[k] = []);
+  PRIVATE.concat(['led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo']).forEach(k => S[k] = []);
   S.msgs = {}; S.inqMsgs = {};
   if (S.user) { try { S.admin = !!(await rpc('is_admin')); } catch (_) { S.admin = false; } }
   if (!S.user || (S.mode === 'pro' && !S.pro) || (S.mode === 'admin' && !S.admin)) S.mode = 'customer';
@@ -325,8 +331,22 @@ function specKind(st, pfx, k) { specRead(st, pfx); st.kind = k; st.subs = new Se
 function specSub(st, pfx, x, b) { st.subs.has(x) ? st.subs.delete(x) : st.subs.add(x); if (b) { b.setAttribute('aria-pressed', st.subs.has(x)); b.className = chipCls(st.subs.has(x)); } }
 const specFields = st => st.subs.size ? [...st.subs] : st.kind === 'truck' ? ['설비 운반'] : [];
 const PROV = { kakao:'카카오', google:'구글', naver:'네이버' };
+/* 간편 로그인: 카카오(Supabase 기본 기능) · 네이버(Edge Function naver-login) — 설정이 켜진 것만 버튼이 보여요 */
+const NAVER_FN = (C.SUPABASE_URL || '') + '/functions/v1/naver-login';
+const SOC_ORDER = ['kakao', 'naver', 'google'];
+let SOC = [];
+async function socialCheck() {
+  if (!sb) return;
+  const on = new Set();
+  try { const r = await fetch(C.SUPABASE_URL + '/auth/v1/settings', { headers:{ apikey:C.SUPABASE_ANON_KEY } }); const ex = (await r.json()).external || {}; ['kakao', 'google'].forEach(k => { if (ex[k]) on.add(k); }); } catch (_) {}
+  try { const r = await fetch(NAVER_FN + '?cfg=1'); if (r.ok && (await r.json()).on) on.add('naver'); } catch (_) {}
+  SOC = SOC_ORDER.filter(k => on.has(k));
+  if (mmOpen() && menuCur === 'auth') renderAuth();
+}
+const SOC_STYLE = { kakao:'bg-[#FEE500] text-[#191919]', naver:'bg-[#03C75A] text-white', google:'border-2 border-mist bg-white text-sea' };
+const SOC_ICON = { kakao:'<svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>', naver:'<svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M16.3 12.8 7.4 0H0v24h7.7V11.2L16.6 24H24V0h-7.7z"/></svg>', google:'G' };
 function saveAuth() { specRead(au, 'au'); ['name', 'email', 'pw', 'pw2', 'biz'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const cs = [...document.querySelectorAll('.au-c')]; if (cs.length) au.agree = cs.every(c => c.checked); }
-function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); }
+function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); menuCur = 'auth'; }
 const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격증 · 장비 보유 <span class="text-xs font-normal text-sea/60">(선택)</span></p>
   <div id="${act}-chips" class="mt-2 flex flex-wrap gap-1.5">${[...CERTS, ...[...set].filter(c => !CERTS.includes(c))].map(c => chip(act, c, set.has(c))).join('')}</div>
   <div class="mt-2 flex gap-2"><input id="${act}-in" maxlength="30" aria-label="자격증·장비 직접 입력" placeholder="직접 입력 (예: 가스용접기능사)" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3"><button type="button" data-act="${act}add" class="${B.s} shrink-0">+ 추가</button></div>
@@ -338,7 +358,7 @@ const legalLinks = () => `<a href="${esc(TERMS_URL)}" target="_blank" rel="noope
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
   const tab = (k, t) => `<button type="button" data-act="atab" data-id="${k}" aria-pressed="${au.tab === k}" class="flex-1 rounded-full py-2.5 text-sm font-bold ${au.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`;
-  const social = (C.SOCIAL || []).length ? `<div class="mt-5"><p class="text-xs font-bold text-sea/60">간편 ${login ? '로그인' : '가입'}</p><div class="mt-2 grid grid-cols-${Math.min(3, C.SOCIAL.length)} gap-2">${C.SOCIAL.map(k => `<button type="button" data-act="asocial" data-id="${k}" class="rounded-xl border-2 border-mist px-2 py-3 text-sm font-bold hover:bg-ice">${PROV[k] || k}</button>`).join('')}</div>${login ? '' : '<p class="mt-1 text-xs text-sea/60">간편 가입 후 기사로 활동하려면 “기사·업체 등록”에서 정보를 입력해 주세요.</p>'}</div><div class="my-4 flex items-center gap-3 text-xs text-sea/50"><i class="h-px flex-1 bg-mist"></i>또는 이메일로<i class="h-px flex-1 bg-mist"></i></div>` : '';
+  const social = SOC.length ? `<div class="mt-5"><p class="text-xs font-bold text-sea/60">3초 간편 ${login ? '로그인' : '가입'}</p><div class="mt-2 grid gap-2">${SOC.map(k => `<button type="button" data-act="asocial" data-id="${k}" class="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-[15px] font-bold hover:opacity-90 ${SOC_STYLE[k] || ''}">${SOC_ICON[k] || ''}${PROV[k] || k}로 ${login ? '로그인' : '시작하기'}</button>`).join('')}</div>${login ? '' : '<p class="mt-1 text-xs text-sea/60">간편 가입 후 기사로 활동하려면 “기사·업체 등록”에서 정보를 입력해 주세요.</p>'}</div><div class="my-4 flex items-center gap-3 text-xs text-sea/50"><i class="h-px flex-1 bg-mist"></i>또는 이메일로<i class="h-px flex-1 bg-mist"></i></div>` : '';
   const common = `${lab('au-email', '이메일')}<input id="au-email" type="email" autocomplete="email" value="${v('email')}" class="${inp}">
     ${lab('au-pw', login ? '비밀번호' : '비밀번호 (8자 이상, 영문+숫자)')}<input id="au-pw" type="password" autocomplete="${login ? 'current-password' : 'new-password'}" value="${v('pw')}" class="${inp}">
     ${login ? '' : `${lab('au-pw2', '비밀번호 확인')}<input id="au-pw2" type="password" autocomplete="new-password" value="${v('pw2')}" class="${inp}">`}`;
@@ -396,6 +416,11 @@ async function asignup(el) {
   });
 }
 async function asocial(p) {
+  if (p === 'naver') {
+    const ns = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+    sessionStorageSet('hy_ns', ns); try { localStorage.setItem('hy_ns', ns); } catch (_) {}
+    location.href = NAVER_FN + '?start=1&ns=' + ns; return;
+  }
   await busy(null, async () => { const { error } = await sb.auth.signInWithOAuth({ provider:p, options:{ redirectTo:C.SITE_URL || location.href.split('#')[0] } }); if (error) throw error; });
 }
 function resetStart() {
@@ -1509,6 +1534,55 @@ function visitCard() {
       <div><h3 class="text-sm font-bold">최근 7일 실제 행동</h3><ul class="mt-2 space-y-1 text-sm"><li class="flex justify-between"><span>견적 요청</span><b class="tabular-nums">${VS.week_quote || 0}건</b></li><li class="flex justify-between"><span>회원가입</span><b class="tabular-nums">${VS.week_signup || 0}명</b></li><li class="flex justify-between"><span>판매글 등록</span><b class="tabular-nums">${VS.week_listing || 0}건</b></li><li class="flex justify-between text-sea/60"><span>장터 · 기사찾기 화면 조회</span><b class="tabular-nums">${pg.market || 0} · ${pg.pros || 0}회</b></li></ul></div>
     </div>`);
 }
+/* 관리자: 고객 견적 요청 한눈에 보기 */
+let RF = 'wait';
+const HR = 3600e3, T0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return +d; };
+const reqQs = id => S.adminQuo.filter(q => q.request_id === id);
+const reqState = r => { const n = reqQs(r.id).length; return r.status === 'matched' ? 'done' : r.status !== 'open' ? 'closed' : n ? 'got' : 'wait'; };
+const RST = { wait:['견적 대기', 'bg-sun text-white'], got:['견적 받음', 'bg-cool text-white'], done:['계약 성사', 'bg-sea text-white'], closed:['마감·취소', 'bg-mist text-sea/70'] };
+const custOf = r => S.custNm[r.customer_id] || {};
+function reqBoard() {
+  const R = S.adminReq, t0 = T0(), wk = Date.now() - 7 * 24 * HR;
+  const today = R.filter(r => +new Date(r.created_at) >= t0).length, week = R.filter(r => +new Date(r.created_at) >= wk);
+  const wait = R.filter(r => reqState(r) === 'wait'), late = wait.filter(r => Date.now() - new Date(r.created_at) > 2 * HR);
+  const rate = week.length ? Math.round(week.filter(r => r.status === 'matched').length / week.length * 100) : 0;
+  const cnt = k => k === 'ALL' ? R.length : R.filter(r => reqState(r) === k).length;
+  const list = (RF === 'ALL' ? R : R.filter(r => reqState(r) === RF)).slice(0, 200);
+  const byGu = {}; week.forEach(r => byGu[r.gu] = (byGu[r.gu] || 0) + 1);
+  const bySvc = {}; week.forEach(r => bySvc[r.service] = (bySvc[r.service] || 0) + 1);
+  const top = (o, f) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, n]) => `<span class="rounded-full bg-ice px-2.5 py-1 text-xs font-bold">${esc(f(k))} ${n}</span>`).join(' ') || '<span class="text-xs text-sea/50">아직 없어요</span>';
+  const mini = (t, v, hot) => `<div class="rounded-2xl ${hot ? 'bg-sun/10 ring-2 ring-sun/40' : 'bg-ice'} p-3"><p class="text-xs text-sea/60">${t}</p><p class="mt-0.5 font-display text-2xl tabular-nums ${hot ? 'text-sun' : ''}">${v}</p></div>`;
+  const row = r => { const st = RST[reqState(r)], n = reqQs(r.id).length, c = custOf(r), isLate = reqState(r) === 'wait' && Date.now() - new Date(r.created_at) > 2 * HR;
+    return `<button type="button" data-act="areq" data-id="${r.id}" class="grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-b border-mist px-2 py-3 text-left hover:bg-ice sm:grid-cols-[92px_1.4fr_1fr_100px_90px_96px]">
+      <span class="hidden text-xs text-sea/60 sm:block"><b class="block text-sea">${reqCode(r.id)}</b>${ago(r.created_at)}</span>
+      <span class="min-w-0"><b class="block truncate">${esc(SVC[r.service] || r.service)}${r.target_pro ? ' <span class="text-xs text-sun">지정</span>' : ''}${(r.photos || []).length ? ' <span class="text-xs text-sea/50">📷' + r.photos.length + '</span>' : ''}</b><span class="block truncate text-xs text-sea/60 sm:hidden">${reqCode(r.id)} · ${ago(r.created_at)} · ${esc(place(r.gu))} · 희망 ${esc(r.wish_date || '-')}</span></span>
+      <span class="hidden truncate text-sm sm:block">${esc(place(r.gu))}${r.to_gu ? ' → ' + esc(r.to_gu) : ''}</span>
+      <span class="hidden text-sm tabular-nums sm:block">${esc(r.wish_date || '-')}</span>
+      <span class="hidden truncate text-sm sm:block">${esc(c.name || '고객')}</span>
+      <span class="row-span-2 flex flex-col items-end gap-1 sm:row-span-1"><span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}${n ? ' ' + n : ''}</span>${isLate ? '<span class="text-[11px] font-bold text-red-600">2시간+ 무응답</span>' : ''}</span></button>`; };
+  const fchip = (k, t) => `<button type="button" data-act="rfilt" data-id="${k}" aria-pressed="${RF === k}" class="${chipCls(RF === k)}">${t} ${cnt(k)}</button>`;
+  return `<section class="mt-8 rounded-3xl border-2 border-cool/30 bg-white p-5 sm:p-6"><div class="flex flex-wrap items-baseline justify-between gap-2"><h2 class="text-xl font-bold">고객 견적 요청 한눈에 보기</h2><span class="text-xs text-sea/50">줄을 누르면 상세 내용 · 받은 견적이 보여요</span></div>
+    <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">${mini('오늘 들어온 요청', today + '건')}${mini('최근 7일 요청', week.length + '건')}${mini('견적 0건 · 2시간 넘음', late.length + '건', late.length > 0)}${mini('7일 계약 성사율', rate + '%')}</div>
+    <div class="mt-3 grid gap-2 text-sm sm:grid-cols-2"><p><b class="mr-1 text-xs text-sea/60">많이 찾는 지역(7일)</b> ${top(byGu, place)}</p><p><b class="mr-1 text-xs text-sea/60">많이 찾는 서비스(7일)</b> ${top(bySvc, k => SVC[k] || k)}</p></div>
+    <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="요청 상태 필터">${fchip('wait', '견적 대기')}${fchip('got', '견적 받음')}${fchip('done', '계약 성사')}${fchip('closed', '마감·취소')}${fchip('ALL', '전체')}</div>
+    <div class="mt-3 hidden grid-cols-[92px_1.4fr_1fr_100px_90px_96px] gap-3 border-b-2 border-mist px-2 pb-2 text-xs font-bold text-sea/60 sm:grid"><span>번호·접수</span><span>서비스</span><span>지역</span><span>희망일</span><span>고객</span><span class="text-right">상태</span></div>
+    <div class="max-h-[520px] overflow-y-auto">${list.map(row).join('') || `<div class="mt-3">${empty(RF === 'wait' ? '견적을 기다리는 요청이 없어요. 👍' : '해당하는 요청이 없어요.')}</div>`}</div></section>`;
+}
+function areqModal(id) {
+  id = +id; const r = S.adminReq.find(x => x.id === id); if (!r) return;
+  const c = custOf(r), qs = reqQs(id).slice().sort((a, b) => a.price - b.price), st = RST[reqState(r)];
+  const pname = pid => (S.adminPros.find(p => p.id === pid) || {}).name || '기사';
+  const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && p.kind === kind && (!(p.areas || []).length || p.areas.includes(r.gu)));
+  const rows = [['서비스', SVC[r.service] || r.service], ['지역', place(r.gu) + (r.to_gu ? ' → ' + place(r.to_gu) : '')], ['희망일', r.wish_date || '-'], ['접수', fmtT(r.created_at) + ' (' + ago(r.created_at) + ')'], ['고객', (c.name || '고객') + (c.email ? ' · ' + c.email : '')], ...(r.ton ? [['차량', r.ton + (r.lift ? ' · 리프트' : '')]] : []), ...(r.target_pro ? [['지정 기사', pname(r.target_pro)]] : [])];
+  openM(head(reqCode(r.id)) + `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}</span>
+    <dl class="mt-3 grid grid-cols-[72px_1fr] gap-y-1.5 text-sm">${rows.map(([k, v]) => `<dt class="text-sea/60">${k}</dt><dd class="font-bold">${esc(v)}</dd>`).join('')}</dl>
+    <p class="mt-4 text-sm font-bold">요청 내용</p><p class="mt-1 whitespace-pre-wrap rounded-xl bg-ice p-3 text-sm leading-relaxed">${esc(r.details || '(내용 없음)')}</p>
+    ${(r.photos || []).length ? `<div class="mt-3 flex flex-wrap gap-2">${r.photos.filter(isPhotoUrl).map(p => `<a href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="요청 사진" class="h-20 w-20 rounded-lg object-cover"></a>`).join('')}</div>` : ''}
+    <p class="mt-5 text-sm font-bold">받은 견적 ${qs.length}건</p>${qs.map(q => `<div class="mt-2 flex items-center justify-between gap-2 rounded-xl border border-mist px-3 py-2 text-sm"><span>${esc(pname(q.pro_id))} <span class="text-xs text-sea/50">${ago(q.created_at)}</span></span><b>${won(q.price)} <span class="text-xs font-normal text-sea/60">${esc(QL[q.status] || '')}</span></b></div>`).join('') || '<p class="mt-1 text-sm text-sea/60">아직 견적이 없어요.</p>'}
+    ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl bg-sun/10 p-3 text-sm"><b>이 요청을 받을 수 있는 기사님 ${near.length}명</b> <span class="text-xs text-sea/60">(같은 분야 · 활동 지역 일치 · 승인됨)</span><p class="mt-1 text-xs leading-relaxed">${near.slice(0, 15).map(p => esc(p.name) + (p.online === false ? '(쉬는 중)' : '')).join(', ') || '해당 지역 기사님이 없어요. 기사 모집이 필요한 지역이에요.'}</p></div>` : ''}
+    <div class="mt-5"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
+  menuCur = 'areq';
+}
 function adminView() {
   if (!S.admin) { $('#pview').innerHTML = ''; return; }
   const open = S.inq.filter(i => i.status === 'RECEIVED' || i.status === 'IN_PROGRESS').length, over = S.inq.filter(slaOver).length, wait = S.con.filter(c => c.status === 'pending').length;
@@ -1520,8 +1594,8 @@ function adminView() {
   const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
-    <div class="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
-    ${delCard()}${visitCard()}
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
+    ${reqBoard()}${delCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
@@ -1635,6 +1709,7 @@ const ACT = {
   rev: id => revModal(id), rvsend: (id, el) => rvsend(el, id), rew: id => rewModal(id), rwsend: (id, el) => rwsend(el, id),
   rvs: k => { rv.s = k; rv.tags = []; rv.other = ''; revModal(rv.cid); },
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
+  rfilt: k => { RF = k; adminView(); }, areq: id => areqModal(id),
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
   smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
@@ -1916,8 +1991,18 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote({}); else if (go === 'delete') delModal(); }, 1500);
   } catch (e) {}
   if (!sb) { $('#setup-warn').classList.remove('hidden'); render(); return; }
-  render();
+  render(); socialCheck();
+  /* 네이버 로그인에서 돌아왔을 때: 내가 시작한 로그인인지 확인 */
+  let nsBad = false;
+  try { const q = new URLSearchParams(location.search), ns = q.get('ns'), ne = q.get('naver_err');
+    if (ns || ne) {
+      let mine = sessionStorageGet('hy_ns'); try { mine = mine || localStorage.getItem('hy_ns'); localStorage.removeItem('hy_ns'); } catch (_) {}
+      if (ns && ns !== mine) nsBad = true;
+      q.delete('ns'); q.delete('naver_err'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+      if (ne) setTimeout(() => toast(ne === 'noemail' ? '네이버 로그인 때 이메일 제공에 동의해 주세요. 다시 시도해 주세요.' : ne === 'cancel' ? '네이버 로그인을 취소했어요.' : '네이버 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'), 800);
+    } } catch (_) {}
   sb.auth.onAuthStateChange((ev, session) => {
+    if (nsBad && session) { nsBad = false; sb.auth.signOut(); setTimeout(() => toast('로그인 확인에 실패했어요. 로그인 버튼을 눌러 다시 시도해 주세요.'), 300); return; }
     if (ev === 'PASSWORD_RECOVERY') setTimeout(newPwModal, 400);
     if (ev === 'TOKEN_REFRESHED') return;
     const id = session && session.user ? session.user.id : null;
