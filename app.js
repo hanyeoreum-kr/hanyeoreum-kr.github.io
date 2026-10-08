@@ -1978,7 +1978,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   $('#foot').innerHTML = `<div class="lg:grid lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
     <div><p class="font-logo text-xl text-[#0C2D48] lg:text-2xl">한여름<span class="text-[#1AA7C7]">.</span></p>
       <p class="mt-2">문의는 <button type="button" data-act="cs" class="font-bold text-sea underline">고객센터 1:1 문의</button>로 남겨 주세요. 24시간 안에 답변해요.</p>
-      <details class="mt-3 group"><summary class="inline-flex cursor-pointer list-none items-center gap-1 font-bold text-slate-500">사업자 정보 <span class="transition group-open:rotate-180" aria-hidden="true">▾</span></summary>
+      <details open class="mt-3 group"><summary class="inline-flex cursor-pointer list-none items-center gap-1 font-bold text-slate-500">사업자 정보 <span class="transition group-open:rotate-180" aria-hidden="true">▾</span></summary>
         <div class="mt-2 space-y-0.5">
           <p>상호: ${esc(z.name)} | 대표: ${esc(z.ceo)} | 사업자등록번호: ${esc(z.bizNo)} <a class="underline" href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${bizNoD}" target="_blank" rel="noopener">사업자정보 확인</a></p>
           <p>통신판매업 신고번호: ${z.mailOrderNo ? esc(z.mailOrderNo) : '신고 진행 중'}</p>
