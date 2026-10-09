@@ -18,7 +18,7 @@ window.HY_CONFIG = {
   TOSS_CLIENT_KEY: 'test_gck_ALnQvDd2VJqeeg7w5QGn3Mj7X41m',
 
   // 토스 테스트 키를 쓰는 동안 결제창이 보이는 심사용 테스트 계정 이메일 (Supabase Secrets의 TOSS_TEST_EMAIL과 같게)
-  TOSS_TEST_EMAIL: 'abcqwer7734123@naver.com',
+  TOSS_TEST_EMAIL: 'abcqwer7734@naver.com',
 
   // 기사 예치금 충전 계좌 (토스 키가 없을 때만 쓰여요 · 관리자가 입금 확인 후 승인)
   BANK: { name: '은행명', account: '3333-38-5718558', holder: '예금주' },
