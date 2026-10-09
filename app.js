@@ -17,7 +17,7 @@ const GG_ALL = ['수원시','성남시','고양시','용인시','부천시','안
 const FAR = '기타(지방)';
 const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
 const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
-const SVC = { clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
+const SVC = { home_repair:'생활가전 수리', home_clean:'세탁기·건조기 청소', home_install:'생활가전 설치·이전', clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
 /* 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통)
    용달·화물(truck)은 운송주선업 허가 전까지 보류: KINDS_OFF 에서 KINDS 로 옮기면 다시 켜져요 */
 const KINDS = {
@@ -34,7 +34,9 @@ const KINDS_ON = {
   kitchen:{ name:'주방설비', title:'업소용 주방설비 수리·청소', desc:'식기세척기 · 후드·덕트 · 가스레인지', pro:'업소용 주방설비 전문 기사님', subs:['식기세척기', '후드·덕트 청소', '가스레인지·오븐', '기타 주방설비'], svcs:['kitchen_repair', 'kitchen_clean'], color:'bg-amber-50 text-amber-700', avatar:'bg-amber-500',
     icon:'<path d="M4 10h16v10H4z"/><path d="M4 14h16"/><path d="M8 3v4M12 3v4M16 3v4"/>' },
   clean:{ name:'입주·이사청소', title:'입주·이사청소 · 생활청소', desc:'입주청소 · 이사청소 · 거주청소 · 상가청소', pro:'입주·이사청소 전문 기사님', subs:['입주청소', '이사청소', '거주청소', '상가·사무실 청소'], svcs:['clean_movein', 'clean_moveout', 'clean_home', 'clean_store'], color:'bg-emerald-50 text-emerald-700', avatar:'bg-emerald-600',
-    icon:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>' }
+    icon:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>' },
+  home:{ name:'생활가전', title:'세탁기·건조기 등 생활가전 수리·청소', desc:'세탁기 · 건조기 · 가정용 냉장고 · 식기세척기 · 정수기', pro:'생활가전 전문 기사님', subs:['세탁기', '건조기', '가정용 냉장고·김치냉장고', '식기세척기', '정수기·비데', '전자레인지·오븐', '기타 생활가전'], svcs:['home_repair', 'home_clean', 'home_install'], color:'bg-violet-50 text-violet-700', avatar:'bg-violet-600',
+    icon:'<rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M4 7h16"/><circle cx="12" cy="14" r="4.2"/><path d="M7 4.8h.01M9.5 4.8h.01"/>' }
 };
 const KINDS_OFF = {
   truck:{ name:'용달·화물', title:'용달·화물 기사 바로 매칭', desc:'설비 운반 · 소형 이사 · 화물', pro:'용달·화물 기사님', subs:['설비 운반', '소형 이사', '일반 화물'], svcs:['truck'], color:'bg-orange-50 text-orange-700', avatar:'bg-orange-500',
@@ -43,7 +45,7 @@ const KINDS_OFF = {
 Object.keys(KINDS).forEach(k => delete KINDS[k]); Object.assign(KINDS, KINDS_ON);
 const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
-const kindOf = code => { const c = String(code); return c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
+const kindOf = code => { const c = String(code); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
@@ -119,7 +121,7 @@ const row = (k, v) => `<div class="flex justify-between gap-4 py-2 border-b bord
 const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>`;
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
-const flat = code => /^(aircon|heat|kitchen|clean)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
+const flat = code => /^(aircon|heat|kitchen|clean|home)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
 const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
 const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; if (/listings_years_check/i.test(m)) return '연식(4자리 연도) 저장 준비가 안 됐어요. 관리자: supabase_update.sql 을 실행해 주세요.'; if (/violates check constraint/i.test(m)) return '입력한 값 중 저장할 수 없는 값이 있어요. 숫자 칸을 다시 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
@@ -489,7 +491,7 @@ async function asignup(el) {
     if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
     let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
-    if (error && pro && data.kind === 'clean' && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
+    if (error && pro && !['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(data.kind) && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
     if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
     track('signup'); auDoc = null;
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
@@ -586,7 +588,7 @@ async function bpSend(el) {
   if (!$('#bp-as').checked) return setErr('재점검·보완 보장 동의에 체크해 주세요.');
   await busy(el, async () => {
     const bpArgs = { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift };
-    try { await rpc('become_pro', bpArgs); } catch (e) { if (bpArgs.p_kind !== 'clean') throw e; await rpc('become_pro', Object.assign(bpArgs, { p_kind:'aircon' })); }
+    try { await rpc('become_pro', bpArgs); } catch (e) { if (['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(bpArgs.p_kind)) throw e; await rpc('become_pro', Object.assign(bpArgs, { p_kind:'aircon' })); }
     await saveKinds(kindsOrdered(bp));
     try { await rpc('agree_as', {}); } catch (e) { console.warn('agree_as', e); }
     if (doc) await uploadBizDoc(doc);
@@ -721,9 +723,10 @@ const MCAT = {
   heat:{ n:'보일러·난방', items:['가스보일러', '기름보일러', '전기보일러', '온수기', '라디에이터'], ph:'예) 콘덴싱 가스보일러', inst:'보일러 설치' },
   cold:{ n:'냉장·냉동', items:['업소용 냉장고(4도어)', '업소용 냉동고', '냉장·냉동 겸용', '테이블 냉장고', '쇼케이스', '반찬 냉장고(밧드)', '음료 냉장고', '아이스크림 냉동고', '김치냉장고', '제빙기'], ph:'예) 4도어 업소용 냉장고' },
   kitchen:{ n:'주방설비', items:['식기세척기', '가스레인지·화구', '오븐', '튀김기', '작업대', '싱크대', '후드'], ph:'예) 업소용 식기세척기', inst:'주방설비 설치·수리' },
+  home:{ n:'생활가전', items:['세탁기', '건조기', '가정용 냉장고', '김치냉장고', '식기세척기', '정수기'], ph:'예) 드럼 세탁기 21kg', inst:'생활가전 설치' },
   etc:{ n:'기타 설비', items:['환풍기', '정수기', '제습기', '온풍기'], ph:'예) 업소용 제습기' }
 };
-const lcat = l => l.cat && MCAT[l.cat] ? l.cat : /에어컨|냉난방|실외기/.test(l.title || '') ? 'aircon' : /보일러|온수기|라디에이터/.test(l.title || '') ? 'heat' : /식기세척|레인지|화구|오븐|작업대|싱크|후드|튀김/.test(l.title || '') ? 'kitchen' : 'cold';
+const lcat = l => l.cat && MCAT[l.cat] ? l.cat : /세탁기|건조기|김치냉장고|정수기|비데/.test(l.title || '') ? 'home' : /에어컨|냉난방|실외기/.test(l.title || '') ? 'aircon' : /보일러|온수기|라디에이터/.test(l.title || '') ? 'heat' : /식기세척|레인지|화구|오븐|작업대|싱크|후드|튀김/.test(l.title || '') ? 'kitchen' : 'cold';
 const lIcon = l => (KINDS[lcat(l)] || KINDS.cold).icon;
 let sellCat = 'cold';
 const ITEMS_NOW = () => (MCAT[sellCat] || MCAT.cold).items;
