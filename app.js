@@ -1423,11 +1423,27 @@ function walletModal(keep) {
     <div class="mt-3">${btn('chargego', '', '입금했어요 · 충전 신청', 'a', 'w-full')}</div>`}
     <h3 class="mt-6 font-bold">예치금 내역</h3>${list.map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${fmtT(l.created_at)} · 잔액 ${won(l.balance_after)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-2">${empty('아직 내역이 없어요.')}</div>`}`, keep);
   menuCur = 'wallet';
+  if (tossOn() && TOSS_WIDGET) tossWidgetInit();
 }
 /* 토스페이먼츠: 결제가 승인되면 서버가 확인하고 예치금에 바로 넣어요 (관리자 승인 없음) */
 let payMethod = 'CARD', tossBusy = false;
 const PAY = { CARD:'카드 · 간편결제', TRANSFER:'계좌이체' };
-const tossBlock = () => `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
+const TOSS_WIDGET = /_gck_/.test(TOSS_KEY);
+let tossW = null;
+const chAmt = () => +(document.querySelector('input[name="ch-amt"]:checked') || {}).value || 0;
+async function tossWidgetInit() {
+  if (!TOSS_WIDGET || !$('#toss-methods')) return;
+  try {
+    await loadTossSdk();
+    tossW = window.TossPayments(TOSS_KEY).widgets({ customerKey:me() });
+    await tossW.setAmount({ currency:'KRW', value:chAmt() || 30000 });
+    await Promise.all([tossW.renderPaymentMethods({ selector:'#toss-methods', variantKey:'DEFAULT' }), tossW.renderAgreement({ selector:'#toss-agree', variantKey:'AGREEMENT' })]);
+  } catch (e) { console.warn('toss widget', e); setErr('결제 화면을 불러오지 못했어요. 잠시 후 다시 열어 주세요.'); }
+}
+const tossBlock = () => TOSS_WIDGET ? `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
+  <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
+  <div id="toss-methods" class="mt-3"></div><div id="toss-agree"></div>${errBox()}
+  <div class="mt-3">${btn('tosspay', '', '결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">결제 영수증은 토스페이먼츠에서 발급돼요. 예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>` : `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
   <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
   <fieldset class="mt-3"><legend class="text-sm font-bold">결제 수단</legend><div class="mt-2 grid grid-cols-2 gap-2">${Object.entries(PAY).map(([k, t]) => `<button type="button" data-act="paymeth" data-id="${k}" aria-pressed="${payMethod === k}" class="rounded-xl border-2 px-2 py-3 text-sm font-bold ${payMethod === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>${errBox()}
   <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.<br>예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>`;
@@ -1436,12 +1452,17 @@ function loadTossSdk() {
   return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://js.tosspayments.com/v2/standard'; s.onload = res; s.onerror = () => rej(new Error('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')); document.head.appendChild(s); });
 }
 async function tossPay(el) {
-  const amt = +(document.querySelector('input[name="ch-amt"]:checked') || {}).value;
+  const amt = chAmt();
   if (!amt) return setErr('충전 금액을 골라 주세요.');
   await busy(el, async () => {
     await loadTossSdk();
     const orderId = await rpc('create_charge_order', { p_amount:amt });
     const back = (C.SITE_URL || location.href).split(/[?#]/)[0];
+    if (TOSS_WIDGET) {
+      if (!tossW) throw new Error('결제 화면이 아직 준비되지 않았어요. 잠시 후 다시 눌러 주세요.');
+      await tossW.setAmount({ currency:'KRW', value:amt });
+      return tossW.requestPayment({ orderId, orderName:`한여름 예치금 충전 ${won(amt)}`, successUrl:back + '?toss=success', failUrl:back + '?toss=fail', customerEmail:S.user.email, customerName:S.pro.name });
+    }
     const req = { method:payMethod, amount:{ currency:'KRW', value:amt }, orderId, orderName:`한여름 예치금 충전 ${won(amt)}`, successUrl:back + '?toss=success', failUrl:back + '?toss=fail', customerEmail:S.user.email, customerName:S.pro.name };
     if (payMethod === 'CARD') req.card = { useEscrow:false, flowMode:'DEFAULT', useCardPoint:false, useAppCardOnly:false };
     await window.TossPayments(C.TOSS_CLIENT_KEY).payment({ customerKey:me() }).requestPayment(req);
@@ -1884,6 +1905,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
+  if (e.target.name === 'ch-amt' && tossW && TOSS_WIDGET) tossW.setAmount({ currency:'KRW', value:+e.target.value }).catch(() => {});
   if (e.target.id === 'chat-photo') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'au-doc') { const f = e.target.files[0]; e.target.value = ''; if (f) { const er = docErr(f); if (er) setErr(er); else { auDoc = f; setErr(''); saveAuth(); renderAuth(); } } }
   if (e.target.id === 'ph-file') { const f = e.target.files[0]; e.target.value = ''; if (f) phPick(f); }
