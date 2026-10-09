@@ -1720,6 +1720,47 @@ function areqModal(id) {
     <div class="mt-5"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
   menuCur = 'areq';
 }
+/* 백업: 관리자만. 전체 데이터(JSON, 복구용) + 기사님 예치금 잔액표(CSV, 엑셀로 열기) */
+const BK_TABLES = ['pros', 'profiles', 'ledger', 'charge_requests', 'toss_orders', 'income', 'contracts', 'requests', 'quotes', 'referrals', 'reviews', 'rework_claims', 'listings', 'offers', 'inquiries', 'inquiry_msgs', 'threads', 'messages', 'settings', 'audit_log'];
+const ymd = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
+function saveFile(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+async function backupAll(el) {
+  if (!S.admin) return;
+  await busy(el, async () => {
+    const out = { site:'hanyeoreum', made_at:new Date().toISOString(), tables:{}, errors:{} };
+    for (const t of BK_TABLES) {
+      el.textContent = `백업 중… ${t}`;
+      const rows = [];
+      for (let i = 0; ; i += 1000) {
+        const { data, error } = await sb.from(t).select('*').range(i, i + 999);
+        if (error) { out.errors[t] = error.message; break; }
+        rows.push(...(data || [])); if (!data || data.length < 1000) break;
+      }
+      if (!out.errors[t]) out.tables[t] = rows;
+    }
+    saveFile(`한여름_전체백업_${ymd()}.json`, JSON.stringify(out), 'application/json');
+    const pros = out.tables.pros || [], profs = Object.fromEntries((out.tables.profiles || []).map(p => [p.id, p]));
+    const q = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    const lines = [['상호/기사명', '이메일', '분야', '승인상태', '예치금 잔액(원)', '가입일'].map(q).join(',')]
+      .concat(pros.map(p => [p.name, (profs[p.id] || {}).email || '', (p.kinds || [p.kind]).map(k => (KINDS[k] || {}).name || k).join(' · '), ({ APPROVED:'승인', PENDING:'승인 대기', REJECTED:'반려' })[p.approval] || p.approval || '', p.balance || 0, (p.created_at || '').slice(0, 10)].map(q).join(',')));
+    const total = pros.reduce((a, p) => a + (+p.balance || 0), 0);
+    lines.push(['합계', '', '', '', total, ''].map(q).join(','));
+    setTimeout(() => saveFile(`한여름_예치금잔액_${ymd()}.csv`, '\ufeff' + lines.join('\r\n'), 'text/csv;charset=utf-8'), 600);
+    try { localStorage.setItem('hy_last_backup', new Date().toISOString()); } catch (_) {}
+    const bad = Object.keys(out.errors);
+    toast(bad.length ? `백업 파일 2개를 저장했어요. (${bad.length}개 표는 건너뜀)` : '백업 파일 2개를 저장했어요.');
+    adminView();
+  });
+  if (el && document.body.contains(el)) el.textContent = '지금 백업 다운로드';
+}
+function backupCard() {
+  let last = null; try { last = localStorage.getItem('hy_last_backup'); } catch (_) {}
+  const days = last ? Math.floor((Date.now() - T(last)) / 864e5) : null, warn = days === null || days >= 7;
+  return `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 ${warn ? 'border-sun bg-sun/10' : 'border-mist bg-white'} p-5">
+    <div class="min-w-[220px] flex-1"><p class="font-black">💾 데이터 백업</p><p class="mt-1 text-sm text-sea/70">${last ? `마지막 백업: ${fmtD(last)} (${days}일 전)` : '아직 이 컴퓨터에서 백업한 적이 없어요.'} · <b>일주일에 한 번</b> 눌러 주세요.</p>
+    <p class="mt-1 text-xs text-sea/60">파일 2개가 저장돼요: 전체 백업(복구용) · 기사님 예치금 잔액표(엑셀로 열기). 개인정보가 들어 있으니 안전한 곳에 보관하세요.</p></div>
+    ${btn('backup', '', '지금 백업 다운로드', warn ? 'a' : 's')}</section>`;
+}
 function adminView() {
   if (!S.admin) { $('#pview').innerHTML = ''; return; }
   const open = S.inq.filter(i => i.status === 'RECEIVED' || i.status === 'IN_PROGRESS').length, over = S.inq.filter(slaOver).length, wait = S.con.filter(c => c.status === 'pending').length;
@@ -1732,7 +1773,7 @@ function adminView() {
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
-    ${reqBoard()}${delCard()}${visitCard()}
+    ${backupCard()}${reqBoard()}${delCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
@@ -1836,7 +1877,7 @@ const ACT = {
   ldet: id => ldet(id), sellopen: () => sellOpen(), stockopen: () => sellModal('stock'),
   sprm: i => { sp.splice(+i, 1); spThumbs(); bkDraw(); }, ssend: (id, el) => ssend(el),
   oopen: id => offerModal(id), osend: (id, el) => osend(el, id), lpick: (id, el) => lpick(el, id), lclose: (id, el) => lclose(el, id),
-  cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
+  backup: (id, el) => backupAll(el), cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
   csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(),
