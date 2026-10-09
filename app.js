@@ -1458,7 +1458,7 @@ async function tossPay(el) {
   await busy(el, async () => {
     await loadTossSdk();
     const orderId = await rpc('create_charge_order', { p_amount:amt });
-    const back = (C.SITE_URL || location.href).split(/[?#]/)[0];
+    const back = location.origin + location.pathname;
     if (TOSS_WIDGET) {
       if (!tossW) throw new Error('결제 화면이 아직 준비되지 않았어요. 잠시 후 다시 눌러 주세요.');
       await tossW.setAmount({ currency:'KRW', value:amt });
