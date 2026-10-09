@@ -91,7 +91,9 @@ const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-011
 /* 충전 계좌: config.js 의 BANK 값이 비어 있거나 예시 글자면 아래 기본값을 써요 */
 const BANK = (() => { const d = { name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, c = C.BANK || {}, ok = v => typeof v === 'string' && v.trim() && !/YOUR|OOO|○|예시|은행명|계좌번호|예금주/.test(v); return { name:ok(c.name) ? c.name : d.name, account:ok(c.account) && /[1-9]/.test(c.account) ? c.account : d.account, holder:ok(c.holder) ? c.holder : d.holder }; })();
 /* 토스 카드결제: 실제 운영 키(live_)가 들어 있을 때만 켜요. 테스트 키(test_)면 계좌이체 충전으로 보여요 */
-const TOSS_ON = typeof C.TOSS_CLIENT_KEY === 'string' && /^live_/.test(C.TOSS_CLIENT_KEY.trim());
+/* 결제: live 키면 모두, test 키면 심사용 테스트 계정(C.TOSS_TEST_EMAIL)에게만 결제창을 보여요 */
+const TOSS_KEY = typeof C.TOSS_CLIENT_KEY === 'string' ? C.TOSS_CLIENT_KEY.trim() : '';
+const tossOn = () => /^live_/.test(TOSS_KEY) || (/^test_/.test(TOSS_KEY) && !!S.user && !!C.TOSS_TEST_EMAIL && (S.user.email || '').toLowerCase() === String(C.TOSS_TEST_EMAIL).toLowerCase());
 const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
 const pad = n => String(n).padStart(2, '0');
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
@@ -1414,7 +1416,7 @@ function walletModal(keep) {
   openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p></div>
     <p class="mt-3 text-sm text-sea/75 leading-relaxed">거래가 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
     <h3 class="mt-5 font-bold">충전하기</h3>
-    ${TOSS_ON ? tossBlock() : pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
+    ${tossOn() ? tossBlock() : pc ? `<p class="mt-2 rounded-xl bg-sun/10 p-4 text-sm"><b>${won(pc.amount)}</b> 충전 신청을 확인하고 있어요 (입금자명 ${esc(pc.depositor)}). 입금이 확인되면 바로 반영돼요.</p>` : `
     <ol class="mt-2 space-y-1 rounded-xl bg-ice p-4 text-sm"><li>1. 아래 계좌로 충전할 금액을 입금해요.</li><li class="font-bold">${esc(bank.name || '')} ${esc(bank.account || '')} (예금주 ${esc(bank.holder || '')})</li><li>2. 입금한 금액과 입금자명을 적고 충전 신청을 눌러요.</li><li>3. 관리자가 입금을 확인하면 예치금에 반영돼요.</li></ol>
     <fieldset class="mt-3"><legend class="text-sm font-bold">입금 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
     <label for="ch-name" class="block mt-3 text-sm font-bold">입금자명</label><input id="ch-name" maxlength="20" value="${esc(p.name)}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
@@ -1428,7 +1430,7 @@ const PAY = { CARD:'카드 · 간편결제', TRANSFER:'계좌이체' };
 const tossBlock = () => `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
   <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
   <fieldset class="mt-3"><legend class="text-sm font-bold">결제 수단</legend><div class="mt-2 grid grid-cols-2 gap-2">${Object.entries(PAY).map(([k, t]) => `<button type="button" data-act="paymeth" data-id="${k}" aria-pressed="${payMethod === k}" class="rounded-xl border-2 px-2 py-3 text-sm font-bold ${payMethod === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>${errBox()}
-  <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.</p>`;
+  <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.<br>예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>`;
 function loadTossSdk() {
   if (window.TossPayments) return Promise.resolve();
   return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://js.tosspayments.com/v2/standard'; s.onload = res; s.onerror = () => rej(new Error('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')); document.head.appendChild(s); });
@@ -2087,7 +2089,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
         </div></details></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">서비스</p><ul class="mt-3 space-y-2">${Object.entries(KINDS).map(([k, v]) => `<li><button type="button" data-act="qcat" data-id="${k}" class="hover:text-sea">${v.title}</button></li>`).join('')}<li><button type="button" data-act="mkt" class="hover:text-sea">중고마켓</button></li></ul></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">고객지원</p><ul class="mt-3 space-y-2"><li><button type="button" data-act="guarantee" class="hover:text-sea">14일 재점검 안심 보장</button></li><li><button type="button" data-act="cs" class="hover:text-sea">고객센터 · 1:1 문의</button></li><li><button type="button" data-act="gopro" class="hover:text-sea">기사님 등록</button></li><li><button type="button" data-act="install" class="hover:text-sea">앱 설치 안내</button></li></ul></div></div>
-  <p class="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-bold text-slate-500"><a class="underline" href="${esc(TERMS_URL)}" target="_blank" rel="noopener">이용약관</a><a class="underline text-sea" href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a><a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a><a class="underline" href="delete-account.html">회원 탈퇴 안내</a></p>
+  <p class="mt-5 flex flex-wrap gap-x-3 gap-y-1 font-bold text-slate-500"><a class="underline" href="${esc(TERMS_URL)}" target="_blank" rel="noopener">이용약관</a><a class="underline text-sea" href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener">개인정보처리방침</a><a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a><a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a><a class="underline" href="delete-account.html">회원 탈퇴 안내</a></p>
   <p class="mt-3 rounded-2xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500 lg:text-xs">한여름은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 기사·판매 회원이 등록한 서비스·상품 정보와 거래에 대한 책임은 각 회원에게 있으며, 한여름은 회원 간 분쟁 해결을 위해 14일 재점검 안심 보장제와 고객센터를 운영합니다.</p>
   <p class="mt-3">&copy; ${new Date().getFullYear()} 한여름. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
