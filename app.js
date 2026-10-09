@@ -2022,10 +2022,11 @@ async function pushSubscribe() {
   } catch (e) { console.warn('push', e); return false; }
 }
 async function notifOn() {
-  if (!canNote()) return toast(isIOS() && !standalone() ? '아이폰은 홈 화면에 추가한 앱에서 알림을 켤 수 있어요.' : '이 브라우저는 알림을 지원하지 않아요.');
+  if (isIOS() && !standalone()) { toast('아이폰은 홈 화면에 추가한 한여름 앱에서만 알림을 켤 수 있어요.'); return installApp(); }
+  if (!canNote()) return toast('이 브라우저는 알림을 지원하지 않아요.');
   const r = await Notification.requestPermission().catch(() => 'denied');
   const ok = r === 'granted' && await pushSubscribe();
-  toast(r === 'granted' ? (ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림을 켰어요. (앱이 열려 있을 때 알려 드려요)') : '알림이 꺼져 있어요. 휴대폰 설정 → 앱/사이트 알림에서 허용할 수 있어요.');
+  toast(r === 'granted' ? (ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림을 켰어요. (앱이 열려 있을 때 알려 드려요)') : (isIOS() ? '알림이 꺼져 있어요. 아이폰 설정 → 알림 → 한여름에서 허용할 수 있어요.' : '알림이 꺼져 있어요. 휴대폰 설정 → 앱/사이트 알림에서 허용할 수 있어요.'));
   render(); refreshOpen(['con']);
 }
 function phoneNote(t, b) {
