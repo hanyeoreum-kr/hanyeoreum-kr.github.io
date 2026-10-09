@@ -301,6 +301,18 @@ async function shareLink(el) {
   try { if (navigator.share) { await navigator.share({ title:'한여름 견적 요청', text, url }); return; } } catch (_) { return; }
   try { await navigator.clipboard.writeText(text); toast('링크를 복사했어요. 카톡에 붙여넣어 보내세요.'); } catch (_) { prompt('아래 링크를 복사하세요', url); }
 }
+const rankCard = ks => {
+  const meP = proPub(me()) || { rating_count:0, rating:0, done:0 };
+  const peers = S.prosPub.filter(p => proKinds(p).some(k => ks.includes(k)));
+  if (!peers.some(p => p.id === me())) peers.push({ ...meP, id:me() });
+  peers.sort(byScore);
+  const rank = peers.findIndex(p => p.id === me()) + 1, n = +meP.rating_count || 0;
+  return `<section class="mt-6 rounded-3xl bg-sea p-5 text-white lg:p-6"><div class="flex flex-wrap items-start justify-between gap-4"><div class="min-w-0 flex-1"><p class="text-xs font-black text-sun">내 노출 순위</p>
+  <h2 class="mt-1 text-xl font-black">후기가 쌓일수록 <span class="text-sun">맨 위로</span> 올라가요</h2>
+  <ul class="mt-3 space-y-1.5 text-sm leading-relaxed text-white/85"><li>✔ 고객 <b class="text-white">견적 비교 화면 추천순 맨 위</b> + <b class="text-white">⭐한여름 추천</b> 배지</li><li>✔ <b class="text-white">기사님 찾기</b> 기본 정렬(추천순) 상단 노출</li><li>✔ 아는 손님을 아래 링크로 초대하면 <b class="text-white">수수료 0원</b>, 그 거래 후기도 <b class="text-white">내 점수</b>로 쌓여요</li></ul>
+  <p class="mt-2 text-xs text-white/60">순위는 <b>후기 수</b>가 가장 크게 좌우해요 (평점 4점 이상 후기일수록 쭉쭉 올라가요) · 한여름에서 실제 거래한 손님만 후기를 쓸 수 있어요</p></div>
+  <div class="grid grid-cols-2 gap-2 text-center"><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">내 분야 순위</p><p class="font-display text-3xl tabular-nums">${rank}<span class="text-base">/${peers.length}</span></p></div><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">받은 후기</p><p class="font-display text-3xl tabular-nums">${n}<span class="text-base">개</span></p><p class="text-xs text-sun">${n ? '★ ' + (+meP.rating || 0).toFixed(1) : '첫 후기를 받아보세요'}</p></div></div></div></section>`;
+};
 const refCard = () => { const n = (S.myRefs || []).length; return `<section class="mt-6 rounded-3xl border-2 border-sun/40 bg-sun/5 p-5 lg:p-6">
   <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-xs font-black text-sun">내 손님 링크</p><h2 class="mt-1 text-xl font-black">내가 데려온 손님은 <span class="text-sun">수수료 0원</span></h2>
   <p class="mt-1 text-sm leading-relaxed text-sea/80">이 링크로 처음 가입한 손님은 <b>기사님 손님</b>으로 등록돼요. 그 손님과의 거래는 언제든 수수료가 0원이고, 링크로 들어온 요청은 <b>기사님에게만</b> 가요. 견적서·내역서·14일 보증서는 자동으로 나가고 후기도 쌓여요.</p></div>
@@ -681,19 +693,29 @@ function render() {
    ===================================================================== */
 let fp = 0, fpages = 1, ldetCur = null, sellKind = 'normal', sp = [], sellBulk = false, bk = [];
 /* 일괄 판매: 자주 파는 종목 */
-const ITEMS = ['업소용 냉장고(4도어)', '업소용 냉동고', '냉장·냉동 겸용', '테이블 냉장고', '쇼케이스', '반찬 냉장고(밧드)', '음료 냉장고', '아이스크림 냉동고', '김치냉장고', '제빙기', '에어컨'];
+const MCAT = {
+  aircon:{ n:'에어컨', items:['벽걸이 에어컨', '스탠드 에어컨', '2in1 에어컨', '시스템 에어컨', '천장형 냉난방기', '실외기'], ph:'예) 스탠드 에어컨 18평형', inst:'에어컨 설치' },
+  heat:{ n:'보일러·난방', items:['가스보일러', '기름보일러', '전기보일러', '온수기', '라디에이터'], ph:'예) 콘덴싱 가스보일러', inst:'보일러 설치' },
+  cold:{ n:'냉장·냉동', items:['업소용 냉장고(4도어)', '업소용 냉동고', '냉장·냉동 겸용', '테이블 냉장고', '쇼케이스', '반찬 냉장고(밧드)', '음료 냉장고', '아이스크림 냉동고', '김치냉장고', '제빙기'], ph:'예) 4도어 업소용 냉장고' },
+  kitchen:{ n:'주방설비', items:['식기세척기', '가스레인지·화구', '오븐', '튀김기', '작업대', '싱크대', '후드'], ph:'예) 업소용 식기세척기', inst:'주방설비 설치·수리' },
+  etc:{ n:'기타 설비', items:['환풍기', '정수기', '제습기', '온풍기'], ph:'예) 업소용 제습기' }
+};
+const lcat = l => l.cat && MCAT[l.cat] ? l.cat : /에어컨|냉난방|실외기/.test(l.title || '') ? 'aircon' : /보일러|온수기|라디에이터/.test(l.title || '') ? 'heat' : /식기세척|레인지|화구|오븐|작업대|싱크|후드|튀김/.test(l.title || '') ? 'kitchen' : 'cold';
+const lIcon = l => (KINDS[lcat(l)] || KINDS.cold).icon;
+let sellCat = 'cold';
+const ITEMS_NOW = () => (MCAT[sellCat] || MCAT.cold).items;
 const itemsOf = l => Array.isArray(l.items) ? l.items : [];
 const itemsN = l => itemsOf(l).reduce((t, x) => t + (+x.q || 0), 0);
-const MK = { q:'', grades:new Set(), sort:'new', tab:'all', free:false };
+const MK = { q:'', grades:new Set(), sort:'new', tab:'all', free:false, cat:'' };
 const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('hy_fav') || '[]'); } catch (_) { return []; } })());
 const saveFav = () => { try { localStorage.setItem('hy_fav', JSON.stringify([...FAV])); } catch (_) {} };
 const ago = t => { const m = Math.floor((Date.now() - T(t)) / 6e4); return m < 1 ? '방금 전' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
 const heart = id => FAV.has(id) ? '❤️' : '🤍';
 const favBtn = id => `<button type="button" data-act="fav" data-id="${id}" aria-pressed="${FAV.has(id)}" aria-label="관심 목록에 담기" class="h-10 w-10 shrink-0 rounded-full hover:bg-ice text-xl">${heart(id)}</button>`;
 const sellerFree = l => l.kind === 'stock' && !!(proPub(l.seller_id) || {}).free;
-const thumb = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="aspect-[4/3] w-full object-cover">` : `<div class="aspect-[4/3] grid place-items-center bg-gradient-to-br from-brand-50 to-cyan-50 text-brand-200" aria-hidden="true">${svgI(KINDS.cold.icon, 'h-12 w-12')}</div>`;
-const thumbSq = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="h-full w-full object-cover">` : `<span class="grid h-full w-full place-items-center bg-gradient-to-br from-brand-50 to-cyan-50 text-brand-200" aria-hidden="true">${svgI(KINDS.cold.icon, 'h-9 w-9')}</span>`;
-const badge = l => `${itemsOf(l).length ? `<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">일괄 ${itemsN(l)}대</span>` : ''}<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${sellerFree(l) ? FREE_CHIP : ''}`;
+const thumb = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="aspect-[4/3] w-full object-cover">` : `<div class="aspect-[4/3] grid place-items-center bg-gradient-to-br from-brand-50 to-cyan-50 text-brand-200" aria-hidden="true">${svgI(lIcon(l), 'h-12 w-12')}</div>`;
+const thumbSq = l => l.photos && l.photos[0] ? `<img src="${esc(l.photos[0])}" alt="${esc(l.title)}" loading="lazy" class="h-full w-full object-cover">` : `<span class="grid h-full w-full place-items-center bg-gradient-to-br from-brand-50 to-cyan-50 text-brand-200" aria-hidden="true">${svgI(lIcon(l), 'h-9 w-9')}</span>`;
+const badge = l => `<span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700">${MCAT[lcat(l)].n}</span>${itemsOf(l).length ? `<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">일괄 ${itemsN(l)}대</span>` : ''}<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${GC[l.grade]}">${GR[l.grade][0]}</span>${l.kind === 'stock' ? '<span class="rounded-full bg-sea px-2.5 py-0.5 text-xs font-bold text-white">업체 재고</span>' : ''}${sellerFree(l) ? FREE_CHIP : ''}`;
 const lstate = l => l.status === 'open' ? (l.seller_id === me() ? `받은 제안 ${S.off.filter(o => o.listing_id === l.id).length}건` : '판매 중') : l.status === 'sold' ? '거래 완료' : '판매 종료';
 const lcard = l => `<button type="button" data-act="ldet" data-id="${l.id}" class="text-left overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-0.5 lg:rounded-3xl ${l.status !== 'open' ? 'opacity-60' : ''}">${thumb(l)}
   <div class="p-3 sm:p-4"><div class="flex flex-wrap items-center gap-1.5">${badge(l)}</div><p class="mt-1 text-xs text-sea/60">${esc(place(l.gu))} · ${yearTxt(l.years)}</p>
@@ -715,9 +737,10 @@ const mrow = l => `<div class="flex items-start gap-2 py-3 sm:py-4 border-b bord
 function renderMarket() {
   const mine = S.lst.filter(l => l.seller_id === me()).length;
   $('#mtabs').innerHTML = [['all', '전체'], ['mine', `내 판매글 (${mine})`], ['fav', `관심 (${FAV.size})`]].map(([k, t]) => `<button type="button" data-act="mtab" data-id="${k}" aria-pressed="${MK.tab === k}" class="shrink-0 rounded-full px-3 py-1.5 text-xs sm:text-sm font-bold ${MK.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`).join('');
-  $('#mchips').innerHTML = ['A', 'B', 'C'].map(g => `<button type="button" data-act="mgr" data-id="${g}" aria-pressed="${MK.grades.has(g)}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.grades.has(g) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${g}급</button>`).join('');
+  $('#mchips').innerHTML = [['', '전체 분야'], ...Object.entries(MCAT).map(([k, v]) => [k, v.n])].map(([k, t]) => `<button type="button" data-act="mcat" data-id="${k}" aria-pressed="${MK.cat === k}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.cat === k ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}">${t}</button>`).join('') + '<span class="h-5 w-px shrink-0 bg-mist" aria-hidden="true"></span>' + ['A', 'B', 'C'].map(g => `<button type="button" data-act="mgr" data-id="${g}" aria-pressed="${MK.grades.has(g)}" class="shrink-0 rounded-full border-2 px-2.5 py-1 text-xs sm:text-sm font-bold ${MK.grades.has(g) ? 'border-cool bg-cool text-white' : 'border-mist hover:bg-ice'}">${g}급</button>`).join('');
   let rows = S.lst.filter(l => MK.tab === 'mine' ? l.seller_id === me() : l.status !== 'closed');
   if (MK.tab === 'fav') rows = rows.filter(l => FAV.has(l.id));
+  if (MK.cat) rows = rows.filter(l => lcat(l) === MK.cat);
   if (MK.grades.size) rows = rows.filter(l => MK.grades.has(l.grade));
   if (MK.free) rows = rows.filter(sellerFree);
   if (MK.q) rows = rows.filter(l => (l.title + ' ' + l.descr + ' ' + l.gu + ' ' + l.loc + ' ' + itemsOf(l).map(x => x.n).join(' ')).toLowerCase().includes(MK.q));
@@ -738,7 +761,7 @@ function ldet(id, keep) {
       + `<p class="mt-3 text-xs text-sea/60">${l.kind === 'stock' ? '거래가 최종 확정될 때 거래금액의 5%(건당 최대 10만 원)가 예치금에서 차감돼요. 구매자는 수수료가 없어요.' : '일반 판매는 수수료가 없어요.'}</p>`
       + (l.status === 'open' ? `<div class="mt-4">${btn('lclose', l.id, '판매글 내리기', 's')}</div>` : (conFor('listing_id', l.id) ? `<div class="mt-4">${btn('rcpt', conFor('listing_id', l.id).id, '거래 내역 보기', 's')}</div>` : ''));
   } else {
-    foot = `<div class="mt-5">${myOff ? `<p class="font-bold text-cool">내 제안 ${manwon(myOff.price)} · ${QL[myOff.status]}</p>` : l.status === 'open' ? btn('oopen', l.id, asPro ? '매입 제안하기' : '구매 제안하기', 'a', 'w-full') : ''}</div><p class="mt-2 text-xs text-sea/60">제안이 선택되면 판매자와 채팅방이 열려요. 제안 내역은 판매자만 볼 수 있어요.</p>`;
+    foot = `<div class="mt-5">${myOff ? `<p class="font-bold text-cool">내 제안 ${manwon(myOff.price)} · ${QL[myOff.status]}</p>` : l.status === 'open' ? btn('oopen', l.id, asPro ? '매입 제안하기' : '구매 제안하기', 'a', 'w-full') : ''}</div><p class="mt-2 text-xs text-sea/60">제안이 선택되면 판매자와 채팅방이 열려요. 제안 내역은 판매자만 볼 수 있어요.</p>${MCAT[lcat(l)].inst && !asPro ? `<div class="mt-4 rounded-2xl bg-ice p-4"><p class="text-sm font-bold">${MCAT[lcat(l)].inst}도 필요하세요?</p><p class="mt-0.5 text-xs text-sea/70">한여름 기사님들께 설치 견적을 무료로 받아 비교할 수 있어요.</p><div class="mt-2">${btn('lquote', lcat(l), '설치 견적 무료로 받기', 's')}</div></div>` : ''}`;
   }
   openM(head(esc(l.title)) + (l.photos && l.photos.length ? `<div class="flex snap-x gap-2 overflow-x-auto pb-1">${l.photos.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener" class="shrink-0 snap-start"><img src="${esc(u)}" alt="판매 사진 ${i + 1}" loading="lazy" class="h-44 rounded-xl object-cover"></a>`).join('')}</div>${l.photos.length > 2 ? `<p class="mt-1 text-xs text-sea/50">사진 ${l.photos.length}장 · 옆으로 밀어서 보기 · 누르면 크게 보여요</p>` : ''}` : thumb(l)) + `
     <div class="mt-3 flex items-center justify-between"><p class="font-display text-3xl">${manwon(l.price)}${l.price >= 10000 ? ` <span class="text-sm font-bold text-sea/50">(${won(l.price)})</span>` : ''}</p>${favBtn(l.id)}</div>
@@ -760,7 +783,7 @@ function bkDraw() {
   $('#sl-price-l').textContent = sellBulk ? '일괄 희망 가격 · 전체 합계(원)' : '희망 판매 가격(원)';
   $('#sl-years-l').textContent = sellBulk ? '대표 연식 (몇 년식인가요?)' : '연식 (몇 년식인가요?)';
   $('#sp-lab').textContent = sellBulk ? `사진 추가하기 (최대 20장 · 물건마다 찍어 주세요) ${sp.length ? sp.length + '/20' : ''}` : `사진 추가하기 (최대 5장) ${sp.length ? sp.length + '/5' : ''}`;
-  $('#bk-chips').innerHTML = ITEMS.map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
+  $('#bk-chips').innerHTML = ITEMS_NOW().map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
   $('#bk-list').innerHTML = bk.length ? bk.map((x, i) => `<li class="flex items-center gap-2 rounded-xl bg-white px-3 py-2"><span class="min-w-0 flex-1 truncate text-sm font-bold">${esc(x.n)}</span>
     <button type="button" data-act="bkq" data-id="${i}:-1" aria-label="${esc(x.n)} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold">−</button><span class="w-8 text-center font-bold tabular-nums">${x.q}</span><button type="button" data-act="bkq" data-id="${i}:1" aria-label="${esc(x.n)} 한 대 더하기" class="h-8 w-8 rounded-full bg-ice font-bold">+</button>
     <button type="button" data-act="bkrm" data-id="${i}" aria-label="${esc(x.n)} 빼기" class="ml-1 text-xl leading-none text-sea/40">&times;</button></li>`).join('') + `<li class="px-1 pt-1 text-right text-sm font-bold">총 ${bk.reduce((t, x) => t + x.q, 0)}대 · ${bk.length}종목</li>` : '<li class="rounded-xl bg-white px-3 py-4 text-center text-sm text-sea/60">위에서 파실 물건 종목을 눌러 담아 주세요.</li>';
@@ -769,9 +792,10 @@ function bkAdd(n) { n = String(n || '').trim().slice(0, 30); if (!n) return; con
 function sellModal(kind) {
   if (needLogin('판매글은 로그인 후 올릴 수 있어요.')) return;
   if (kind === 'stock' && !approved()) return toast('승인된 기사·업체만 재고 판매글을 올릴 수 있어요.');
-  sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false;
+  sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false; sellCat = MK.cat || 'cold';
   const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
-  openM(head(sellKind === 'stock' ? '중고 재고 판매글 올리기' : '중고 냉동·냉장고 판매글') + `${sellKind === 'stock' ? '<p class="mb-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">거래가 확정되면 <b>거래금액의 5%(건당 최대 10만 원)</b>만 예치금에서 차감돼요.</p>' : ''}
+  openM(head(sellKind === 'stock' ? '중고 재고 판매글 올리기' : '중고 설비 판매글 올리기') + `${sellKind === 'stock' ? '<p class="mb-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">거래가 확정되면 <b>거래금액의 5%(건당 최대 10만 원)</b>만 예치금에서 차감돼요.</p>' : '<p class="mb-4 rounded-xl bg-emerald-50 p-3 text-sm leading-relaxed">일반 판매는 <b>수수료 0원</b>이에요. 개인 구매자와 서울·경기 설비 업체가 함께 보는 공동 마켓이라 더 빨리 팔려요.</p>'}
+    <p class="text-sm font-bold">어떤 설비인가요?</p><div class="mt-2 mb-4 flex flex-wrap gap-1.5" role="group" aria-label="설비 분야">${Object.entries(MCAT).map(([k, v]) => `<button type="button" data-act="scat" data-id="${k}" aria-pressed="${sellCat === k}" class="rounded-full border-2 px-3 py-1.5 text-sm font-bold ${sellCat === k ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}">${v.n}</button>`).join('')}</div>
     <div class="grid grid-cols-2 gap-1 rounded-2xl bg-ice p-1" role="group" aria-label="판매 방식"><button type="button" data-act="smode" data-id="one" aria-pressed="true" class="rounded-xl py-3 text-sm font-bold bg-sea text-white">한 대만 팔기</button><button type="button" data-act="smode" data-id="bulk" aria-pressed="false" class="rounded-xl py-3 text-sm font-bold text-sea/60">여러 대 일괄 판매</button></div>
     <div id="bk-box" class="hidden mt-3 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">파실 물건을 모두 담아 주세요</p><p class="mt-0.5 text-xs text-sea/60">폐업·리뉴얼 매장은 한 번에 올리면 매입 업체 연락이 더 빨라요.</p>
       <div id="bk-chips" class="mt-3 flex flex-wrap gap-1.5"></div>
@@ -779,11 +803,11 @@ function sellModal(kind) {
       <ul id="bk-list" class="mt-3 space-y-1.5"></ul></div>
     <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span id="sp-lab" class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
     <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
-    <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="예) 4도어 업소용 냉장고" class="${inp}">
+    <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="${MCAT[sellCat].ph}" class="${inp}">
     <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label>${moneyInp('sl-price', '', inp)}${unitTable('sl-price')}
     <fieldset class="mt-4"><legend class="text-sm font-bold">제품 상태</legend><div class="mt-2 grid grid-cols-3 gap-2">${Object.keys(GR).map(k => `<label class="relative"><input type="radio" name="sg" value="${k}" class="peer sr-only"><span class="block rounded-xl border-2 border-mist py-3 text-center cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-cool"><b>${GR[k][0]}</b><br><span class="text-xs text-sea/60">${GR[k][1]}</span></span></label>`).join('')}</div></fieldset>
     <label id="sl-years-l" for="sl-years" class="block mt-4 text-sm font-bold">연식 (몇 년식인가요?)</label><div class="relative mt-2"><input id="sl-years" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="예) 2024" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)" class="w-full rounded-xl bg-ice px-4 py-3.5 pr-16"><span class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 font-bold text-sea/60">년식</span></div><p class="mt-1 text-xs text-sea/60">제품 라벨에 적힌 제조 연도 4자리를 넣어 주세요. 예) 2024 → <b>2024년식</b></p>
-    ${lab('sl-gu', '매장 위치 (서울·경기 인접)')}<select id="sl-gu" class="${inp}"><option value="">지역을 선택하세요</option>${guOpts(GG_NEAR)}</select>
+    ${lab('sl-gu', '물건 위치 (서울·경기 인접)')}<select id="sl-gu" class="${inp}"><option value="">지역을 선택하세요</option>${guOpts(GG_NEAR)}</select>
     <input id="sl-loc" maxlength="40" aria-label="상세 위치" placeholder="상세 위치 예) 삼성역 인근 1층 (번지까지는 적지 마세요)" class="${inp}">
     <div class="mt-4 grid grid-cols-2 gap-3"><div><label for="sl-elev" class="text-sm font-bold">엘리베이터</label><select id="sl-elev" class="${inp}"><option value="">선택</option><option value="y">있음</option><option value="n">없음</option></select></div>
     <div><label for="sl-lad" class="text-sm font-bold">사다리차 이용</label><select id="sl-lad" class="${inp}"><option value="">선택</option><option value="y">가능</option><option value="n">불가</option></select></div></div>
@@ -801,7 +825,9 @@ async function ssend(el) {
   await busy(el, async () => {
     el.textContent = '올리는 중...';
     const photos = await uploadAll(sp, (d, t) => { if (t > 1) el.textContent = `사진 올리는 중 ${d}/${t}`; });
-    const { error } = await sb.from('listings').insert({ kind:sellKind, title:g('#sl-title'), price, grade, years:parseInt(years, 10), gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', descr:g('#sl-desc'), photos, items:sellBulk ? bk.map(x => ({ n:x.n, q:x.q })) : [] });
+    const row = { kind:sellKind, cat:sellCat, title:g('#sl-title'), price, grade, years:parseInt(years, 10), gu:g('#sl-gu'), loc:g('#sl-loc'), elev:$('#sl-elev').value === 'y', ladder:$('#sl-lad').value === 'y', descr:g('#sl-desc'), photos, items:sellBulk ? bk.map(x => ({ n:x.n, q:x.q })) : [] };
+    let { error } = await sb.from('listings').insert(row);
+    if (error && /cat/.test(error.message || '')) { delete row.cat; ({ error } = await sb.from('listings').insert(row)); }
     track('sell');
     if (error) throw error;
     sp = []; bk = []; closeM(); await load('lst'); fp = 0; render(); toast('판매글을 올렸어요.');
@@ -844,6 +870,9 @@ async function lclose(el, lid) {
    기사찾기 · 기사 프로필
    ===================================================================== */
 const FS = { kind:'', gu:'', sort:'rating', free:false };
+/* 추천 점수: 후기 수가 가장 크게 반영 (평점 4점 이상일 때 후기 1개당 +0.06, 최대 50개) + 보정 평점 + 완료 건수 */
+const pscore = p => { if (!p) return 0; const n = +p.rating_count || 0, r = n ? +p.rating || 0 : 0; return (r * n + 20) / (n + 5) + Math.min(n, 50) * (r >= 4 ? 0.06 : 0.02) + Math.min(+p.done || 0, 100) * 0.01; };
+const byScore = (a, b) => pscore(b) - pscore(a);
 const pbadges = p => `${p.biz_verified ? '<span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">사업자 인증</span>' : ''}${p.online === false ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">휴무</span>' : ''}`;
 const prate = p => p.rating_count ? `★ ${(+p.rating).toFixed(1)} · 후기 ${p.rating_count}` : '신규 · 아직 후기가 없어요';
 const ptags = p => (p.fields || []).map(f => `<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">${esc(f)}</span>`).join('') + (p.free ? '<span class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand">무료 출장 견적</span>' : '');
@@ -905,7 +934,7 @@ function renderPros() {
   if (FS.kind) ps = ps.filter(p => proKinds(p).includes(FS.kind));
   if (FS.free) ps = ps.filter(p => p.free);
   if (FS.gu) ps = ps.filter(p => (p.areas || []).includes(FS.gu));
-  ps.sort(FS.sort === 'reviews' ? (a, b) => b.rating_count - a.rating_count : FS.sort === 'done' ? (a, b) => (b.done || 0) - (a.done || 0) : FS.sort === 'new' ? (a, b) => T(b.created_at) - T(a.created_at) : (a, b) => b.rating - a.rating || b.rating_count - a.rating_count);
+  ps.sort(FS.sort === 'reviews' ? (a, b) => b.rating_count - a.rating_count : FS.sort === 'done' ? (a, b) => (b.done || 0) - (a.done || 0) : FS.sort === 'new' ? (a, b) => T(b.created_at) - T(a.created_at) : byScore);
   $('#pcount').textContent = `${ps.length}명`;
   $('#prows').innerHTML = ps.map(proCard).join('') || `<div class="lg:col-span-2">${empty(S.prosPub.length ? '조건에 맞는 기사님이 없어요. 필터를 바꿔 보세요.' : '아직 등록된 기사님이 없어요. 곧 만나요!')}</div>`;
 }
@@ -919,7 +948,7 @@ function renderHome() {
         <span class="mt-4 hidden flex-wrap gap-1.5 lg:flex">${c.svcs.map(x => `<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">${SVC[x].replace('에어컨 ', '').replace('냉장·냉동고 ', '').replace('냉장·냉동 ', '')}</span>`).join('')}</span></span>
       <span class="text-xl text-slate-300 lg:hidden" aria-hidden="true">›</span><span class="hidden text-sm font-black text-brand lg:inline">견적 요청하기 →</span></button>`).join(''); }
   const hp = $('#home-pros'); if (!hp) return;
-  const top = S.prosPub.filter(p => KINDS[p.kind || 'aircon']).sort((a, b) => b.rating - a.rating || b.rating_count - a.rating_count).slice(0, 4);
+  const top = S.prosPub.filter(p => KINDS[p.kind || 'aircon']).sort(byScore).slice(0, 4);
   hp.innerHTML = top.length ? top.map(p => `<button type="button" data-act="pdet" data-id="${p.id}" class="w-44 shrink-0 rounded-2xl bg-white p-4 text-left shadow-card transition lg:w-auto lg:rounded-3xl lg:p-5 lg:hover:-translate-y-1">
     ${proAvatar(p, 'h-12 w-12 text-base')}<b class="mt-3 block truncate">${esc(p.name)}</b><span class="block text-xs font-bold text-brand">${pkindLine(p)}</span>
     <span class="mt-1 block text-sm">${p.rating_count ? `<b class="text-amber-500">★ ${(+p.rating).toFixed(1)}</b> <span class="text-xs text-sub">후기 ${p.rating_count}</span>` : '<span class="text-xs text-sub">신규 기사님</span>'}</span><span class="mt-1 block truncate text-xs text-sub">${esc((p.areas || []).slice(0, 2).join(' · '))}</span></button>`).join('')
@@ -1028,7 +1057,7 @@ async function qNext() {
 /* =====================================================================
    고객: 내 요청 관리 · 견적 비교 · 계약 · 내역서 · 보증서
    ===================================================================== */
-let cmpCur = null;
+let cmpCur = null, cmpSort = 'rec';
 const wdOf = c => c.kind === 'service' ? '작업' : c.kind === 'sale' ? '수거' : '인도';
 const remainMs = c => c.paused ? (c.remaining_sec || 0) * 1000 : Math.max(0, T(c.deadline) - Date.now());
 const pctLeft = c => Math.max(0, Math.min(100, remainMs(c) / ((c.auto_hours || 24) * 36e5) * 100));
@@ -1078,10 +1107,12 @@ async function rclose(el, rid) {
 function compare(rid, keep) {
   cmpCur = +rid;
   const r = S.req.find(x => x.id === +rid); if (!r) return;
-  const qs = S.quo.filter(q => q.request_id === r.id).sort((a, b) => a.price - b.price);
-  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${SVC[r.service]} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>` +
+  const qs = S.quo.filter(q => q.request_id === r.id).sort(cmpSort === 'low' ? (a, b) => a.price - b.price : (a, b) => pscore(proPub(b.pro_id)) - pscore(proPub(a.pro_id)) || a.price - b.price);
+  const best = qs.length > 1 && cmpSort === 'rec' && (proPub(qs[0].pro_id) || {}).rating_count > 0 ? qs[0].id : null;
+  const tb = (k, t) => `<button type="button" data-act="cmpsort" data-id="${k}" aria-pressed="${cmpSort === k}" class="rounded-full px-3 py-1.5 text-xs font-bold ${cmpSort === k ? 'bg-sea text-white' : 'bg-ice'}">${t}</button>`;
+  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${SVC[r.service]} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
     (qs.map(q => { const p = proPub(q.pro_id) || { name:'기사', rating:0, rating_count:0 };
-      return card(`<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(p.name)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
+      return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(p.name)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
       <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}</p>
       <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pro_id, '프로필 보기', 's')}${r.status === 'open' ? btn('pick', q.id, '계약하기', 'a') : `<span class="text-sm font-bold">${QL[q.status]}</span>`}</div>`); }).join('') || `<div class="mt-3">${empty('아직 도착한 견적이 없어요.')}</div>`) + `<div class="mt-4">${btn('menu', '', '← 내 요청으로', 's')}</div>`, keep);
   menuCur = 'cmp';
@@ -1300,11 +1331,11 @@ function proView() {
     <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    ${refCard()}
+    ${rankCard(myKinds)}${refCard()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청과 내 활동 지역 요청이 먼저 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
-    ${myKinds.includes('cold') ? `<h2 class="mt-10 text-2xl font-black">중고 냉동·냉장고 매입</h2><p class="mt-1 text-sm text-sub">매입 제안은 무료이고 매입 수수료도 0원이에요.</p>
-    <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${S.lst.filter(l => l.status === 'open' && l.seller_id !== me()).map(proListing).join('') || empty('지금 올라온 판매글이 없어요.')}</div>
+    ${myKinds.length ? `<h2 class="mt-10 text-2xl font-black">중고마켓 · 매입 제안</h2><p class="mt-1 text-sm text-sub">에어컨·보일러·냉장고·주방설비 중고를 업체와 소비자가 함께 사고팔아요. 매입 제안은 무료이고 매입 수수료도 0원이에요. 내 분야 물건이 먼저 보여요.</p>
+    <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${S.lst.filter(l => l.status === 'open' && l.seller_id !== me()).sort((a, b) => (myKinds.includes(lcat(b)) - myKinds.includes(lcat(a))) || b.id - a.id).map(proListing).join('') || empty('지금 올라온 판매글이 없어요.')}</div>
     <div class="mt-10 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-black">내 재고 판매</h2>${btn('stockopen', '', '재고 판매글 올리기', 'a')}</div>
     <p class="mt-1 text-sm text-sub">보유 중인 중고 재고를 소비자나 다른 업체에 팔 수 있어요. 거래 확정 시 거래금액의 5%(건당 최대 10만 원)만 차감돼요.</p>
     <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">${S.lst.filter(l => l.seller_id === me() && l.kind === 'stock').map(lcard).join('') || `<div class="col-span-2">${empty('아직 올린 재고가 없어요.')}</div>`}</div>` : ''}`;
@@ -1738,7 +1769,7 @@ const ACT = {
   admin: () => setMode(S.mode === 'admin' ? 'customer' : 'admin'),
   menu: () => !S.user ? custMenu() : S.mode === 'pro' ? proMenu() : custMenu(),
   fprev: () => { fp = (fp - 1 + fpages) % fpages; renderFeed(); }, fnext: () => { fp = (fp + 1) % fpages; renderFeed(); },
-  mtab: k => { MK.tab = k; renderMarket(); }, mgr: g => { MK.grades.has(g) ? MK.grades.delete(g) : MK.grades.add(g); renderMarket(); }, mfree: () => { MK.free = !MK.free; renderMarket(); },
+  mtab: k => { MK.tab = k; renderMarket(); }, mcat: k => { MK.cat = k || ''; renderMarket(); }, mgr: g => { MK.grades.has(g) ? MK.grades.delete(g) : MK.grades.add(g); renderMarket(); }, mfree: () => { MK.free = !MK.free; renderMarket(); },
   ffree: () => { FS.free = !FS.free; renderPros(); }, fkind: k => { FS.kind = k || ''; renderPros(); },
   qcat: k => { closeM(); openQuote({ cat:k }); }, qopen0: () => { closeM(); openQuote({}); },
   preq: id => { const p = proPub(id); if (!p) return; closeM(); const k = p.kind || 'aircon'; openQuote({ cat:k, service:k === 'truck' ? 'truck' : '', target:p.id, targetName:p.name }); toast(`${p.name} 기사님께만 보이는 견적 요청을 작성해요.`); },
@@ -1752,7 +1783,7 @@ const ACT = {
   ldet: id => ldet(id), sellopen: () => sellOpen(), stockopen: () => sellModal('stock'),
   sprm: i => { sp.splice(+i, 1); spThumbs(); bkDraw(); }, ssend: (id, el) => ssend(el),
   oopen: id => offerModal(id), osend: (id, el) => osend(el, id), lpick: (id, el) => lpick(el, id), lclose: (id, el) => lclose(el, id),
-  pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
+  cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
   csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(),
@@ -1766,8 +1797,8 @@ const ACT = {
   rfilt: k => { RF = k; adminView(); }, refshare: (id, el) => shareLink(el), areq: id => areqModal(id),
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
-  smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
-  bkadd: id => bkAdd(ITEMS[+id]), bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
+  lquote: k => { closeM(); openQuote({ cat:KINDS[k] ? k : 'aircon' }); }, smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
+  bkadd: id => bkAdd(ITEMS_NOW()[+id]), scat: k => { if (!MCAT[k]) return; sellCat = k; bk = []; document.querySelectorAll('[data-act="scat"]').forEach(b => { const on = b.dataset.id === k; b.setAttribute('aria-pressed', on); b.className = `rounded-full border-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}`; }); const t = $('#sl-title'); if (t) t.placeholder = MCAT[k].ph; bkDraw(); }, bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
   bkq: id => { const [i, d] = id.split(':').map(Number); const x = bk[i]; if (!x) return; x.q = Math.max(1, Math.min(99, x.q + d)); bkDraw(); },
   bkrm: id => { bk.splice(+id, 1); bkDraw(); },
   delacct: () => { closeM(); delModal(); }, delgo: (id, el) => delGo(el),
@@ -1809,7 +1840,7 @@ function confirmBox(el) {
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]');
-  if (b) { if (b.tagName === 'A') e.preventDefault(); const f = ACT[b.dataset.act]; if (f) { if (!sb && !['home', 'back', 'mkt', 'pros', 'fprev', 'fnext', 'mtab', 'mgr', 'mfree', 'ffree', 'fav'].includes(b.dataset.act)) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); f(b.dataset.id, b); } return; }
+  if (b) { if (b.tagName === 'A') e.preventDefault(); const f = ACT[b.dataset.act]; if (f) { if (!sb && !['home', 'back', 'mkt', 'pros', 'fprev', 'fnext', 'mtab', 'mcat', 'mgr', 'mfree', 'ffree', 'fav'].includes(b.dataset.act)) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); f(b.dataset.id, b); } return; }
   if (e.target.closest('[data-mclose]')) return closeM();
   if (e.target.closest('[data-rmclose]')) return $('#rm').classList.add('hidden');
   const st = e.target.closest('[data-star]'); if (st) { rmStars = +st.dataset.star; paintStars(); return; }

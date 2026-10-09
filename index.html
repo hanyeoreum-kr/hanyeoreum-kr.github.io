@@ -188,7 +188,7 @@ if (window.tailwind) tailwind.config = {
 
 <!-- 중고마켓 미리보기 -->
 <section id="market" class="mx-auto mt-8 max-w-6xl px-5 lg:mt-16 lg:px-8">
-  <div class="flex items-end justify-between"><div><p class="text-xs font-black tracking-wide text-emerald-600">MARKET</p><h2 class="text-lg font-black lg:text-2xl">방금 올라온 중고 설비</h2><p class="hidden text-sm text-sub lg:block">업소용 냉장·냉동 설비를 사고팔아요</p></div>
+  <div class="flex items-end justify-between"><div><p class="text-xs font-black tracking-wide text-emerald-600">MARKET</p><h2 class="text-lg font-black lg:text-2xl">방금 올라온 중고 설비</h2><p class="hidden text-sm text-sub lg:block">에어컨·보일러·냉장고·주방설비 중고를 함께 사고팔아요</p></div>
     <div class="flex items-center gap-3"><button type="button" data-act="sellopen" class="hidden rounded-full bg-sun px-4 py-2 text-sm font-bold text-white lg:inline-block">+ 판매하기</button><button type="button" data-act="mkt" class="text-sm font-bold text-brand">더보기</button></div></div>
   <div id="feed" class="mt-3 grid grid-cols-2 gap-3 lg:mt-6 lg:grid-cols-4 lg:gap-6"></div>
   <div id="fpager" class="mt-4 flex items-center justify-center gap-4"></div>
@@ -276,14 +276,14 @@ if (window.tailwind) tailwind.config = {
       <p class="mt-1 text-sm text-sub lg:text-base">평점·후기·자격을 비교하고 원하는 기사님께 바로 견적을 요청해요.</p></div>
     <div id="fkinds-m" class="no-sb mt-4 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden"></div>
     <div class="mt-2 flex gap-2 px-5 lg:hidden"><label for="fg" class="sr-only">활동 지역</label><select id="fg" data-f="gu" class="min-w-0 flex-1 rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"></select>
-      <label for="fsort" class="sr-only">정렬</label><select id="fsort" data-f="sort" class="min-w-0 flex-1 rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"><option value="rating">평점순</option><option value="reviews">후기 많은 순</option><option value="done">완료 많은 순</option><option value="new">신규순</option></select>
+      <label for="fsort" class="sr-only">정렬</label><select id="fsort" data-f="sort" class="min-w-0 flex-1 rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"><option value="rating">추천순</option><option value="reviews">후기 많은 순</option><option value="done">완료 많은 순</option><option value="new">신규순</option></select>
       <span id="fchips" class="shrink-0"></span></div>
     <div class="lg:mt-8 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start lg:gap-8">
       <aside class="hidden lg:sticky lg:top-24 lg:block">
         <div id="fkinds-d" class="grid gap-1 rounded-3xl bg-white p-3 shadow-card"></div>
         <div class="mt-4 grid gap-3 rounded-3xl bg-white p-4 shadow-card">
           <label for="fg2" class="sr-only">활동 지역</label><select id="fg2" data-f="gu" class="rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"></select>
-          <label for="fsort2" class="sr-only">정렬</label><select id="fsort2" data-f="sort" class="rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"><option value="rating">평점순</option><option value="reviews">후기 많은 순</option><option value="done">완료 많은 순</option><option value="new">신규순</option></select>
+          <label for="fsort2" class="sr-only">정렬</label><select id="fsort2" data-f="sort" class="rounded-2xl border border-mist bg-white px-3 py-2.5 text-sm font-bold"><option value="rating">추천순</option><option value="reviews">후기 많은 순</option><option value="done">완료 많은 순</option><option value="new">신규순</option></select>
 </div>
         <p class="mt-4 rounded-3xl bg-brand-50 p-5 text-sm leading-relaxed text-slate-600"><b class="text-sea">모든 기사님은</b><br>사업자등록증을 확인한 뒤 활동하고, 14일 재점검 보장제에 참여해요.</p>
       </aside>
@@ -422,6 +422,6 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=13"></script>
-<script src="app.js?v=35"></script>
+<script src="app.js?v=36"></script>
 </body>
 </html>
