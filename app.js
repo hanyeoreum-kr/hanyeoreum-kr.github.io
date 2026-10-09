@@ -1455,7 +1455,7 @@ async function handleTossReturn() {
   if (t === 'fail') { clean(); return toast(q.get('message') || '결제가 취소됐어요.'); }
   if (!S.user) { tossBusy = false; return toast('로그인하면 결제 확인을 이어서 할게요.'); }
   toast('결제를 확인하고 있어요...');
-  const { data, error } = await sb.functions.invoke('toss-confirm', { body:{ paymentKey:q.get('paymentKey'), orderId:q.get('orderId'), amount:+q.get('amount') } });
+  const { data, error } = await sb.functions.invoke(C.TOSS_FN || 'swift-worker', { body:{ paymentKey:q.get('paymentKey'), orderId:q.get('orderId'), amount:+q.get('amount') } });
   clean();
   let msg = data && data.message;
   if (!msg && error && error.context && error.context.json) { try { msg = (await error.context.json()).message; } catch (_) {} }
