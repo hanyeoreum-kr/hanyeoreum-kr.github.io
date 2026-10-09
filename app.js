@@ -17,7 +17,7 @@ const GG_ALL = ['수원시','성남시','고양시','용인시','부천시','안
 const FAR = '기타(지방)';
 const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
 const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
-const SVC = { aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
+const SVC = { clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
 /* 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통)
    용달·화물(truck)은 운송주선업 허가 전까지 보류: KINDS_OFF 에서 KINDS 로 옮기면 다시 켜져요 */
 const KINDS = {
@@ -32,7 +32,9 @@ const KINDS_ON = {
     icon:'<path d="M12 2.5c1 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.6 1 2.5 2 3 0-3 .5-5.5.5-8z"/><path d="M5 21h14"/>' },
   cold:KINDS.cold,
   kitchen:{ name:'주방설비', title:'업소용 주방설비 수리·청소', desc:'식기세척기 · 후드·덕트 · 가스레인지', pro:'업소용 주방설비 전문 기사님', subs:['식기세척기', '후드·덕트 청소', '가스레인지·오븐', '기타 주방설비'], svcs:['kitchen_repair', 'kitchen_clean'], color:'bg-amber-50 text-amber-700', avatar:'bg-amber-500',
-    icon:'<path d="M4 10h16v10H4z"/><path d="M4 14h16"/><path d="M8 3v4M12 3v4M16 3v4"/>' }
+    icon:'<path d="M4 10h16v10H4z"/><path d="M4 14h16"/><path d="M8 3v4M12 3v4M16 3v4"/>' },
+  clean:{ name:'입주·이사청소', title:'입주·이사청소 · 생활청소', desc:'입주청소 · 이사청소 · 거주청소 · 상가청소', pro:'입주·이사청소 전문 기사님', subs:['입주청소', '이사청소', '거주청소', '상가·사무실 청소'], svcs:['clean_movein', 'clean_moveout', 'clean_home', 'clean_store'], color:'bg-emerald-50 text-emerald-700', avatar:'bg-emerald-600',
+    icon:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>' }
 };
 const KINDS_OFF = {
   truck:{ name:'용달·화물', title:'용달·화물 기사 바로 매칭', desc:'설비 운반 · 소형 이사 · 화물', pro:'용달·화물 기사님', subs:['설비 운반', '소형 이사', '일반 화물'], svcs:['truck'], color:'bg-orange-50 text-orange-700', avatar:'bg-orange-500',
@@ -41,7 +43,7 @@ const KINDS_OFF = {
 Object.keys(KINDS).forEach(k => delete KINDS[k]); Object.assign(KINDS, KINDS_ON);
 const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
-const kindOf = code => { const c = String(code); return c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
+const kindOf = code => { const c = String(code); return c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
@@ -115,7 +117,7 @@ const row = (k, v) => `<div class="flex justify-between gap-4 py-2 border-b bord
 const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>`;
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
-const flat = code => /^(aircon|heat|kitchen)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
+const flat = code => /^(aircon|heat|kitchen|clean)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
 const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
 const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; if (/listings_years_check/i.test(m)) return '연식(4자리 연도) 저장 준비가 안 됐어요. 관리자: supabase_update.sql 을 실행해 주세요.'; if (/violates check constraint/i.test(m)) return '입력한 값 중 저장할 수 없는 값이 있어요. 숫자 칸을 다시 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
@@ -164,7 +166,7 @@ const isPhotoUrl = u => typeof u === 'string' && /^https:\/\//.test(u);
    ===================================================================== */
 const S = {
   user:null, profile:null, pro:null, admin:false, mode:'customer', view:'main', autoH:24,
-  req:[], quo:[], adminReq:[], adminQuo:[], custNm:{}, con:[], thr:[], rew:[], lst:[], off:[], inq:[], ntf:[], led:[], chg:[], inc:[], aud:[], prosPub:[], adminPros:[], myRev:[], proPh:{},
+  req:[], quo:[], adminReq:[], adminQuo:[], custNm:{}, myRefs:[], adminRefs:[], con:[], thr:[], rew:[], lst:[], off:[], inq:[], ntf:[], led:[], chg:[], inc:[], aud:[], prosPub:[], adminPros:[], myRev:[], proPh:{},
   msgs:{}, inqMsgs:{}
 };
 const me = () => S.user && S.user.id;
@@ -191,6 +193,8 @@ const Q = {
   aud: () => sb.from('audit_log').select('*').order('id', { ascending:false }).limit(100),
   myRev: () => sb.from('reviews').select('id, contract_id, pro_id, mood, stars, tags, body, created_at').order('id', { ascending:false }).limit(500),
   adminPros: () => sb.from('pros').select('*').order('created_at', { ascending:false }).limit(1000),
+  myRefs: () => sb.from('referrals').select('customer_id, created_at').eq('pro_id', me()).limit(2000),
+  adminRefs: () => sb.from('referrals').select('customer_id, pro_id, created_at').limit(5000),
   adminReq: () => sb.from('requests').select('*').order('id', { ascending:false }).limit(1000),
   adminQuo: () => sb.from('quotes').select('id, request_id, pro_id, price, status, created_at').order('id', { ascending:false }).limit(3000),
   pro: () => sb.from('pros').select('*').eq('id', me()).maybeSingle(),
@@ -209,6 +213,7 @@ async function load(key) {
   if (key === 'myRev') { S.myRev = data || []; return; }
   if (key === 'adminReq') { S.adminReq = data || []; const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
     for (let i = 0; i < ids.length; i += 200) { const { data:ps } = await sb.from('profiles').select('id, name, email').in('id', ids.slice(i, i + 200)); (ps || []).forEach(p => S.custNm[p.id] = p); } return; }
+  if (key === 'prosPub') { S.prosPub = data || []; try { const ks = await rpc('pros_kinds_public'); const m = new Map((ks || []).map(x => [x.id, x.kinds])); S.prosPub.forEach(p => { if (!(p.kinds || []).length && m.get(p.id)) p.kinds = m.get(p.id); }); } catch (_) {} return; }
   if (key === 'proPh') { S.proPh = Object.fromEntries((data || []).map(x => [x.id, x.url])); return; }
   S[key] = data || [];
 }
@@ -216,7 +221,7 @@ async function loadAll() {
   const keys = [...PUBLIC];
   if (S.user) {
     keys.push(...PRIVATE, 'pro', 'profile');
-    if (S.admin) keys.push('led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo');
+    if (S.admin) keys.push('led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo', 'adminRefs');
   }
   await Promise.all(keys.map(load));
   if (S.user && S.pro) await Promise.all([load('led'), load('chg')]);
@@ -267,11 +272,46 @@ function refreshOpen(ks) {
    ===================================================================== */
 const sessionStorageGet = k => { try { return sessionStorage.getItem(k); } catch (_) { return null; } };
 const sessionStorageSet = (k, v) => { try { sessionStorage.setItem(k, v); } catch (_) {} };
+/* ===== 기사님 개인 링크 (내 손님 수수료 0%) ===== */
+const REF_KEY = 'hy_ref', UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const refGet = () => { try { const r = JSON.parse(localStorage.getItem(REF_KEY) || 'null'); return r && UUID_RE.test(r.pro) && Date.now() - r.at < 30 * 864e5 ? r : null; } catch (_) { return null; } };
+const refSet = pro => { try { localStorage.setItem(REF_KEY, JSON.stringify({ pro, at:Date.now() })); } catch (_) {} };
+const refClear = () => { try { localStorage.removeItem(REF_KEY); } catch (_) {} };
+const myRefSet = () => new Set((S.myRefs || []).map(r => r.customer_id));
+const proLink = id => (C.SITE_URL || 'https://hanyeoreum.co.kr/').replace(/\/?$/, '/') + '?pro=' + id + '&from=pro';
+let refTried = false;
+async function claimRef() {
+  const r = refGet(); if (!r || !S.user || refTried) return; refTried = true;
+  try {
+    const res = await rpc('claim_referral', { p_pro:r.pro });
+    if (res === 'ok') { const p = proPub(r.pro); toast(`${p ? p.name + ' 기사님' : '초대한 기사님'}의 손님으로 등록됐어요.`); }
+    if (['ok', 'exists', 'old', 'self', 'nopro'].includes(res)) refClear();
+  } catch (_) { refTried = false; }
+}
+let refLanded = false, refFromUrl = false;
+function refLanding() {
+  const r = refGet(); if (!r || !refFromUrl || refLanded || S.mode !== 'customer') return;
+  const p = proPub(r.pro); if (!p) return; refLanded = true;
+  if (S.user && S.pro && S.pro.id === r.pro) return;
+  setTimeout(() => { const k = proKinds(p).find(x => KINDS[x]) || 'aircon'; openQuote({ cat:k, target:p.id, targetName:p.name }); toast(`${p.name} 기사님께 바로 견적을 요청할 수 있어요.`); }, 900);
+}
+async function shareLink(el) {
+  const url = proLink(me()), nm = S.pro ? S.pro.name : '';
+  const text = `${nm} 기사님께 견적 요청하기 (한여름)\n사진 올리고 날짜만 고르면 바로 연결돼요.\n${url}`;
+  try { if (navigator.share) { await navigator.share({ title:'한여름 견적 요청', text, url }); return; } } catch (_) { return; }
+  try { await navigator.clipboard.writeText(text); toast('링크를 복사했어요. 카톡에 붙여넣어 보내세요.'); } catch (_) { prompt('아래 링크를 복사하세요', url); }
+}
+const refCard = () => { const n = (S.myRefs || []).length; return `<section class="mt-6 rounded-3xl border-2 border-sun/40 bg-sun/5 p-5 lg:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-xs font-black text-sun">내 손님 링크</p><h2 class="mt-1 text-xl font-black">내가 데려온 손님은 <span class="text-sun">수수료 0원</span></h2>
+  <p class="mt-1 text-sm leading-relaxed text-sea/80">이 링크로 처음 가입한 손님은 <b>기사님 손님</b>으로 등록돼요. 그 손님과의 거래는 언제든 수수료가 0원이고, 링크로 들어온 요청은 <b>기사님에게만</b> 가요. 견적서·내역서·14일 보증서는 자동으로 나가고 후기도 쌓여요.</p></div>
+  <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-card"><p class="text-xs text-sea/60">데려온 손님</p><p class="font-display text-3xl tabular-nums">${n}명</p></div></div>
+  <div class="mt-4 flex flex-wrap items-center gap-2"><input readonly value="${esc(proLink(me()))}" aria-label="내 손님 링크" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-sm" onclick="this.select()">${btn('refshare', '', '카톡으로 보내기 · 복사', 'a')}</div>
+  <p class="mt-2 text-xs text-sea/60">이미 한여름에 가입했던 손님이나, 한여름에서 소개받은 손님은 내 손님으로 등록되지 않아요.</p></section>`; };
 async function onSession(session) {
   const prevId = me();
   S.user = session ? session.user : null;
   S.admin = false; S.pro = null; S.profile = null;
-  PRIVATE.concat(['led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo']).forEach(k => S[k] = []);
+  PRIVATE.concat(['led', 'chg', 'inc', 'aud', 'adminPros', 'adminReq', 'adminQuo', 'myRefs', 'adminRefs']).forEach(k => S[k] = []);
   S.msgs = {}; S.inqMsgs = {};
   if (S.user) { try { S.admin = !!(await rpc('is_admin')); } catch (_) { S.admin = false; } }
   if (!S.user || (S.mode === 'pro' && !S.pro) || (S.mode === 'admin' && !S.admin)) S.mode = 'customer';
@@ -284,12 +324,15 @@ async function onSession(session) {
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
     else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 계약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
   }, 800);
+  if (S.user && S.pro) load('myRefs').then(() => { if (S.mode === 'pro') render(); });
+  if (S.user) claimRef();
   if (S.user && S.pro && !(S.pro.kinds || []).length) { const mk = ((S.user.user_metadata || {}).kinds || []).filter(k => KINDS[k] || k === 'truck'); if (mk.length) saveKinds(mk); }
   if (S.user && S.pro && !S.pro.biz_doc && !S.admin) {
     const sent = await flushPendingDoc();
     if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
   }
   updateAuthUI(); showView(S.view === 'pros' || S.view === 'market' ? S.view : 'main');
+  refLanding();
 }
 function updateAuthUI() {
   const u = S.user, nm = S.profile ? S.profile.name : (u ? (u.email || '').split('@')[0] : '');
@@ -412,7 +455,8 @@ async function asignup(el) {
     const data = { name, role:au.type };
     if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
-    const { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
+    let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
+    if (error && pro && data.kind === 'clean' && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
     if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
     track('signup'); auDoc = null;
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
@@ -507,7 +551,8 @@ async function bpSend(el) {
   if (doc && docErr(doc)) return setErr(docErr(doc));
   if (!doc && !S.admin) return setErr('사업자등록증을 올려 주세요.');
   await busy(el, async () => {
-    await rpc('become_pro', { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift });
+    const bpArgs = { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift };
+    try { await rpc('become_pro', bpArgs); } catch (e) { if (bpArgs.p_kind !== 'clean') throw e; await rpc('become_pro', Object.assign(bpArgs, { p_kind:'aircon' })); }
     await saveKinds(kindsOrdered(bp));
     if (doc) await uploadBizDoc(doc);
     if (bpPhoto) { try { await savePhoto(bpPhoto); } catch (e) { console.warn('photo', e); } bpPhoto = null; }
@@ -1252,10 +1297,11 @@ function proView() {
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-br from-brand to-brand-800 p-6 text-white shadow-lg shadow-brand/30">
       <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
-    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
+    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${kd.name} 분야 요청만 보여요. 나를 지정한 요청과 내 활동 지역 요청이 먼저 나와요.</p>
+    ${refCard()}
+    <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청과 내 활동 지역 요청이 먼저 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
     ${myKinds.includes('cold') ? `<h2 class="mt-10 text-2xl font-black">중고 냉동·냉장고 매입</h2><p class="mt-1 text-sm text-sub">매입 제안은 무료이고 매입 수수료도 0원이에요.</p>
     <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${S.lst.filter(l => l.status === 'open' && l.seller_id !== me()).map(proListing).join('') || empty('지금 올라온 판매글이 없어요.')}</div>
@@ -1265,13 +1311,13 @@ function proView() {
 }
 function proReq(r) {
   const my = S.quo.find(q => q.request_id === r.id && q.pro_id === me()), mine = (S.pro.areas || []).includes(r.gu);
-  const k = KINDS[kindOf(r.service)];
+  const k = KINDS[kindOf(r.service)] || KINDS.aircon, myCust = myRefSet().has(r.customer_id);
   return `<article class="rounded-3xl bg-white p-5 shadow-card ${r.target_pro === me() ? 'ring-2 ring-sun' : mine ? 'ring-1 ring-brand-200' : ''}">
-    <div class="flex flex-wrap items-center gap-2"><span class="rounded-full px-3 py-1 text-sm font-bold ${k.color}">${SVC[r.service]}</span>${r.target_pro === me() ? '<span class="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-white">나를 지정한 요청</span>' : ''}${mine ? '<span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">내 지역</span>' : ''}</div>
+    <div class="flex flex-wrap items-center gap-2"><span class="rounded-full px-3 py-1 text-sm font-bold ${k.color}">${SVC[r.service]}</span>${r.target_pro === me() ? '<span class="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-white">나를 지정한 요청</span>' : ''}${mine ? '<span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">내 지역</span>' : ''}${myCust ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">⭐ 내 손님 · 수수료 0원</span>' : ''}</div>
     <p class="mt-2 font-bold">${reqWhere(r)}</p><p class="text-sm text-sub">희망일 ${esc(r.wish_date)}</p>
     <p class="mt-3 leading-relaxed line-clamp-3 whitespace-pre-wrap">${esc(r.details) || '<span class="text-sea/50">세부 요청사항 없음</span>'}</p>
     ${(r.photos || []).length ? `<div class="mt-3 flex gap-2">${r.photos.slice(0, 5).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="고객 첨부 사진" loading="lazy" class="h-16 w-16 rounded-xl object-cover"></a>`).join('')}</div>` : ''}
-    <p class="mt-3 text-xs text-sea/60">${reqCode(r.id)} · ${ago(r.created_at)} · 확정 시 수수료 ${feeNote(r.service)} · 제출은 무료</p>
+    <p class="mt-3 text-xs text-sea/60">${reqCode(r.id)} · ${ago(r.created_at)} · 확정 시 수수료 ${myCust ? '0원 (내 손님)' : feeNote(r.service)} · 제출은 무료</p>
     <div class="mt-3">${my ? `<span class="font-bold text-cool">내 견적 ${won(my.price)} · ${QL[my.status]}</span>` : btn('qopen', r.id, '무료 견적 제출', 'a')}</div></article>`;
 }
 function proListing(l) {
@@ -1610,7 +1656,7 @@ function adminView() {
         ${chg.map(c => card(`<div class="flex flex-wrap items-start justify-between gap-2"><div><p class="font-bold">${esc(proName(c.pro_id))} · ${won(c.amount)}</p><p class="text-xs text-sea/60">입금자명 ${esc(c.depositor)} · ${fmtT(c.created_at)}</p></div><div class="flex gap-2">${btn('chgok', c.id, '입금 확인 · 승인', 'a')}${btn('chgno', c.id, '반려', 's')}</div></div>`)).join('') || `<div class="mt-3">${empty('확인할 충전 신청이 없어요.')}</div>`}</section>
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">기사 가입 승인</h2><p class="mt-1 text-sm text-sea/70">사업자등록증을 열어 상호·대표자를 확인하세요. 사업자 상태(휴·폐업)는 국세청 홈택스에서 조회할 수 있어요.</p>
         ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs ${p.biz_doc ? 'text-cool font-bold' : 'text-red-600 font-bold'}">${p.biz_doc ? '📄 사업자등록증 제출됨 · ' + fmtT(p.biz_doc_at) : '📄 사업자등록증 미제출'}</p>${(p.certs || []).length ? `<p class="text-xs text-sea/70">자격/장비 ${p.certs.map(esc).join(', ')}</p>` : ''}<p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex flex-wrap gap-2">${p.biz_doc ? btn('pdoc', p.id, '사업자등록증 보기', 'p') : ''}${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
-        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}</div>`).join('')}</details></section>
+        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · 데려온 손님 ${(S.adminRefs || []).filter(r => r.pro_id === p.id).length}명 · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}</div>`).join('')}</details></section>
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
@@ -1627,7 +1673,7 @@ function adminView() {
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">최근 계약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 계약이 없어요.')}</div>`}</div>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 계약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
@@ -1717,7 +1763,7 @@ const ACT = {
   rev: id => revModal(id), rvsend: (id, el) => rvsend(el, id), rew: id => rewModal(id), rwsend: (id, el) => rwsend(el, id),
   rvs: k => { rv.s = k; rv.tags = []; rv.other = ''; revModal(rv.cid); },
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
-  rfilt: k => { RF = k; adminView(); }, areq: id => areqModal(id),
+  rfilt: k => { RF = k; adminView(); }, refshare: (id, el) => shareLink(el), areq: id => areqModal(id),
   online: (id, el) => toggleOnline(el), qopen: id => quoteModal(id), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
   smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
@@ -1994,6 +2040,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   netState(); setTimeout(instShow, 4000);
   if (!standalone()) $('#hero-inst').classList.remove('hidden');
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
+  try { const q0 = new URLSearchParams(location.search), rp = q0.get('pro'); if (rp && UUID_RE.test(rp)) { if (!refGet() || refGet().pro !== rp) refSet(rp); refFromUrl = true; q0.delete('pro'); history.replaceState(null, '', location.pathname + (q0.toString() ? '?' + q0 : '') + location.hash); } } catch (_) {}
   try { const q = new URLSearchParams(location.search), go = q.get('go'), gcat = q.get('cat');
     if (go || q.has('app')) { q.delete('go'); q.delete('app'); q.delete('cat'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
     if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote(gcat && KINDS[gcat] ? { cat:gcat } : {}); else if (go === 'delete') delModal(); }, 1500);
