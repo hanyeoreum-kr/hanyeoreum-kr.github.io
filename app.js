@@ -309,11 +309,11 @@ const rankCard = ks => {
   if (!peers.some(p => p.id === me())) peers.push({ ...meP, id:me() });
   peers.sort(byScore);
   const rank = peers.findIndex(p => p.id === me()) + 1, n = +meP.rating_count || 0;
-  return `<section class="mt-6 rounded-3xl bg-sea p-5 text-white lg:p-6"><div class="flex flex-wrap items-start justify-between gap-4"><div class="min-w-0 flex-1"><p class="text-xs font-black text-sun">내 노출 순위</p>
+  return `<section class="mt-6 rounded-3xl bg-sea p-5 text-white lg:p-6"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0 md:flex-1"><p class="text-xs font-black text-sun">내 노출 순위</p>
   <h2 class="mt-1 text-xl font-black">후기가 쌓일수록 <span class="text-sun">맨 위로</span> 올라가요</h2>
   <ul class="mt-3 space-y-1.5 text-sm leading-relaxed text-white/85"><li>✔ 고객 <b class="text-white">견적 비교 화면 추천순 맨 위</b> + <b class="text-white">⭐한여름 추천</b> 배지</li><li>✔ <b class="text-white">기사님 찾기</b> 기본 정렬(추천순) 상단 노출</li><li>✔ 아는 손님을 아래 링크로 초대하면 <b class="text-white">수수료 0원</b>, 그 거래 후기도 <b class="text-white">내 점수</b>로 쌓여요</li></ul>
   <p class="mt-2 text-xs text-white/60">순위는 <b>후기 수</b>가 가장 크게 좌우해요 (평점 4점 이상 후기일수록 쭉쭉 올라가요) · 한여름에서 실제 거래한 손님만 후기를 쓸 수 있어요</p></div>
-  <div class="grid grid-cols-2 gap-2 text-center"><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">내 분야 순위</p><p class="font-display text-3xl tabular-nums">${rank}<span class="text-base">/${peers.length}</span></p></div><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">받은 후기</p><p class="font-display text-3xl tabular-nums">${n}<span class="text-base">개</span></p><p class="text-xs text-sun">${n ? '★ ' + (+meP.rating || 0).toFixed(1) : '첫 후기를 받아보세요'}</p></div></div></div></section>`;
+  <div class="grid shrink-0 grid-cols-2 gap-2 text-center md:w-72"><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">내 분야 순위</p><p class="font-display text-3xl tabular-nums">${rank}<span class="text-base">/${peers.length}</span></p></div><div class="rounded-2xl bg-white/10 px-4 py-3"><p class="text-xs text-white/60">받은 후기</p><p class="font-display text-3xl tabular-nums">${n}<span class="text-base">개</span></p><p class="text-xs text-sun">${n ? '★ ' + (+meP.rating || 0).toFixed(1) : '첫 후기를 받아보세요'}</p></div></div></div></section>`;
 };
 const refCard = () => { const n = (S.myRefs || []).length; return `<section class="mt-6 rounded-3xl border-2 border-sun/40 bg-sun/5 p-5 lg:p-6">
   <div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-xs font-black text-sun">내 손님 링크</p><h2 class="mt-1 text-xl font-black">내가 데려온 손님은 <span class="text-sun">수수료 0원</span></h2>
