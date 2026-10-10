@@ -8,7 +8,7 @@ window.HY_CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_-DbRd04mxB52782xwt0eig_GxErWPkH',
 
   // 사이트 주소 (비밀번호 재설정·가입 인증 메일의 링크가 여기로 돌아와요)
-    SITE_URL: 'https://hanyeoreum-kr.github.io/',
+    SITE_URL: 'https://hanyeoreum.co.kr/',
 
   // 관리자 이메일 (화면 표시용 — 실제 권한은 DB의 admins 표에서만 정해져요)
   ADMIN_EMAIL: 'l87482305@gmail.com',
