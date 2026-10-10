@@ -121,9 +121,10 @@ if (window.tailwind) tailwind.config = {
         <select id="hgu" class="min-w-0 flex-1 bg-transparent py-2.5 text-lg font-black outline-none"></select>
         <span id="hgu-n" class="hidden shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"></span>
       </div>
-      <div class="mt-2.5 flex gap-2">
+      <div class="relative mt-2.5 flex gap-2">
         <label for="hq" class="sr-only">무엇이 필요하세요</label>
-        <input id="hq" type="search" enterkeyhint="search" autocomplete="off" placeholder="세탁기, 보일러 에러, 입주청소…" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
+        <div id="hsug" role="listbox" aria-label="추천 서비스" class="absolute inset-x-0 top-full z-30 mt-2 hidden max-h-80 overflow-y-auto rounded-2xl border border-mist bg-white p-1.5 text-sea shadow-2xl"></div>
+        <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
         <button type="submit" class="shrink-0 whitespace-nowrap rounded-2xl bg-sun px-4 font-black text-white hover:brightness-95 lg:px-6">무료 견적</button>
       </div>
       <p class="mt-2.5 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
@@ -427,6 +428,6 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=15"></script>
-<script src="app.js?v=49"></script>
+<script src="app.js?v=51"></script>
 </body>
 </html>

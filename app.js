@@ -989,6 +989,64 @@ const QMAP = [
   [/주방|후드|덕트|식기세척|가스레인지|오븐|화구/, /청소|후드|덕트/, 'kitchen', 'kitchen_clean', 'kitchen_repair'],
   [/입주|이사|청소|거주|상가|사무실|준공/, /이사\s*(나|퇴거)|퇴거/, 'clean', 'clean_moveout', null, /상가|사무실|매장/, 'clean_store', /거주|살면서|대청소/, 'clean_home', /입주|신축|준공/, 'clean_movein']
 ];
+/* 검색 추천: 글자를 치면 맞는 서비스를 골라서 누를 수 있게 */
+const SVC_KW = {
+  aircon_repair:'에어컨 고장 수리 물샘 물 새요 에러 안나와 바람 안 시원',
+  aircon_clean:'에어컨 청소 세척 분해 냄새 곰팡이',
+  aircon_install:'에어컨 설치 이전 이사 철거 실외기 배관',
+  aircon_check:'냉난방기 점검 가스 충전 냉매 시스템 천장형',
+  heat_repair:'보일러 고장 수리 온수 안나와 난방 에러 소음 물샘',
+  heat_install:'보일러 교체 설치 콘덴싱 가스보일러 기름보일러',
+  heat_clean:'난방 배관 청소 바닥 미지근 보일러청소',
+  cold_repair:'업소용 냉장고 냉동고 쇼케이스 제빙기 저온창고 고장 수리 냉기 약함',
+  freezer_removal:'업소용 냉장고 냉동고 철거 폐업 수거 처리',
+  freezer_sale:'중고 매입 판매 팔기 업소용 냉장고',
+  kitchen_repair:'식기세척기 식세기 가스레인지 오븐 화구 튀김기 주방설비 수리 업소용',
+  kitchen_clean:'후드 덕트 청소 기름때 주방 식당',
+  clean_movein:'입주청소 신축 새집 아파트 입주',
+  clean_moveout:'이사청소 퇴거 이사 나갈 때',
+  clean_home:'거주청소 대청소 살면서 집청소',
+  clean_store:'상가 사무실 매장 준공 청소',
+  home_repair:'세탁기 건조기 냉장고 김치냉장고 식기세척기 식세기 정수기 비데 전자레인지 가전 고장 수리',
+  home_clean:'세탁기 건조기 청소 분해 냄새 곰팡이 통세척',
+  home_install:'세탁기 건조기 가전 설치 이전 이사'
+};
+let hsugList = [], hsugIdx = -1;
+function hsugFind(q) {
+  const toks = String(q || '').toLowerCase().replace(/[^0-9a-z가-힣\s]/g, ' ').split(/\s+/).filter(t => t.length >= 1);
+  const codes = Object.values(KINDS).flatMap(k => k.svcs).filter(c => SVC_KW[c] || SVC[c]);
+  if (!toks.length) return [];
+  const best = hqMatch(q).service;
+  return codes.map(c => { const hay = (SVC[c] + ' ' + (SVC_KW[c] || '')).toLowerCase(), kn = String((KINDS[kindOf(c)] || {}).name || '').toLowerCase(); let sc = 0;
+      for (const t of toks) { if (hay.includes(t)) sc += t.length >= 2 ? 2 : 1; else if (kn.includes(t)) sc += 1; else if (t.length >= 3 && hay.includes(t.slice(0, 2))) sc += 1; }
+      if (c === best) sc += 3; return [c, sc]; })
+    .filter(([, sc]) => sc > 0).sort((a, b) => b[1] - a[1]).slice(0, 7).map(([c]) => c);
+}
+/* 검색창 추천: 분야 6개를 보여주고, 글자를 치면 맞는 분야를 위로 */
+function hsugKinds(q) {
+  const all = HCATS.map(([k]) => k).filter(k => KINDS[k]);
+  if (!String(q || '').trim()) return all;
+  const sc = {}; hsugFind(q).forEach((c, i) => { const k = kindOf(c); sc[k] = (sc[k] || 0) + (10 - i); });
+  const m = hqMatch(q).cat; if (m) sc[m] = (sc[m] || 0) + 20;
+  const hit = all.filter(k => sc[k]).sort((a, b) => sc[b] - sc[a]);
+  return hit.length ? hit.concat(all.filter(k => !sc[k])) : all;
+}
+function hsugShow(open) {
+  const box = $('#hsug'), inp = $('#hq'); if (!box || !inp) return;
+  if (!open) { box.classList.add('hidden'); inp.setAttribute('aria-expanded', 'false'); hsugIdx = -1; return; }
+  const q = inp.value.trim(); hsugList = hsugKinds(q); hsugIdx = -1;
+  const name = Object.fromEntries(HCATS.map(([k, n, d]) => [k, [n, d]]));
+  box.innerHTML = `<p class="px-3 pb-1 pt-2 text-[11px] font-bold text-sub">${q ? '이 분야가 맞나요?' : '어떤 분야가 필요하세요?'}</p>` +
+    hsugList.map((k, i) => { const c = KINDS[k], [n, d] = name[k] || [c.name, c.desc]; return `<button type="button" role="option" data-hsug="${i}" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-ice"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl ${c.color}">${svgI(c.icon, 'h-5 w-5')}</span><span class="min-w-0 flex-1"><b class="block text-[15px]">${n}</b><span class="block text-xs text-sub">${d}</span></span><span class="text-slate-300">›</span></button>`; }).join('');
+  box.classList.remove('hidden'); inp.setAttribute('aria-expanded', 'true');
+}
+function hsugPick(i) {
+  const k = hsugList[i]; if (!k) return;
+  const inp = $('#hq'), q = inp.value.trim(), g = ($('#hgu') || {}).value || '', m = hqMatch(q);
+  hsugShow(false);
+  openQuote(m.cat === k && m.service && m.service !== 'freezer_sale' ? { cat:k, service:m.service, district:g } : { cat:k, district:g });
+  const d = $('#qm-details'); if (q && d && !d.value.trim()) { d.value = q.slice(0, 500); $('#qm-count').textContent = `${d.value.length} / 500`; }
+}
 function hqMatch(q) {
   q = String(q || '').trim(); if (!q) return {};
   for (const [kw, r1, cat, s1, def, r2, s2, r3, s3, r4, s4] of QMAP) {
@@ -1999,12 +2057,25 @@ $('#qm-file').addEventListener('change', e => {
   e.target.value = ''; qThumbs();
 });
 $('#qm-thumbs').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; URL.revokeObjectURL(qphotos[+b.dataset.rm].url); qphotos.splice(+b.dataset.rm, 1); qThumbs(); });
+(() => { const inp = $('#hq'), box = $('#hsug'); if (!inp || !box) return;
+  inp.addEventListener('focus', () => hsugShow(true));
+  inp.addEventListener('input', () => hsugShow(true));
+  inp.addEventListener('keydown', e => {
+    if (box.classList.contains('hidden')) return;
+    const items = box.querySelectorAll('[data-hsug]');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!items.length) return; hsugIdx = (hsugIdx + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length; items.forEach((b, i) => b.classList.toggle('bg-ice', i === hsugIdx)); items[hsugIdx].scrollIntoView({ block:'nearest' }); }
+    else if (e.key === 'Escape') hsugShow(false);
+  });
+  box.addEventListener('mousedown', e => e.preventDefault());
+  box.addEventListener('click', e => { const b = e.target.closest('[data-hsug]'); if (b) hsugPick(+b.dataset.hsug); });
+  document.addEventListener('click', e => { if (!e.target.closest('#hfind')) hsugShow(false); });
+})();
 $('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / 500`);
 $('#qm-next').addEventListener('click', qNext);
 $('#qm-back').addEventListener('click', () => qShow(qstep - 1));
 qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
 document.addEventListener('submit', e => {
-  if (e.target.id === 'hfind') { e.preventDefault(); const q = $('#hq').value, m = hqMatch(q), g = $('#hgu').value; if (m.service === 'freezer_sale') return sellOpen(); openQuote(Object.assign({ district:g }, m), e.submitter); const d = $('#qm-details'); if (q.trim() && d && !d.value.trim()) { d.value = q.trim().slice(0, 500); $('#qm-count').textContent = `${d.value.length} / 500`; } if (!m.cat && q.trim()) toast('필요한 서비스를 골라 주세요. 검색어는 요청사항에 적어 두면 돼요.'); return; }
+  if (e.target.id === 'hfind') { e.preventDefault(); if (hsugIdx >= 0) return hsugPick(hsugIdx); hsugShow(false); const q = $('#hq').value, m = hqMatch(q), g = $('#hgu').value; if (m.service === 'freezer_sale') return sellOpen(); openQuote(Object.assign({ district:g }, m), e.submitter); const d = $('#qm-details'); if (q.trim() && d && !d.value.trim()) { d.value = q.trim().slice(0, 500); $('#qm-count').textContent = `${d.value.length} / 500`; } if (!m.cat && q.trim()) toast('필요한 서비스를 골라 주세요. 검색어는 요청사항에 적어 두면 돼요.'); return; }
   if (e.target.id !== 'quick') return; e.preventDefault();
   openQuote({ service:$('#svc').value, district:$('#gu').value }, e.submitter);
 });
