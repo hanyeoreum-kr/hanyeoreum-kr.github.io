@@ -1,5 +1,5 @@
 /* 한여름 서비스워커 — 항상 최신 화면을 먼저 받고, 인터넷이 끊겼을 때만 저장본을 보여줘요. */
-const CACHE = 'hy-v52';
+const CACHE = 'hy-v54';
 const CDN = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const CORE = ['./', 'index.html', 'app.js?v=51', 'config.js?v=15', 'manifest.json', 'icon-192.png', 'icon-512.png', 'terms.html', 'privacy.html', 'refund.html', 'legal.css', 'delete-account.html'];
 
