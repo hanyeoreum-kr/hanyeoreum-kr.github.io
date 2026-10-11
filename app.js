@@ -48,6 +48,12 @@ Object.keys(KINDS).forEach(k => delete KINDS[k]); Object.assign(KINDS, KINDS_ON)
 const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
 const kindOf = code => { const c = String(code); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
+/* 분야별 '기타 (직접 입력)': DB 서비스 코드는 그대로 쓰고, 요청 내용 앞에 [기타 요청] 표시를 붙여요 */
+const ETC_SVC = { aircon:'aircon_repair', heat:'heat_repair', cold:'cold_repair', kitchen:'kitchen_repair', clean:'clean_home', home:'home_repair' };
+const ETC_TAG = '[기타 요청]', SITE_TAG = '[현장]';
+const SITE_SVCS = ['freezer_removal'];   // 현장 정보(층·엘리베이터·사다리차·주차)를 꼭 받는 서비스
+const isEtc = r => String((r && r.details) || '').startsWith(ETC_TAG);
+const svcOf = r => isEtc(r) ? ((KINDS[kindOf(r.service)] || {}).name || '') + ' · 기타' : SVC[r.service];
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
@@ -270,7 +276,7 @@ function refreshOpen(ks) {
   if (menuCur === 'wallet') return walletModal(true);
   if (menuCur === 'cmp' && cmpCur) return compare(cmpCur, true);
   if (menuCur === 'ldet' && ldetCur) return ldet(ldetCur, true);
-  if (chatCur && ks.includes('con')) return chatModal(chatCur, true);
+  if (chatCur && (ks.includes('con') || ks.includes('thr'))) return chatModal(chatCur, true);
 }
 
 /* =====================================================================
@@ -968,7 +974,7 @@ function renderPros() {
 }
 /* 홈: 3대 분야 카드 · 기사님 미리보기 */
 /* 홈 상단: 분야 6개 · 우리 동네 · 검색 */
-const HCATS = [['aircon', '에어컨', '수리·청소·설치'], ['heat', '보일러', '고장·교체·청소'], ['clean', '입주청소', '입주·이사·거주'], ['home', '세탁기·가전', '수리·분해청소', true], ['cold', '업소용 냉장', '수리·철거·매입'], ['kitchen', '주방·덕트', '식기세척기·후드']];
+const HCATS = [['aircon', '에어컨', '수리·청소·설치'], ['heat', '보일러', '고장·교체·청소'], ['clean', '입주청소', '입주·이사·상가'], ['home', '세탁기·가전', '수리·분해청소', true], ['cold', '업소용 냉장', '수리·철거·매입'], ['kitchen', '주방·덕트', '식기세척기·후드']];
 const HGU_KEY = 'hy_gu';
 const hguGet = () => { try { return localStorage.getItem(HGU_KEY) || ''; } catch (_) { return ''; } };
 const hguSet = g => { try { g ? localStorage.setItem(HGU_KEY, g) : localStorage.removeItem(HGU_KEY); } catch (_) {} };
@@ -1099,7 +1105,7 @@ async function pchat(el, pid) {
    ===================================================================== */
 const qm = $('#qm');
 let qstep = 1, qopener = null, qphotos = [], qsending = false;
-const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'' };
+const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' };
 function qErr(msg) { const e = $('#qm-err'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
 function qShow(n) {
   qstep = n; qErr('');
@@ -1108,13 +1114,22 @@ function qShow(n) {
   $('#qm-label').textContent = n < 4 ? `${n} / 3 단계${qform.targetName ? ` · 지정 기사님: ${qform.targetName}` : ''}` : '';
   const truck = (n === 2 && (document.querySelector('input[name="qm-svc"]:checked') || {}).value === 'truck') || (n === 2 && qform.service === 'truck');
   $('#qm-truck').classList.toggle('hidden', !truck); $('#qm-gu-l').textContent = truck ? '출발지' : '작업 지역';
+  $('#qm-site').classList.toggle('hidden', !(n === 2 && SITE_SVCS.includes(qform.service)));
+  if (n === 3) {
+    const lab = document.querySelector('label[for="qm-details"]'), d = $('#qm-details'), room = 500 - qPrefix().length;
+    lab.innerHTML = qform.etc ? '어떤 작업이 필요한지 적어 주세요 <span class="text-sun">(필수)</span>' : '세부 요청사항 · 특이사항';
+    d.placeholder = qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.';
+    d.maxLength = room; if (d.value.length > room) d.value = d.value.slice(0, room); $('#qm-count').textContent = `${d.value.length} / ${room}`;
+  }
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
   $('#qm-next').textContent = n === 3 ? (S.user ? '견적 요청 보내기' : '로그인하고 보내기') : n === 4 ? '닫기' : '다음';
   $('#qm-next').disabled = false;
   qm.querySelector('.overflow-y-auto').scrollTop = 0;
 }
+const qPrefix = () => [qform.etc ? ETC_TAG : '', qform.site ? `${SITE_TAG} ${qform.site}` : ''].filter(Boolean).join(' ');
 function qReset() {
-  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'' });
+  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' });
+  ['#qm-floor', '#qm-elev', '#qm-ladder', '#qm-park'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   $('#qm-to').value = ''; $('#qm-ton').value = ''; $('#qm-lift').checked = false; qCat('');
   qphotos.forEach(p => URL.revokeObjectURL(p.url)); qphotos = []; qThumbs();
   document.querySelectorAll('input[name="qm-svc"]').forEach(r => r.checked = false);
@@ -1139,14 +1154,19 @@ function closeQuote() { qm.classList.add('hidden'); if (!mmOpen()) document.body
 function qThumbs() { $('#qm-thumbs').innerHTML = qphotos.map((p, i) => `<li class="relative aspect-square"><img src="${p.url}" alt="첨부 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-rm="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join(''); }
 async function qNext() {
   if (qstep === 4) return closeQuote();
-  if (qstep === 1) { const r = document.querySelector('input[name="qm-svc"]:checked'); if (!r) return qErr('서비스를 선택해 주세요.'); qform.service = r.value;
+  if (qstep === 1) { const r = document.querySelector('input[name="qm-svc"]:checked'); if (!r) return qErr('서비스를 선택해 주세요.'); qform.etc = r.value.startsWith('etc_') ? r.value.slice(4) : null; qform.service = qform.etc ? ETC_SVC[qform.etc] : r.value; if (!SITE_SVCS.includes(qform.service)) qform.site = '';
     if (r.value === 'freezer_sale') { r.checked = false; qform.service = ''; closeQuote(); return sellOpen(); }
-    if (qform.target && !KINDS[kindOf(r.value)].svcs.includes(r.value)) qform.target = null; }
+    if (qform.target && !KINDS[kindOf(qform.service)].svcs.includes(qform.service)) qform.target = null; }
   if (qstep === 2) {
     qform.district = $('#qm-gu').value; qform.date = $('#qm-date').value;
     if (!qform.district) return qErr('작업할 구를 선택해 주세요.');
     if (!qform.date) return qErr('작업 희망일을 입력해 주세요.');
     if (qform.date < today()) return qErr('오늘 이후 날짜를 선택해 주세요.');
+    if (SITE_SVCS.includes(qform.service)) {
+      const v = ['#qm-floor', '#qm-elev', '#qm-ladder', '#qm-park'].map(id => $(id).value);
+      if (v.some(x => !x)) return qErr('현장 정보(위치 층 · 엘리베이터 · 사다리차 · 주차)를 모두 선택해 주세요.');
+      qform.site = `${v[0]} · 엘리베이터 ${v[1]} · 사다리차 ${v[2]} · 주차 ${v[3]}`;
+    } else qform.site = '';
     if (qform.service === 'truck') { qform.to = $('#qm-to').value; qform.ton = $('#qm-ton').value; qform.lift = $('#qm-lift').checked;
       if (!qform.to) return qErr('도착지 구를 선택해 주세요.'); if (!qform.ton) return qErr('희망 차량을 선택해 주세요.'); }
   }
@@ -1154,17 +1174,18 @@ async function qNext() {
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
   if (!S.user) { toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
   qform.details = $('#qm-details').value.trim();
+  if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
   if (qsending) return; qsending = true;
   const b = $('#qm-next'); b.disabled = true; b.textContent = '보내는 중...';
   try {
     const photos = await uploadAll(qphotos.map(p => p.file));
-    const truck = qform.service === 'truck', row = { service:qform.service, gu:qform.district, wish_date:qform.date, details:qform.details, photos };
+    const truck = qform.service === 'truck', pre = qPrefix(), row = { service:qform.service, gu:qform.district, wish_date:qform.date, details:(pre ? pre + (qform.details ? '\n' + qform.details : '') : qform.details).slice(0, 500), photos };
     if (truck) Object.assign(row, { to_gu:qform.to, ton:qform.ton, lift:qform.lift });
     if (qform.target) row.target_pro = qform.target;
     const { data, error } = await sb.from('requests').insert(row).select('id').single();
     if (!error) track('quote');
     if (error) throw error;
-    const rows = [['요청 번호', reqCode(data.id)], ['서비스', SVC[qform.service]], truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
+    const rows = [['요청 번호', reqCode(data.id)], ['서비스', qform.etc ? KINDS[qform.etc].name + ' · 기타' : SVC[qform.service]], ...(qform.site ? [['현장', qform.site]] : []), truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
     await load('req'); render(); qShow(4);
   } catch (e) { qErr(errMsg(e) || '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '견적 요청 보내기'; }
@@ -1206,7 +1227,7 @@ function custMenu(keep) {
   openM(head('내 요청 관리') + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
     (my.length ? '<h3 class="mt-2 font-bold">견적 요청</h3>' : '') + my.map(r => {
       const qs = S.quo.filter(q => q.request_id === r.id), c = conFor('request_id', r.id);
-      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${SVC[r.service]} · ${reqWhere(r)}${r.target_pro ? ' · <span class="text-sun">지정 요청</span>' : ''}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${svcOf(r)} · ${reqWhere(r)}${r.target_pro ? ' · <span class="text-sun">지정 요청</span>' : ''}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
         <p class="text-xs text-sea/60 mt-1">${reqCode(r.id)} · 희망일 ${esc(r.wish_date)} · 사진 ${(r.photos || []).length}장</p>
         <div class="mt-3 flex flex-wrap gap-2 items-center">${r.status === 'open' ? (qs.length ? btn('cmp', r.id, `받은 견적 ${qs.length}건 비교`) : '<span class="text-sm text-sea/60">기사님 견적을 기다리는 중이에요</span>') + btn('rclose', r.id, '요청 취소', 's') : conBlock(c)}</div>`);
     }).join('') +
@@ -1227,7 +1248,7 @@ function compare(rid, keep) {
   const qs = S.quo.filter(q => q.request_id === r.id).sort(cmpSort === 'low' ? (a, b) => a.price - b.price : (a, b) => pscore(proPub(b.pro_id)) - pscore(proPub(a.pro_id)) || a.price - b.price);
   const best = qs.length > 1 && cmpSort === 'rec' && (proPub(qs[0].pro_id) || {}).rating_count > 0 ? qs[0].id : null;
   const tb = (k, t) => `<button type="button" data-act="cmpsort" data-id="${k}" aria-pressed="${cmpSort === k}" class="rounded-full px-3 py-1.5 text-xs font-bold ${cmpSort === k ? 'bg-sea text-white' : 'bg-ice'}">${t}</button>`;
-  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${SVC[r.service]} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
+  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${svcOf(r)} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
     (qs.map(q => { const p = proPub(q.pro_id) || { name:'기사', rating:0, rating_count:0 };
       return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(p.name)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
       <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}</p>
@@ -1294,6 +1315,9 @@ async function chatModal(tid, keep) {
   if (!S.msgs[tid]) { try { await loadMsgs(tid); } catch (e) { return toast(errMsg(e)); } }
   const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null, other = t.u1 === me() ? t.u2_name : t.u1_name, imCust = t.u1 === me();
   const i0 = $('#chat-in'), draft = keep && i0 ? i0.value : '', focused = keep && document.activeElement === i0;
+  const hasRead = 'u1_read_at' in t, otherRead = imCust ? t.u2_read_at : t.u1_read_at;
+  const lastM = [...(S.msgs[tid] || [])].reverse().find(m => m.sender_id === me() && m.kind !== 'sys'), lastMine = lastM ? lastM.id : null;
+  const readTag = !hasRead || !lastM ? '' : otherRead && T(otherRead) >= T(lastM.created_at) ? ' · <b>읽음</b>' : ' · 안 읽음';
   const acts = [qa('qphoto', tid, '📷 사진 보내기'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
   else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 계약하기'));
@@ -1301,13 +1325,25 @@ async function chatModal(tid, keep) {
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
     <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
-      : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}</p></div></div>`).join('')}</div>
+      : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
     <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"></div>
     <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
-  chatCur = tid;
+  chatCur = tid; markRead(t);
   const b = $('#chatbox'); b.scrollTop = b.scrollHeight;
   const i1 = $('#chat-in'); i1.value = draft; if (keep ? focused : innerWidth >= 768) i1.focus();
 }
+/* 채팅 읽음 표시: 내가 채팅방을 보고 있으면 '읽은 시각'을 서버에 남겨요 → 상대 화면에 '읽음'으로 보여요 */
+let markBusy = 0;
+function markRead(t) {
+  if (!t || !('u1_read_at' in t) || document.visibilityState === 'hidden' || markBusy === t.id) return;
+  const lastOther = [...(S.msgs[t.id] || [])].reverse().find(m => m.sender_id && m.sender_id !== me());
+  if (!lastOther) return;
+  const k = t.u1 === me() ? 'u1_read_at' : 'u2_read_at';
+  if (t[k] && T(t[k]) >= T(lastOther.created_at)) return;
+  markBusy = t.id;
+  rpc('mark_thread_read', { p_thread:t.id }).then(() => { t[k] = lastOther.created_at; }).catch(() => {}).finally(() => { markBusy = 0; });
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && chatCur) markRead(S.thr.find(x => x.id === chatCur)); });
 async function chatOfContract(cid) {
   let t = S.thr.find(x => x.contract_id === +cid);
   if (!t) { await load('thr'); t = S.thr.find(x => x.contract_id === +cid); }
@@ -1462,7 +1498,7 @@ function proReq(r) {
   const my = S.quo.find(q => q.request_id === r.id && q.pro_id === me()), mine = (S.pro.areas || []).includes(r.gu), near = !mine && isNear(S.pro.areas, r.gu);
   const k = KINDS[kindOf(r.service)] || KINDS.aircon, myCust = myRefSet().has(r.customer_id);
   return `<article class="rounded-3xl bg-white p-5 shadow-card ${r.target_pro === me() ? 'ring-2 ring-sun' : mine ? 'ring-1 ring-brand-200' : ''}">
-    <div class="flex flex-wrap items-center gap-2"><span class="rounded-full px-3 py-1 text-sm font-bold ${k.color}">${SVC[r.service]}</span>${r.target_pro === me() ? '<span class="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-white">나를 지정한 요청</span>' : ''}${mine ? '<span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">내 지역</span>' : ''}${near ? '<span class="rounded-full bg-cyan-50 px-2 py-0.5 text-xs font-bold text-cyan-700">📍 근처 지역</span>' : ''}${myCust ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">⭐ 내 손님 · 수수료 0원</span>' : ''}</div>
+    <div class="flex flex-wrap items-center gap-2"><span class="rounded-full px-3 py-1 text-sm font-bold ${k.color}">${svcOf(r)}</span>${r.target_pro === me() ? '<span class="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-white">나를 지정한 요청</span>' : ''}${mine ? '<span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand">내 지역</span>' : ''}${near ? '<span class="rounded-full bg-cyan-50 px-2 py-0.5 text-xs font-bold text-cyan-700">📍 근처 지역</span>' : ''}${myCust ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">⭐ 내 손님 · 수수료 0원</span>' : ''}</div>
     <p class="mt-2 font-bold">${reqWhere(r)}</p><p class="text-sm text-sub">희망일 ${esc(r.wish_date)}</p>
     <p class="mt-3 leading-relaxed line-clamp-3 whitespace-pre-wrap">${esc(r.details) || '<span class="text-sea/50">세부 요청사항 없음</span>'}</p>
     ${(r.photos || []).length ? `<div class="mt-3 flex gap-2">${r.photos.slice(0, 5).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="고객 첨부 사진" loading="lazy" class="h-16 w-16 rounded-xl object-cover"></a>`).join('')}</div>` : ''}
@@ -1481,7 +1517,7 @@ function quoteModal(rid) {
   const r = S.req.find(x => x.id === +rid), p = S.pro, need = calcFee(r.service, 1);
   if (p.online === false) return toast('휴무 중에는 견적을 낼 수 없어요. “영업중”으로 바꿔 주세요.');
   if (need > p.balance) return lowModal(need);
-  openM(head('무료 견적 제출') + `<p class="text-sm"><b>${SVC[r.service]}</b> · ${reqWhere(r)} · 희망일 ${esc(r.wish_date)}</p>
+  openM(head('무료 견적 제출') + `<p class="text-sm"><b>${svcOf(r)}</b> · ${reqWhere(r)} · 희망일 ${esc(r.wish_date)}</p>
     <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">견적 제출은 <b>무료</b>예요. 거래가 확정될 때만 수수료(${feeNote(r.service)})가 예치금에서 차감돼요.</p>
     <label for="qp" class="block mt-4 text-sm font-bold">견적 금액(원)</label><input id="qp" type="number" min="1000" step="1000" inputmode="numeric" placeholder="예) 90000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
     <label for="qd" class="block mt-4 text-sm font-bold">작업 가능일</label><input id="qd" type="date" min="${today()}" value="${esc(r.wish_date >= today() ? r.wish_date : today())}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
@@ -1602,7 +1638,7 @@ function proMenu(keep) {
         ${c.warranty_no ? `<p class="mt-1 text-xs text-sea/60">무상 A/S 보증번호 ${esc(c.warranty_no)}</p>` : ''}
         <div class="mt-2 flex flex-wrap gap-2">${btn('rcpt', c.id, '내역서', 's')}${btn('chatc', c.id, '채팅방', 's')}${c.kind === 'service' && prov && c.status === 'confirmed' ? btn('done', c.id, '작업 완료 요청') : ''}${c.status !== 'completed' ? btn('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료', 'a') : ''}
         ${w && w.status !== 'resolved' && prov ? btn('rwstep', c.id, `재점검: ${w.status === 'requested' ? '방문 일정 확정' : '재점검 완료'}`, 'a') : ''}${w && w.status === 'resolved' ? '<span class="text-sm font-bold text-cool">재점검 해결 완료</span>' : ''}</div>`); }).join('') : `<div class="mt-2">${empty('아직 계약이 없어요.')}</div>`}
-    <h3 class="mt-6 font-bold">제출한 견적</h3>${qs.length ? qs.slice(0, 30).map(q => { const r = S.req.find(x => x.id === q.request_id); return card(`<p class="font-bold">${r ? SVC[r.service] + ' · ' + esc(r.gu) : reqCode(q.request_id)} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]} · ${fmtT(q.created_at)}</p>`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
+    <h3 class="mt-6 font-bold">제출한 견적</h3>${qs.length ? qs.slice(0, 30).map(q => { const r = S.req.find(x => x.id === q.request_id); return card(`<p class="font-bold">${r ? svcOf(r) + ' · ' + esc(r.gu) : reqCode(q.request_id)} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]} · ${fmtT(q.created_at)}</p>`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
     <h3 class="mt-6 font-bold">내 매입·구매 제안</h3>${offs.map(o => { const l = S.lst.find(x => x.id === o.listing_id); return card(`<p class="font-bold">${l ? esc(l.title) : '판매글'} · ${won(o.price)}</p><p class="text-xs text-sea/60">${QL[o.status]}</p>`); }).join('') || `<div class="mt-2">${empty('제출한 제안이 없어요.')}</div>`}
     <div class="mt-6">${btn('cs', '', '고객센터 · 내 문의', 's')}</div>`, keep);
   menuCur = 'pro';
@@ -1783,7 +1819,7 @@ function reqBoard() {
   const row = r => { const st = RST[reqState(r)], n = reqQs(r.id).length, c = custOf(r), isLate = reqState(r) === 'wait' && Date.now() - new Date(r.created_at) > 2 * HR;
     return `<button type="button" data-act="areq" data-id="${r.id}" class="grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-b border-mist px-2 py-3 text-left hover:bg-ice sm:grid-cols-[92px_1.4fr_1fr_100px_90px_96px]">
       <span class="hidden text-xs text-sea/60 sm:block"><b class="block text-sea">${reqCode(r.id)}</b>${ago(r.created_at)}</span>
-      <span class="min-w-0"><b class="block truncate">${esc(SVC[r.service] || r.service)}${r.target_pro ? ' <span class="text-xs text-sun">지정</span>' : ''}${(r.photos || []).length ? ' <span class="text-xs text-sea/50">📷' + r.photos.length + '</span>' : ''}</b><span class="block truncate text-xs text-sea/60 sm:hidden">${reqCode(r.id)} · ${ago(r.created_at)} · ${esc(place(r.gu))} · 희망 ${esc(r.wish_date || '-')}</span></span>
+      <span class="min-w-0"><b class="block truncate">${esc(svcOf(r) || r.service)}${r.target_pro ? ' <span class="text-xs text-sun">지정</span>' : ''}${(r.photos || []).length ? ' <span class="text-xs text-sea/50">📷' + r.photos.length + '</span>' : ''}</b><span class="block truncate text-xs text-sea/60 sm:hidden">${reqCode(r.id)} · ${ago(r.created_at)} · ${esc(place(r.gu))} · 희망 ${esc(r.wish_date || '-')}</span></span>
       <span class="hidden truncate text-sm sm:block">${esc(place(r.gu))}${r.to_gu ? ' → ' + esc(r.to_gu) : ''}</span>
       <span class="hidden text-sm tabular-nums sm:block">${esc(r.wish_date || '-')}</span>
       <span class="hidden truncate text-sm sm:block">${esc(c.name || '고객')}</span>
@@ -1801,7 +1837,7 @@ function areqModal(id) {
   const c = custOf(r), qs = reqQs(id).slice().sort((a, b) => a.price - b.price), st = RST[reqState(r)];
   const pname = pid => (S.adminPros.find(p => p.id === pid) || {}).name || '기사';
   const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && proKinds(p).includes(kind) && (!(p.areas || []).length || p.areas.includes(r.gu)));
-  const rows = [['서비스', SVC[r.service] || r.service], ['지역', place(r.gu) + (r.to_gu ? ' → ' + place(r.to_gu) : '')], ['희망일', r.wish_date || '-'], ['접수', fmtT(r.created_at) + ' (' + ago(r.created_at) + ')'], ['고객', (c.name || '고객') + (c.email ? ' · ' + c.email : '')], ...(r.ton ? [['차량', r.ton + (r.lift ? ' · 리프트' : '')]] : []), ...(r.target_pro ? [['지정 기사', pname(r.target_pro)]] : [])];
+  const rows = [['서비스', svcOf(r) || r.service], ['지역', place(r.gu) + (r.to_gu ? ' → ' + place(r.to_gu) : '')], ['희망일', r.wish_date || '-'], ['접수', fmtT(r.created_at) + ' (' + ago(r.created_at) + ')'], ['고객', (c.name || '고객') + (c.email ? ' · ' + c.email : '')], ...(r.ton ? [['차량', r.ton + (r.lift ? ' · 리프트' : '')]] : []), ...(r.target_pro ? [['지정 기사', pname(r.target_pro)]] : [])];
   openM(head(reqCode(r.id)) + `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}</span>
     <dl class="mt-3 grid grid-cols-[72px_1fr] gap-y-1.5 text-sm">${rows.map(([k, v]) => `<dt class="text-sea/60">${k}</dt><dd class="font-bold">${esc(v)}</dd>`).join('')}</dl>
     <p class="mt-4 text-sm font-bold">요청 내용</p><p class="mt-1 whitespace-pre-wrap rounded-xl bg-ice p-3 text-sm leading-relaxed">${esc(r.details || '(내용 없음)')}</p>
@@ -2070,7 +2106,7 @@ $('#qm-thumbs').addEventListener('click', e => { const b = e.target.closest('[da
   box.addEventListener('click', e => { const b = e.target.closest('[data-hsug]'); if (b) hsugPick(+b.dataset.hsug); });
   document.addEventListener('click', e => { if (!e.target.closest('#hfind')) hsugShow(false); });
 })();
-$('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / 500`);
+$('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / ${e.target.maxLength > 0 ? e.target.maxLength : 500}`);
 $('#qm-next').addEventListener('click', qNext);
 $('#qm-back').addEventListener('click', () => qShow(qstep - 1));
 qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
@@ -2153,7 +2189,7 @@ function watchNew() {
   if (!S.user) { W = null; return; }
   const n = snapW(); if (!W || W.uid !== n.uid) { W = n; return; }
   const out = [], nm = c => c.title || SVC[c.service] || '거래';
-  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${SVC[r.service] || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
+  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${svcOf(r) || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
   S.quo.filter(q => !W.quo.has(q.id) && S.req.some(r => r.id === q.request_id && r.customer_id === me())).forEach(q => out.push(['새 견적 도착', `${won(q.price)} 견적이 도착했어요`]));
   S.con.forEach(c => {
     const was = W.con.get(c.id); if (was === c.status) return;
@@ -2247,7 +2283,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   $('#qm-ton').insertAdjacentHTML('beforeend', TONS.map(t => `<option>${t}</option>`).join(''));
   $('#svc').innerHTML = Object.values(KINDS).map(k => `<optgroup label="${k.name}">${k.svcs.map(c => `<option value="${c}">${SVC[c]}</option>`).join('')}</optgroup>`).join('');
   const short = c => c === 'freezer_sale' ? '매입·판매 (장터)' : SVC[c].replace('에어컨 ', '').replace('냉장·냉동고 ', '').replace('냉장·냉동 ', '');
-  $('#qm-services').innerHTML = GROUPS.map(([title, codes, k]) => `<fieldset data-cat="${k}"><legend class="flex items-center gap-2 text-sm font-bold text-sub"><span class="grid h-7 w-7 place-items-center rounded-lg ${KINDS[k].color}">${svgI(KINDS[k].icon, 'h-4 w-4')}</span>${title}</legend><div class="mt-2 grid ${codes.length >= 3 ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5">${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">${short(c)}</span></label>`).join('')}</div></fieldset>`).join('')
+  $('#qm-services').innerHTML = GROUPS.map(([title, codes, k]) => `<fieldset data-cat="${k}"><legend class="flex items-center gap-2 text-sm font-bold text-sub"><span class="grid h-7 w-7 place-items-center rounded-lg ${KINDS[k].color}">${svgI(KINDS[k].icon, 'h-4 w-4')}</span>${title}</legend><div class="mt-2 grid grid-cols-2 gap-2.5">${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">${short(c)}</span></label>`).join('')}${ETC_SVC[k] ? `<label class="relative"><input type="radio" name="qm-svc" value="etc_${k}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">기타 (직접 입력)</span></label>` : ''}</div></fieldset>`).join('')
     + '<button type="button" id="qm-allcat" class="hidden text-sm font-bold text-brand underline">다른 서비스도 보기</button>';
   $('#qm-allcat').addEventListener('click', () => qCat(''));
   ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
