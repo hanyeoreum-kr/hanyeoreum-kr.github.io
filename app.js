@@ -978,8 +978,11 @@ const HCATS = [['aircon', '에어컨', '수리·청소·설치'], ['heat', '보�
 const HGU_KEY = 'hy_gu';
 const hguGet = () => { try { return localStorage.getItem(HGU_KEY) || ''; } catch (_) { return ''; } };
 const hguSet = g => { try { g ? localStorage.setItem(HGU_KEY, g) : localStorage.removeItem(HGU_KEY); } catch (_) {} };
+/* 첫 화면 분야 선택: 한눈에 알아보게 이모지 + 짧은 이름 */
+const HK_EMOJI = { aircon:'❄️', heat:'🔥', cold:'🧊', kitchen:'🍳', clean:'🧹', home:'🫧', truck:'🚚' };
+const HK_SUB = { aircon:'수리·청소·설치', heat:'수리·교체·청소', cold:'업소용 수리·철거·매입', kitchen:'식기세척기·후드·덕트', clean:'거주·상가·사무실 청소', home:'세탁기·건조기·가전', truck:'운반·화물' };
 function heroFind() {
-  const hk = $('#hkind'); if (hk && !hk.dataset.done) { hk.dataset.done = 1; hk.innerHTML = '<option value="">🔧 필요한 분야 선택</option>' + Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${v.title}</option>`).join('') + '<option value="sale">중고 설비 사고팔기 (장터)</option>'; }
+  const hk = $('#hkind'); if (hk && !hk.dataset.done) { hk.dataset.done = 1; hk.innerHTML = '<option value="">🔧 필요한 분야 선택</option>' + Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${HK_EMOJI[k] || '🔧'} ${v.name}  ·  ${HK_SUB[k] || ''}</option>`).join('') + '<option value="sale">♻️ 중고 설비  ·  사고팔기 장터</option>'; }
   const sel = $('#hgu'); if (!sel) return;
   if (!sel.dataset.done) { sel.dataset.done = 1; sel.innerHTML = '<option value="">우리 동네 선택</option>' + guOpts(GG_NEAR, hguGet()); }
   const g = sel.value, chip = $('#hgu-n');
