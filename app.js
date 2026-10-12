@@ -758,6 +758,7 @@ const lcard = l => `<button type="button" data-act="ldet" data-id="${l.id}" clas
 function renderFeed() {
   const all = S.lst.filter(l => l.status !== 'closed');
   fpages = Math.max(1, Math.ceil(all.length / 4)); fp = Math.min(fp, fpages - 1);
+  const mk = $('#market'); if (mk) mk.classList.toggle('hidden', !all.length && !!sb);
   $('#feed').innerHTML = all.length ? all.slice(fp * 4, fp * 4 + 4).map(lcard).join('') : `<div class="col-span-2 lg:col-span-4">${empty(sb ? '아직 등록된 판매글이 없어요. 첫 판매글을 올려 보세요.' : '사이트 설정이 끝나면 판매글이 보여요.')}</div>`;
   $('#fpager').innerHTML = fpages > 1 ? `<button type="button" data-act="fprev" class="${B.s}">이전</button><span class="text-sm font-bold" aria-live="polite">${fp + 1} / ${fpages}</span><button type="button" data-act="fnext" class="${B.s}">다음</button>` : '';
 }
