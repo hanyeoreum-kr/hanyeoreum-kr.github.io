@@ -113,7 +113,7 @@ if (window.tailwind) tailwind.config = {
       <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울 전 지역 + 경기 인접 · 고객 견적 무료</span>
       <h1 class="mt-3 text-[1.6rem] font-black leading-tight lg:mt-5 lg:text-[3.1rem] lg:leading-[1.15]"><span class="text-sky-200">시원하고</span> <span class="text-orange-300">따뜻함</span>의 모든 것,<br>한여름에서 <span class="text-amber-300">한 번에!</span></h1>
       <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">업소용 냉장·주방설비</b> · <b class="text-white">입주청소</b> · <b class="text-white">세탁기·생활가전</b>까지 검증된 기사님을 바로 연결해요.</p>
-      <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold lg:mt-6 lg:text-sm"><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 견적 요청·비교 0원</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 실거래 후기만</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 14일 재점검 보장</span></div>
+      <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold lg:mt-6 lg:text-sm"><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 견적 요청·비교 0원</span><span class="rounded-full bg-amber-300/25 px-2.5 py-1">🌙 24시간 요청 가능</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 실거래 후기만</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 14일 재점검 보장</span></div>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
@@ -125,12 +125,14 @@ if (window.tailwind) tailwind.config = {
         <span id="hgu-n" class="hidden shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"></span>
       </div>
       <div class="relative mt-2.5 flex gap-2">
-        <label for="hq" class="sr-only">무엇이 필요하세요</label>
+        <label for="hkind" class="sr-only">필요한 분야</label>
         <div id="hsug" role="listbox" aria-label="추천 서비스" class="absolute inset-x-0 top-full z-30 mt-2 hidden max-h-80 overflow-y-auto rounded-2xl border border-mist bg-white p-1.5 text-sea shadow-2xl"></div>
-        <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
+        <select id="hkind" aria-label="필요한 분야" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-3.5 text-[15px] font-bold outline-none focus:ring-2 focus:ring-brand/30"><option value="">🔧 필요한 분야 선택</option></select>
+        <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" tabindex="-1" aria-hidden="true" class="hidden min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
         <button type="submit" class="shrink-0 whitespace-nowrap rounded-2xl bg-sun px-4 font-black text-white hover:brightness-95 lg:px-6">무료 견적</button>
       </div>
-      <p class="mt-2.5 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
+      <p class="mt-2.5 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">🌙 24시간 언제든 요청하세요 · 밤에 올려 두고 아침에 도착한 견적을 확인하세요</p>
+      <p class="mt-2 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
     </form>
   </div>
 </section>
@@ -380,6 +382,7 @@ if (window.tailwind) tailwind.config = {
         <div class="mx-auto h-16 w-16 rounded-full bg-cool/15 grid place-items-center"><svg viewBox="0 0 24 24" class="h-8 w-8 text-cool" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
         <h3 class="mt-5 font-display text-3xl">견적 요청이 접수됐어요</h3>
         <p class="mt-4 text-sea/75 leading-relaxed">지역 기사님들이 요청을 확인하고 견적을 보내요.<br>도착한 견적은 '내 요청'에서 확인할 수 있어요.</p>
+        <p class="mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-800">🌙 밤늦게 요청하셨다면, 아침에 '내 요청'에서 견적을 확인해 보세요.</p>
         <dl id="qm-summary" class="mt-6 rounded-2xl bg-ice p-5 text-left text-sm space-y-2"></dl>
       </section>
       <p id="qm-err" role="alert" class="mt-4 text-sm font-bold text-red-600 hidden"></p>
@@ -443,6 +446,6 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=15"></script>
-<script src="app.js?v=52"></script>
+<script src="app.js?v=53"></script>
 </body>
 </html>

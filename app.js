@@ -979,6 +979,7 @@ const HGU_KEY = 'hy_gu';
 const hguGet = () => { try { return localStorage.getItem(HGU_KEY) || ''; } catch (_) { return ''; } };
 const hguSet = g => { try { g ? localStorage.setItem(HGU_KEY, g) : localStorage.removeItem(HGU_KEY); } catch (_) {} };
 function heroFind() {
+  const hk = $('#hkind'); if (hk && !hk.dataset.done) { hk.dataset.done = 1; hk.innerHTML = '<option value="">🔧 필요한 분야 선택</option>' + Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${v.title}</option>`).join('') + '<option value="sale">중고 설비 사고팔기 (장터)</option>'; }
   const sel = $('#hgu'); if (!sel) return;
   if (!sel.dataset.done) { sel.dataset.done = 1; sel.innerHTML = '<option value="">우리 동네 선택</option>' + guOpts(GG_NEAR, hguGet()); }
   const g = sel.value, chip = $('#hgu-n');
@@ -1880,13 +1881,114 @@ async function backupAll(el) {
   });
   if (el && document.body.contains(el)) el.textContent = '지금 백업 다운로드';
 }
+/* 세무용 엑셀 (관리자): 월별 예치금 충전 · 수수료 차감(실제 매출) · 환불 · 남은 예치금 */
+async function fetchAll(t) {
+  const rows = [];
+  for (let i = 0; ; i += 1000) { const { data, error } = await sb.from(t).select('*').range(i, i + 999); if (error) throw error; rows.push(...(data || [])); if (!data || data.length < 1000) break; }
+  return rows;
+}
+/* 외부 도구 없이 진짜 엑셀(.xlsx) 파일을 만들어요: 시트 여러 개 · 숫자는 1,000 단위 쉼표 · 첫 줄 굵게 */
+const XL = (() => {
+  const T8 = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; T8[n] = c >>> 0; }
+  const crc = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = T8[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const enc = new TextEncoder();
+  function zip(files) {
+    const parts = [], cen = []; let off = 0;
+    files.forEach(([name, text]) => {
+      const nm = enc.encode(name), d = enc.encode(text), c = crc(d);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(12, 0x21, true);
+      h.setUint32(14, c, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true); h.setUint16(26, nm.length, true);
+      parts.push(new Uint8Array(h.buffer), nm, d);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(14, 0x21, true);
+      ch.setUint32(16, c, true); ch.setUint32(20, d.length, true); ch.setUint32(24, d.length, true); ch.setUint16(28, nm.length, true); ch.setUint32(42, off, true);
+      cen.push(new Uint8Array(ch.buffer), nm); off += 30 + nm.length + d.length;
+    });
+    const size = cen.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+    return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+  const x = v => String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const col = i => { let s = ''; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  const toRows = rows => {
+    if (!rows.length || Array.isArray(rows[0])) return rows;
+    const keys = [...new Set(rows.flatMap(r => Object.keys(r)))];
+    return [keys].concat(rows.map(r => keys.map(k => { const v = r[k]; return v == null ? '' : typeof v === 'number' ? v : typeof v === 'object' ? JSON.stringify(v) : String(v); })));
+  };
+  function sheet(rows, widths) {
+    rows = toRows(rows);
+    const body = rows.map((r, ri) => `<row r="${ri + 1}">${(r || []).map((v, ci) => {
+      if (v === '' || v == null) return '';
+      const ref = col(ci) + (ri + 1), head = ri === 0;
+      return typeof v === 'number' && isFinite(v) ? `<c r="${ref}" s="${head ? 3 : 2}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr"${head ? ' s="1"' : ''}><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+    }).join('')}</row>`).join('');
+    const cols = widths && widths.length ? `<cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` : '';
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>${cols}<sheetData>${body}</sheetData></worksheet>`;
+  }
+  function book(sheets) {
+    const ns = 'http://schemas.openxmlformats.org/', R = ns + 'officeDocument/2006/relationships';
+    const files = [
+      ['[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="${ns}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`],
+      ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${ns}package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+      ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${ns}spreadsheetml/2006/main" xmlns:r="${R}"><sheets>${sheets.map((s, i) => `<sheet name="${x(String(s.name).replace(/[\[\]:*?\/\\]/g, ' ').slice(0, 31))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`],
+      ['xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${ns}package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="${R}/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`],
+      ['xl/styles.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${ns}spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="3" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`]
+    ].concat(sheets.map((s, i) => [`xl/worksheets/sheet${i + 1}.xml`, sheet(s.rows, s.cols)]));
+    return zip(files);
+  }
+  return { book };
+})();
+function saveBlob(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+const ledKind = l => { const t = String(l.text || ''); return l.amount > 0 ? (/충전|입금|결제/.test(t) ? '충전' : '조정(+)') : /환불/.test(t) ? '환불' : /수수료/.test(t) ? '수수료 차감' : '조정(-)'; };
+const monOf = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+const dtOf = t => { const d = new Date(t); return `${monOf(t)}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+async function taxExcel(el) {
+  if (!S.admin) return;
+  await busy(el, async () => {
+    el.textContent = '자료 모으는 중…';
+    const [led, inc, pros] = await Promise.all([fetchAll('ledger'), fetchAll('income'), fetchAll('pros')]);
+    const toss = await fetchAll('toss_orders').catch(() => null), chg = await fetchAll('charge_requests').catch(() => null);
+    const name = id => (pros.find(p => p.id === id) || {}).name || '';
+    const sup = v => Math.round(v / 1.1);
+    const M = {};
+    const m = k => M[k] || (M[k] = { charge:0, fee:0, feeLed:0, refund:0, adj:0, net:0 });
+    led.forEach(l => { const r = m(monOf(l.created_at)), k = ledKind(l), a = +l.amount || 0; r.net += a;
+      if (k === '충전') r.charge += a; else if (k === '수수료 차감') r.feeLed += -a; else if (k === '환불') r.refund += -a; else r.adj += a; });
+    inc.forEach(l => { m(monOf(l.created_at)).fee += +l.amount || 0; });
+    let bal = 0;
+    const months = Object.keys(M).sort();
+    const sum = [['월', '예치금 충전(원)', '수수료 매출(부가세 포함)', '공급가액', '부가세', '예치금 환불', '기타 조정', '월말 남은 예치금(미사용)', '확인: 예치금 내역의 수수료 차감']];
+    const tot = { charge:0, fee:0, refund:0, adj:0, feeLed:0 };
+    months.forEach(k => { const r = M[k]; bal += r.net; Object.keys(tot).forEach(x => tot[x] += r[x]);
+      sum.push([k, r.charge, r.fee, sup(r.fee), r.fee - sup(r.fee), r.refund, r.adj, bal, r.feeLed]); });
+    sum.push(['합계', tot.charge, tot.fee, sup(tot.fee), tot.fee - sup(tot.fee), tot.refund, tot.adj, bal, tot.feeLed]);
+    const proTotal = pros.reduce((a, p) => a + (+p.balance || 0), 0);
+    sum.push([], ['※ 실제 매출은 "수수료 매출"이에요. 충전된 예치금 중 아직 차감되지 않은 금액(남은 예치금)은 기사님께 돌려줄 수 있는 돈이라 매출이 아니에요.'],
+      ['※ 공급가액·부가세는 수수료가 부가세 포함 금액이라고 보고 1.1로 나눠 계산했어요. 신고 전 세무사와 확인하세요.'],
+      [`※ 지금 기사님 예치금 합계: ${proTotal.toLocaleString('ko-KR')}원 (위 마지막 달 '월말 남은 예치금'과 같아야 정상이에요)`],
+      ['※ 카드·간편결제 충전은 "카드결제(토스)" 시트, 계좌 입금 충전은 "계좌입금 신청" 시트에서 따로 볼 수 있어요.']);
+    const wb = [], add = (rows, name, cols) => wb.push({ rows, name, cols });
+    add(sum, '월별 요약', [10, 15, 22, 12, 10, 12, 10, 24, 28]);
+    add([['일시', '기사님', '내용', '수수료(부가세 포함)', '공급가액', '부가세']].concat(inc.slice().sort((a, b) => T(a.created_at) - T(b.created_at)).map(l => [dtOf(l.created_at), name(l.pro_id), l.text || '', +l.amount || 0, sup(+l.amount || 0), (+l.amount || 0) - sup(+l.amount || 0)])), '수수료 매출', [17, 16, 34, 16, 10, 8]);
+    add([['일시', '기사님', '구분', '내용', '금액(원)']].concat(led.slice().sort((a, b) => T(a.created_at) - T(b.created_at)).map(l => [dtOf(l.created_at), name(l.pro_id), ledKind(l), l.text || '', +l.amount || 0])), '예치금 내역', [17, 16, 12, 34, 12]);
+    add([['기사님', '사업자 승인', '남은 예치금(원)', '가입일']].concat(pros.map(p => [p.name || '', ({ APPROVED:'승인', PENDING:'대기', REJECTED:'반려' })[p.approval] || p.approval || '', +p.balance || 0, String(p.created_at || '').slice(0, 10)])).concat([['합계', '', proTotal, '']]), '기사별 잔액', [18, 12, 16, 12]);
+    if (toss && toss.length) add(toss, '카드결제(토스)');
+    if (chg && chg.length) add(chg, '계좌입금 신청');
+    saveBlob(`한여름_세무자료_${ymd()}.xlsx`, XL.book(wb));
+    toast('세무용 엑셀을 저장했어요.');
+  });
+  if (el && document.body.contains(el)) el.textContent = '🧾 세무용 엑셀 받기';
+}
 function backupCard() {
   let last = null; try { last = localStorage.getItem('hy_last_backup'); } catch (_) {}
   const days = last ? Math.floor((Date.now() - T(last)) / 864e5) : null, warn = days === null || days >= 7;
   return `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 ${warn ? 'border-sun bg-sun/10' : 'border-mist bg-white'} p-5">
     <div class="min-w-[220px] flex-1"><p class="font-black">💾 데이터 백업</p><p class="mt-1 text-sm text-sea/70">${last ? `마지막 백업: ${fmtD(last)} (${days}일 전)` : '아직 이 컴퓨터에서 백업한 적이 없어요.'} · <b>일주일에 한 번</b> 눌러 주세요.</p>
-    <p class="mt-1 text-xs text-sea/60">파일 2개가 저장돼요: 전체 백업(복구용) · 기사님 예치금 잔액표(엑셀로 열기). 개인정보가 들어 있으니 안전한 곳에 보관하세요.</p></div>
-    ${btn('backup', '', '지금 백업 다운로드', warn ? 'a' : 's')}</section>`;
+    <p class="mt-1 text-xs text-sea/60">파일 2개가 저장돼요: 전체 백업(복구용) · 기사님 예치금 잔액표(엑셀로 열기). 개인정보가 들어 있으니 안전한 곳에 보관하세요.</p>
+    <p class="mt-1 text-xs text-sea/60">🧾 세무용 엑셀: 월별 예치금 충전 · 실제 수수료 매출(공급가액·부가세) · 환불 · 남은 예치금을 한 파일로 정리해요. 부가세·종합소득세 신고 때 세무사에게 보여 주세요.</p></div>
+    <div class="flex flex-wrap gap-2">${btn('taxxls', '', '🧾 세무용 엑셀 받기', 's')}${btn('backup', '', '지금 백업 다운로드', warn ? 'a' : 's')}</div></section>`;
 }
 function adminView() {
   if (!S.admin) { $('#pview').innerHTML = ''; return; }
@@ -2004,7 +2106,7 @@ const ACT = {
   ldet: id => ldet(id), sellopen: () => sellOpen(), stockopen: () => sellModal('stock'),
   sprm: i => { sp.splice(+i, 1); spThumbs(); bkDraw(); }, ssend: (id, el) => ssend(el),
   oopen: id => offerModal(id), osend: (id, el) => osend(el, id), lpick: (id, el) => lpick(el, id), lclose: (id, el) => lclose(el, id),
-  backup: (id, el) => backupAll(el), cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
+  backup: (id, el) => backupAll(el), taxxls: (id, el) => taxExcel(el), cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
   csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(),
@@ -2111,6 +2213,7 @@ $('#qm-next').addEventListener('click', qNext);
 $('#qm-back').addEventListener('click', () => qShow(qstep - 1));
 qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
 document.addEventListener('submit', e => {
+  if (e.target.id === 'hfind' && $('#hkind')) { e.preventDefault(); hsugShow(false); const k = $('#hkind').value, g = $('#hgu').value; if (k === 'sale') return sellOpen(); return openQuote(k ? { cat:k, district:g } : { district:g }, e.submitter); }
   if (e.target.id === 'hfind') { e.preventDefault(); if (hsugIdx >= 0) return hsugPick(hsugIdx); hsugShow(false); const q = $('#hq').value, m = hqMatch(q), g = $('#hgu').value; if (m.service === 'freezer_sale') return sellOpen(); openQuote(Object.assign({ district:g }, m), e.submitter); const d = $('#qm-details'); if (q.trim() && d && !d.value.trim()) { d.value = q.trim().slice(0, 500); $('#qm-count').textContent = `${d.value.length} / 500`; } if (!m.cat && q.trim()) toast('필요한 서비스를 골라 주세요. 검색어는 요청사항에 적어 두면 돼요.'); return; }
   if (e.target.id !== 'quick') return; e.preventDefault();
   openQuote({ service:$('#svc').value, district:$('#gu').value }, e.submitter);
