@@ -331,6 +331,19 @@ const refCard = () => { const n = (S.myRefs || []).length; return `<section clas
   <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-card"><p class="text-xs text-sea/60">데려온 손님</p><p class="font-display text-3xl tabular-nums">${n}명</p></div></div>
   <div class="mt-4 flex flex-wrap items-center gap-2"><input readonly value="${esc(proLink(me()))}" aria-label="내 손님 링크" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-3 text-sm" onclick="this.select()">${btn('refshare', '', '카톡으로 보내기 · 복사', 'a')}</div>
   <p class="mt-2 text-xs text-sea/60">이미 한여름에 가입했던 손님이나, 한여름에서 소개받은 손님은 내 손님으로 등록되지 않아요.</p></section>`; };
+/* 가입 직후 1번만: "어떤 작업이 필요하세요?" → 분야를 누르면 바로 견적 요청서 */
+function welcomeCheck() {
+  const u = S.user; if (!u || S.admin || S.pro || mmOpen() || !qm.classList.contains('hidden')) return;
+  const key = 'hy_welcome_' + u.id; if (lsGet(key)) return;
+  if (!u.created_at || Date.now() - T(u.created_at) > 3 * 864e5) return;
+  if (S.req.some(r => r.customer_id === me())) return;
+  lsSet(key, '1'); track('welcome');
+  const b = (act, id, e, t, d) => `<button type="button" data-act="${act}" data-id="${id}" class="flex items-center gap-3 rounded-2xl border-2 border-mist bg-white px-4 py-3 text-left hover:border-brand hover:bg-brand-50"><span class="text-2xl" aria-hidden="true">${e}</span><span class="min-w-0"><b class="block">${t}</b><span class="block text-xs text-sea/60">${d}</span></span></button>`;
+  openM(head('가입을 환영해요! 🎉') + `<p class="leading-relaxed text-sea/80">지금 필요한 작업을 고르면 <b>바로 견적 요청서</b>가 열려요. 요청·비교·채팅은 모두 무료예요.</p>
+    <div class="mt-4 grid gap-2 sm:grid-cols-2">${Object.entries(KINDS).map(([k, v]) => b('qcat', k, HK_EMOJI[k] || '🔧', v.name, HK_SUB[k] || '')).join('')}${b('sellopen', '', '♻️', '중고 설비 팔기', '장터에 판매글 올리기')}</div>
+    <p class="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">🌙 24시간 언제든 요청할 수 있어요 · 밤에 올리고 아침에 견적 확인</p>
+    <button type="button" data-mclose class="mt-3 w-full rounded-xl py-3 text-sm font-bold text-sea/60 hover:bg-ice">나중에 할게요</button>`);
+}
 async function onSession(session) {
   const prevId = me();
   S.user = session ? session.user : null;
@@ -344,6 +357,7 @@ async function onSession(session) {
   if (prevId !== me()) subscribe();
   if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {});
   if (S.user) handleTossReturn();
+  if (S.user) setTimeout(welcomeCheck, 1200);
   if (S.user) setTimeout(async () => {
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
     else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 계약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
@@ -1113,7 +1127,7 @@ let qstep = 1, qopener = null, qphotos = [], qsending = false;
 const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' };
 function qErr(msg) { const e = $('#qm-err'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
 function qShow(n) {
-  qstep = n; qErr('');
+  qstep = n; qErr(''); if (n === 2 || n === 3) track('qstep' + n);
   document.querySelectorAll('#qm [data-step]').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
   [...$('#qm-bar').children].forEach((b, i) => b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}`);
   $('#qm-label').textContent = n < 4 ? `${n} / 3 단계${qform.targetName ? ` · 지정 기사님: ${qform.targetName}` : ''}` : '';
@@ -1154,6 +1168,7 @@ function openQuote(pre = {}, trigger) {
   $('#qm-date').min = today();
   qm.classList.remove('hidden'); document.body.classList.add('overflow-hidden');
   qShow(qform.service ? 2 : 1);
+  track('qopen');
 }
 function closeQuote() { qm.classList.add('hidden'); if (!mmOpen()) document.body.classList.remove('overflow-hidden'); if (qstep === 4) { qReset(); qstep = 1; } if (qopener && qopener.focus) qopener.focus(); }
 function qThumbs() { $('#qm-thumbs').innerHTML = qphotos.map((p, i) => `<li class="relative aspect-square"><img src="${p.url}" alt="첨부 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-rm="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join(''); }
@@ -1177,7 +1192,7 @@ async function qNext() {
   }
   if (qstep < 3) return qShow(qstep + 1);
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
-  if (!S.user) { toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
+  if (!S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
   qform.details = $('#qm-details').value.trim();
   if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
   if (qsending) return; qsending = true;
@@ -1781,11 +1796,22 @@ async function inqDel(el, id) {
 let AF = 'ALL';
 const slaOver = i => { const t = Date.now(), c = T(i.created_at); return (i.status === 'RECEIVED' && t - c > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - c > SLA_ANS); };
 /* 관리자: 방문 통계 카드 */
-let VS = null, vsAt = 0;
+let VS = null, vsAt = 0, FN = null;
 function loadVisits(force) {
   if (!S.admin || (!force && Date.now() - vsAt < 60000)) return;
   vsAt = Date.now();
   rpc('admin_visit_stats', { p_days:14 }).then(d => { VS = d; if (S.mode === 'admin') adminView(); }).catch(() => { VS = { err:true }; if (S.mode === 'admin') adminView(); });
+  rpc('admin_funnel', { p_days:7 }).then(d => { FN = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { FN = { err:true }; });
+}
+function funnelBox() {
+  if (!FN) return '';
+  if (FN.err) return `<p class="mt-5 rounded-xl bg-sun/10 p-3 text-xs">견적 단계 통계를 보려면 Supabase에서 <b>68_supabase_견적단계통계.sql</b>을 실행해 주세요.</p>`;
+  const steps = [['view', '사이트 방문'], ['qopen', '견적 요청서 열기'], ['qstep2', '분야 고르고 2단계로'], ['qstep3', '지역·날짜 입력하고 3단계로'], ['qlogin', '보내기 눌렀다가 로그인 요구'], ['quote', '견적 요청 완료']];
+  const top = Math.max(1, FN.view || 0), base = v => Math.round((v || 0) / top * 100);
+  const rows = steps.map(([k, t], i) => { const v = FN[k] || 0, prev = !i ? 0 : k === 'quote' ? (FN.qstep3 || 0) : (FN[steps[i - 1][0]] || 0), drop = i && prev ? Math.round((1 - v / prev) * 100) : null;
+    return `<li class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1"><span class="text-sm">${t}</span><b class="text-sm tabular-nums">${v}명${drop != null && drop > 0 && k !== 'qlogin' ? ` <span class="text-xs font-normal text-sun">(-${drop}%)</span>` : ''}</b><span class="col-span-2 h-2 rounded-full bg-ice"><span class="block h-2 rounded-full ${k === 'qlogin' ? 'bg-sun/60' : 'bg-cool'}" style="width:${Math.max(base(v), v ? 2 : 0)}%"></span></span></li>`; }).join('');
+  return `<div class="mt-6 border-t border-mist pt-5"><h3 class="text-sm font-bold">견적 요청, 어디서 멈출까요? <span class="font-normal text-sea/50">최근 7일 · 사람 수</span></h3><ul class="mt-3 space-y-2.5">${rows}</ul>
+    <p class="mt-3 text-[11px] leading-relaxed text-sea/50">줄어드는 폭(-%)이 가장 큰 단계가 손님이 포기하는 곳이에요. '로그인 요구'가 많으면 가입 단계에서, '요청서 열기'가 적으면 첫 화면에서 망설이는 거예요. 가입 직후 환영 안내를 본 회원: ${FN.welcome || 0}명</p></div>`;
 }
 function visitCard() {
   loadVisits();
@@ -1801,7 +1827,7 @@ function visitCard() {
     <div class="mt-5 grid gap-4 sm:grid-cols-2">
       <div><h3 class="text-sm font-bold">어디서 왔나요 (7일)</h3><ul class="mt-2 space-y-1 text-sm">${refs.length ? refs.map(r => `<li class="flex justify-between gap-3"><span class="truncate">${esc(r.ref)}</span><b class="tabular-nums">${r.n}명</b></li>`).join('') : '<li class="text-sea/50">아직 기록이 없어요</li>'}</ul><p class="mt-2 text-[11px] leading-relaxed text-sea/50">홍보 링크 끝에 <b>?from=이름</b>을 붙이면 여기에 따로 보여요. 예) hanyeoreum.co.kr/?from=당근</p></div>
       <div><h3 class="text-sm font-bold">최근 7일 실제 행동</h3><ul class="mt-2 space-y-1 text-sm"><li class="flex justify-between"><span>견적 요청</span><b class="tabular-nums">${VS.week_quote || 0}건</b></li><li class="flex justify-between"><span>회원가입</span><b class="tabular-nums">${VS.week_signup || 0}명</b></li><li class="flex justify-between"><span>판매글 등록</span><b class="tabular-nums">${VS.week_listing || 0}건</b></li><li class="flex justify-between text-sea/60"><span>장터 · 기사찾기 화면 조회</span><b class="tabular-nums">${pg.market || 0} · ${pg.pros || 0}회</b></li></ul></div>
-    </div>`);
+    </div>${funnelBox()}`);
 }
 /* 관리자: 고객 견적 요청 한눈에 보기 */
 let RF = 'wait';
@@ -2253,10 +2279,11 @@ setInterval(() => {
    ===================================================================== */
 let VID_ = null; const VID = () => VID_ || (VID_ = (() => { let v = lsGet('hy_vid'); if (!v || v.length < 8) { v = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/-/g, '').slice(0, 20); lsSet('hy_vid', v); } return v; })());
 const SRC = (() => { try { const q = new URLSearchParams(location.search), u = q.get('from') || q.get('utm_source'); if (u) return u.slice(0, 40); const r = document.referrer && new URL(document.referrer).hostname.replace(/^www\./, ''); return r && r !== location.hostname ? r.slice(0, 80) : ''; } catch (e) { return ''; } })();
-const seenView = new Set();
+const seenView = new Set(), ONCE = ['qopen', 'qstep2', 'qstep3', 'qlogin', 'welcome'];
 function track(kind, path) {
-  if (!sb || S.admin || (kind === 'view' && seenView.has(path))) return;
-  if (kind === 'view') seenView.add(path);
+  const k1 = kind === 'view' ? path : ONCE.includes(kind) ? '#' + kind : null;
+  if (!sb || S.admin || (k1 && seenView.has(k1))) return;
+  if (k1) seenView.add(k1);
   sb.from('visits').insert({ vid:VID(), kind, path:String(path || '').slice(0, 40), ref:SRC, mobile:innerWidth < 768, app:standalone() }).then(() => {}, () => {});
 }
 
