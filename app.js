@@ -1994,8 +1994,20 @@ function backupCard() {
     <p class="mt-1 text-xs text-sea/60">🧾 세무용 엑셀: 월별 예치금 충전 · 실제 수수료 매출(공급가액·부가세) · 환불 · 남은 예치금을 한 파일로 정리해요. 부가세·종합소득세 신고 때 세무사에게 보여 주세요.</p></div>
     <div class="flex flex-wrap gap-2">${btn('taxxls', '', '🧾 세무용 엑셀 받기', 's')}${btn('backup', '', '지금 백업 다운로드', warn ? 'a' : 's')}</div></section>`;
 }
+/* 관리자: 총 회원가입 수 (고객 + 기사님) · 오늘 가입 */
+let memN = null, memToday = null, memAt = 0;
+function loadMemberCount() {
+  if (!sb || !S.admin || Date.now() - memAt < 60000) return; memAt = Date.now();
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  Promise.all([sb.from('profiles').select('id', { count:'exact', head:true }), sb.from('profiles').select('id', { count:'exact', head:true }).gte('created_at', t0.toISOString())])
+    .then(([a, b]) => { memN = a.error ? null : a.count; memToday = b.error ? null : b.count; const e = $('#mem-stat'); if (e) e.outerHTML = memStat(); })
+    .catch(() => {});
+}
+const memStat = () => { const pros = S.adminPros.length, tot = memN == null ? null : Math.max(memN, pros);
+  return `<div id="mem-stat" class="rounded-2xl bg-white border-2 border-cool/40 p-4"><p class="text-sm text-sea/70">총 회원가입</p><p class="font-display text-2xl sm:text-3xl mt-1">${tot == null ? '…' : tot.toLocaleString('ko-KR') + '명'}</p><p class="mt-1 text-xs text-sea/60">${tot == null ? '불러오는 중' : `고객 ${(tot - pros).toLocaleString('ko-KR')} · 기사님 ${pros}${memToday ? ` · <b class="text-cool">오늘 +${memToday}</b>` : ''}`}</p></div>`; };
 function adminView() {
   if (!S.admin) { $('#pview').innerHTML = ''; return; }
+  loadMemberCount();
   const open = S.inq.filter(i => i.status === 'RECEIVED' || i.status === 'IN_PROGRESS').length, over = S.inq.filter(slaOver).length, wait = S.con.filter(c => c.status === 'pending').length;
   const pend = S.adminPros.filter(p => p.approval === 'PENDING'), chg = S.chg.filter(c => c.status === 'requested');
   const day = new Date().toDateString(), fee = S.inc.filter(l => new Date(l.created_at).toDateString() === day).reduce((s, l) => s + l.amount, 0), feeAll = S.inc.reduce((s, l) => s + l.amount, 0);
@@ -2005,7 +2017,7 @@ function adminView() {
   const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
-    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">${memStat()}${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
     ${backupCard()}${reqBoard()}${delCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
