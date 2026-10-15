@@ -31,7 +31,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<style>.hidden{display:none}</style>
+<style>.hidden{display:none}@media (hover:hover) and (pointer:fine){.cam-only{display:none!important}}</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 if (window.tailwind) tailwind.config = {
@@ -379,10 +379,8 @@ if (window.tailwind) tailwind.config = {
       <section data-step="3" class="hidden">
         <h3 class="text-xl font-bold">상태를 알려주시면 견적이 더 정확해져요</h3>
         <p class="mt-1 text-sm text-sea/70">사진과 요청사항은 선택이에요. 사진은 최대 5장까지 올릴 수 있어요.</p>
-        <label class="mt-5 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-8 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool">
-          <span class="font-bold">사진 추가하기</span><span class="text-xs text-sea/60">실외기, 제품 라벨, 설치 장소를 찍어주세요</span>
-          <input id="qm-file" type="file" accept="image/*" multiple class="sr-only">
-        </label>
+        <p class="mt-5 text-sm font-bold">사진 <span class="font-normal text-sea/60">· 실외기, 제품 라벨, 설치 장소를 찍어 주세요</span></p>
+        <div class="mt-2 flex gap-2"><label class="cam-only flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-3 py-5 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool"><span class="text-2xl" aria-hidden="true">📷</span><span class="font-bold">바로 찍기</span><input id="qm-cam" type="file" accept="image/*" capture="environment" class="sr-only"></label><label class="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-3 py-5 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool"><span class="text-2xl" aria-hidden="true">🖼️</span><span class="font-bold">앨범에서 고르기</span><span class="cam-only text-[11px] text-sea/60">'갤러리'를 고르세요</span><input id="qm-file" type="file" accept="image/*" multiple class="sr-only"></label></div>
         <ul id="qm-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
         <label for="qm-details" class="block mt-5 text-sm font-bold">세부 요청사항 · 특이사항</label>
         <textarea id="qm-details" rows="4" maxlength="500" placeholder="예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 resize-none"></textarea>
@@ -456,6 +454,6 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=16"></script>
-<script src="app.js?v=58"></script>
+<script src="app.js?v=60"></script>
 </body>
 </html>

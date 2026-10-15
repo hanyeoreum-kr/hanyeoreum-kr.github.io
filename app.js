@@ -88,9 +88,7 @@ document.addEventListener('input', e => {
 });
 /* 금액 단위표 + 빠른 입력 버튼 (판매·제안 금액 입력칸 아래) */
 const UNITS = [[1000, '천 원'], [10000, '만 원'], [100000, '십만 원'], [1000000, '백만 원'], [10000000, '천만 원']];
-const unitTable = id => `<div class="mt-2 rounded-xl border border-mist p-3"><p class="text-xs font-bold text-sea/60">숫자 단위표</p>
-  <table class="mt-1 w-full text-sm tabular-nums"><tbody>${UNITS.map(([n, t]) => `<tr class="border-b border-dashed border-mist last:border-0"><td class="py-1 text-right font-bold">${n.toLocaleString('ko-KR')}</td><td class="py-1 pl-4 text-sea/70">${t}</td></tr>`).join('')}</tbody></table>
-  <div class="mt-2 flex flex-wrap gap-1.5">${[10000, 50000, 100000, 500000, 1000000].map(n => `<button type="button" data-act="madd" data-id="${id}:${n}" class="rounded-full bg-ice px-3 py-1.5 text-xs font-bold hover:bg-mist">+${manwon(n).replace(' 원', '')}</button>`).join('')}<button type="button" data-act="madd" data-id="${id}:0" class="rounded-full px-3 py-1.5 text-xs font-bold text-sea/50 underline">지우기</button></div></div>`;
+const unitTable = id => `<div class="mt-2 flex flex-wrap gap-1.5">${[10000, 50000, 100000, 500000, 1000000].map(n => `<button type="button" data-act="madd" data-id="${id}:${n}" class="rounded-full bg-ice px-3 py-1.5 text-xs font-bold hover:bg-mist">+${manwon(n).replace(' 원', '')}</button>`).join('')}<button type="button" data-act="madd" data-id="${id}:0" class="rounded-full px-3 py-1.5 text-xs font-bold text-sea/50 underline">지우기</button></div>`;
 function moneyAdd(spec) {
   const [id, n] = String(spec).split(':'), el = document.getElementById(id); if (!el) return;
   const v = +n ? moneyVal('#' + id) + +n : 0;
@@ -831,7 +829,7 @@ function bkDraw() {
   $('#sl-title-l').textContent = sellBulk ? '판매글 제목 (비워 두면 자동으로 만들어요)' : '제품명';
   $('#sl-price-l').textContent = sellBulk ? '일괄 희망 가격 · 전체 합계(원)' : '희망 판매 가격(원)';
   $('#sl-years-l').textContent = sellBulk ? '대표 연식 (몇 년식인가요?)' : '연식 (몇 년식인가요?)';
-  $('#sp-lab').textContent = sellBulk ? `사진 추가하기 (최대 20장 · 물건마다 찍어 주세요) ${sp.length ? sp.length + '/20' : ''}` : `사진 추가하기 (최대 5장) ${sp.length ? sp.length + '/5' : ''}`;
+  $('#sp-lab').textContent = sellBulk ? `사진 (최대 20장 · 물건마다 찍어 주세요) ${sp.length ? sp.length + '/20' : ''}` : `사진 (최대 5장) ${sp.length ? sp.length + '/5' : ''}`;
   $('#bk-chips').innerHTML = ITEMS_NOW().map((n, i) => `<button type="button" data-act="bkadd" data-id="${i}" class="rounded-full border-2 px-3 py-1.5 text-xs font-bold ${bk.some(x => x.n === n) ? 'border-cool bg-cool/10 text-sea' : 'border-mist hover:bg-ice'}">+ ${n}</button>`).join('');
   $('#bk-list').innerHTML = bk.length ? bk.map((x, i) => `<li class="flex items-center gap-2 rounded-xl bg-white px-3 py-2"><span class="min-w-0 flex-1 truncate text-sm font-bold">${esc(x.n)}</span>
     <button type="button" data-act="bkq" data-id="${i}:-1" aria-label="${esc(x.n)} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold">−</button><span class="w-8 text-center font-bold tabular-nums">${x.q}</span><button type="button" data-act="bkq" data-id="${i}:1" aria-label="${esc(x.n)} 한 대 더하기" class="h-8 w-8 rounded-full bg-ice font-bold">+</button>
@@ -850,7 +848,7 @@ function sellModal(kind) {
       <div id="bk-chips" class="mt-3 flex flex-wrap gap-1.5"></div>
       <div class="mt-2 flex gap-2"><input id="bk-in" maxlength="30" placeholder="목록에 없으면 직접 입력 (예: 냉장 진열대)" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-sm"><button type="button" data-act="bkcustom" class="shrink-0 rounded-xl bg-sea px-3 text-sm font-bold text-white">담기</button></div>
       <ul id="bk-list" class="mt-3 space-y-1.5"></ul></div>
-    <label class="mt-4 flex flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-4 py-6 text-center cursor-pointer hover:bg-mist"><span id="sp-lab" class="font-bold">사진 추가하기 (최대 5장)</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label>
+    <p id="sp-lab" class="mt-4 text-sm font-bold">사진 (최대 5장)</p><div class="mt-2 flex gap-2"><label class="cam-only flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-3 py-5 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool"><span class="text-2xl" aria-hidden="true">📷</span><span class="font-bold">바로 찍기</span><input id="sp-cam" type="file" accept="image/*" capture="environment" class="sr-only"></label><label class="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-cool/50 bg-ice px-3 py-5 text-center cursor-pointer hover:bg-mist focus-within:outline focus-within:outline-2 focus-within:outline-cool"><span class="text-2xl" aria-hidden="true">🖼️</span><span class="font-bold">앨범에서 고르기</span><span class="cam-only text-[11px] text-sea/60">'갤러리'를 고르세요</span><input id="sp-file" type="file" accept="image/*" multiple class="sr-only"></label></div>
     <ul id="sp-thumbs" class="mt-3 grid grid-cols-5 gap-2"></ul>
     <label id="sl-title-l" for="sl-title" class="block mt-4 text-sm font-bold">제품명</label><input id="sl-title" maxlength="40" placeholder="${MCAT[sellCat].ph}" class="${inp}">
     <label id="sl-price-l" for="sl-price" class="block mt-4 text-sm font-bold">희망 판매 가격(원)</label>${moneyInp('sl-price', '', inp)}${unitTable('sl-price')}
@@ -1338,7 +1336,7 @@ async function chatModal(tid, keep) {
   const hasRead = 'u1_read_at' in t, otherRead = imCust ? t.u2_read_at : t.u1_read_at;
   const lastM = [...(S.msgs[tid] || [])].reverse().find(m => m.sender_id === me() && m.kind !== 'sys'), lastMine = lastM ? lastM.id : null;
   const readTag = !hasRead || !lastM ? '' : otherRead && T(otherRead) >= T(lastM.created_at) ? ' · <b>읽음</b>' : ' · 안 읽음';
-  const acts = [qa('qphoto', tid, '📷 사진 보내기'), qa('qsched', tid, '📅 일정 변경 요청')];
+  const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
   else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 계약하기'));
   else acts.push(qa('qask', tid, '📝 계약 등록 요청'));
@@ -1346,7 +1344,7 @@ async function chatModal(tid, keep) {
     <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
       : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
-    <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"></div>
+    <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"><input id="chat-cam" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true"></div>
     <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
   chatCur = tid; markRead(t);
   const b = $('#chatbox'); b.scrollTop = b.scrollHeight;
@@ -2155,7 +2153,7 @@ const ACT = {
   backup: (id, el) => backupAll(el), taxxls: (id, el) => taxExcel(el), cmpsort: k => { cmpSort = k === 'low' ? 'low' : 'rec'; if (cmpCur) compare(cmpCur, true); }, pdet: id => pdet(id), pq: id => pdet(id, { act:'cmp', id:cmpCur, label:'← 받은 견적으로' }), pchat: (id, el) => pchat(el, id),
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
-  csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(),
+  csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(), qcam: () => $('#chat-cam').click(),
   qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
   qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 계약하기”를 눌러 주세요.'; i.focus(); },
   qdirect: id => directModal(id), dsend: (id, el) => dsend(el, id),
@@ -2230,16 +2228,16 @@ document.addEventListener('change', e => {
   if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
   if (e.target.name === 'ch-amt' && tossW && TOSS_WIDGET) tossW.setAmount({ currency:'KRW', value:+e.target.value }).catch(() => {});
   if (e.target.id === 'hgu') { hguSet(e.target.value); heroFind(); }
-  if (e.target.id === 'chat-photo') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
+  if (e.target.id === 'chat-photo' || e.target.id === 'chat-cam') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'au-doc') { const f = e.target.files[0]; e.target.value = ''; if (f) { const er = docErr(f); if (er) setErr(er); else { auDoc = f; setErr(''); saveAuth(); renderAuth(); } } }
   if (e.target.id === 'ph-file') { const f = e.target.files[0]; e.target.value = ''; if (f) phPick(f); }
-  if (e.target.id === 'sp-file') { for (const f of e.target.files) { if (sp.length >= spMax()) { setErr(sellBulk ? '일괄 판매는 사진을 최대 20장까지 올릴 수 있어요.' : '사진은 최대 5장까지 올릴 수 있어요. 여러 대라면 ‘여러 대 일괄 판매’를 눌러 주세요 (최대 20장).'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); bkDraw(); }
+  if (e.target.id === 'sp-file' || e.target.id === 'sp-cam') { for (const f of e.target.files) { if (sp.length >= spMax()) { setErr(sellBulk ? '일괄 판매는 사진을 최대 20장까지 올릴 수 있어요.' : '사진은 최대 5장까지 올릴 수 있어요. 여러 대라면 ‘여러 대 일괄 판매’를 눌러 주세요 (최대 20장).'); break; } if (f.type.startsWith('image/')) sp.push(f); } e.target.value = ''; spThumbs(); bkDraw(); }
 });
-$('#qm-file').addEventListener('change', e => {
+['#qm-file', '#qm-cam'].forEach(s => $(s).addEventListener('change', e => {
   qErr('');
   for (const f of e.target.files) { if (qphotos.length >= 5) { qErr('사진은 최대 5장까지 올릴 수 있어요.'); break; } if (!f.type.startsWith('image/')) { qErr('이미지 파일만 올릴 수 있어요.'); continue; } qphotos.push({ file:f, url:URL.createObjectURL(f) }); }
   e.target.value = ''; qThumbs();
-});
+}));
 $('#qm-thumbs').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (!b) return; URL.revokeObjectURL(qphotos[+b.dataset.rm].url); qphotos.splice(+b.dataset.rm, 1); qThumbs(); });
 (() => { const inp = $('#hq'), box = $('#hsug'); if (!inp || !box) return;
   inp.addEventListener('focus', () => hsugShow(true));
