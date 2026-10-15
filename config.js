@@ -26,6 +26,9 @@ window.HY_CONFIG = {
   // 간편 로그인: Supabase에서 켠 것만 적으세요. 예) ['kakao', 'google']
   SOCIAL: [],
 
+  // 기사님 소통방 (카카오톡 오픈채팅 주소 · 기사 모드 화면에만 보여요, 비워 두면 표시 안 함)
+  PRO_CHAT_URL: 'https://open.kakao.com/o/gsBerCRi',
+
   // 고객센터 연락처 (비워 두면 표시 안 함)
   CS_PHONE: '010-8748-2305',
   CS_EMAIL: 'l87482305@gmail.com',

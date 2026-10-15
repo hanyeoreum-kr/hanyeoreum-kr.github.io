@@ -1480,6 +1480,10 @@ async function rpsend(el, cid) {
    ===================================================================== */
 const stat = (k, v) => `<div class="rounded-2xl bg-white border border-mist p-4"><p class="text-sm text-sea/70">${k}</p><p class="font-display text-2xl sm:text-3xl mt-1">${v}</p></div>`;
 const pendingCharge = () => S.chg.find(c => c.pro_id === me() && c.status === 'requested');
+function proChat() {
+  const u = (C.PRO_CHAT_URL || '').trim(); if (!/^https:\/\/open\.kakao\.com\//.test(u)) return '';
+  return `<a href="${esc(u)}" target="_blank" rel="noopener" class="mt-6 flex items-center gap-4 rounded-3xl bg-[#FEE500] p-5 text-[#191919] hover:brightness-95"><span class="text-3xl" aria-hidden="true">💬</span><span class="min-w-0 flex-1"><b class="block">기사님 소통방 (카카오톡 오픈채팅)</b><span class="mt-0.5 block text-sm text-black/70">새 일감 소식 · 설비 정보 · 사이트 사용법을 함께 나눠요</span></span><span class="shrink-0 rounded-full bg-[#191919] px-4 py-2 text-sm font-bold text-white">들어가기 ›</span></a>`;
+}
 function proView() {
   const p = S.pro; if (!p) { $('#pview').innerHTML = empty('기사 정보를 불러오는 중이에요.'); return; }
   if (!p.as_agreed_at && S.user && (S.user.user_metadata || {}).as_agree && !proView.asTry) { proView.asTry = true; rpc('agree_as', {}).then(() => load('pro')).then(() => render()).catch(() => {}); }
@@ -1489,7 +1493,7 @@ function proView() {
     <div class="flex flex-wrap items-center gap-2">${notifBtn()}${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
   if (!ok) {
     $('#pview').innerHTML = top + (p.approval === 'PENDING'
-      ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>`
+      ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>${proChat()}`
       : `<div class="mt-6 rounded-3xl bg-red-50 p-6"><p class="font-bold text-red-700 text-lg">기사 등록이 승인되지 않았어요</p><p class="mt-2 text-sm text-sea/80">자세한 내용은 고객센터로 문의해 주세요.</p><div class="mt-4">${btn('inqnew', '', '고객센터 문의', 'a')}</div></div>`);
     return;
   }
@@ -1505,7 +1509,7 @@ function proView() {
     <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}
+    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청 → 내 활동 지역 → 📍근처 지역 순서로 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
     ${myKinds.length ? `<h2 class="mt-10 text-2xl font-black">중고마켓 · 매입 제안</h2><p class="mt-1 text-sm text-sub">에어컨·보일러·냉장고·주방설비 중고를 업체와 소비자가 함께 사고팔아요. 매입 제안은 무료이고 매입 수수료도 0원이에요. 내 분야 물건이 먼저 보여요.</p>
