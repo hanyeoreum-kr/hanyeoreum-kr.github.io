@@ -2419,6 +2419,21 @@ function instShow() {
   instPlace(); $('#inst').style.display = '';
 }
 function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide2', Date.now() + days * 864e5); }
+/* 아이폰: 설명 창 대신, 화면을 어둡게 하고 눌러야 할 버튼 위치를 화살표로 가리켜요 */
+function iosCoach() {
+  const ua = navigator.userAgent, chrome = /CriOS/i.test(ua), other = /EdgiOS|FxiOS|Whale|NAVER/i.test(ua);
+  const top = chrome, step = (n, t) => `<li class="flex gap-3 text-left"><b class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sun text-white">${n}</b><span class="pt-0.5">${t}</span></li>`;
+  const s1 = chrome ? '주소창 <b>오른쪽 끝 공유 버튼 ⬆︎</b>을 눌러요' : other ? '화면의 <b>⋯ 메뉴 → 공유 ⬆︎</b>를 눌러요' : '화면 <b>아래 공유 버튼 ⬆︎</b>을 눌러요<br><span class="text-xs text-white/70">공유 버튼이 안 보이면 <b>⋯</b> 버튼 → <b>공유</b></span>';
+  const box = `<div class="mx-auto max-w-sm rounded-3xl bg-sea p-5 text-white shadow-2xl"><p class="text-lg font-black">📲 홈 화면에 추가하기</p>
+    <ol class="mt-3 space-y-3 text-[15px] leading-snug">${step(1, s1)}${step(2, '목록을 <b>위로 쓸어 올려서</b> <b>‘홈 화면에 추가’</b>를 눌러요<br><span class="text-xs text-white/70">안 보이면 맨 아래 <b>‘작업 편집’</b> 또는 <b>‘더 보기’</b>에서 찾을 수 있어요</span>')}${step(3, '오른쪽 위 <b>‘추가’</b>를 누르면 끝!')}</ol>
+    <div class="mt-4 flex gap-2"><a href="install.html" target="_blank" rel="noopener" class="flex-1 rounded-xl bg-white/15 py-3 text-center text-sm font-bold">그림으로 보기</a><button type="button" data-coach-x class="flex-1 rounded-xl bg-white py-3 text-sm font-black text-sea">알겠어요</button></div></div>`;
+  const arrow = `<div class="pointer-events-none absolute ${top ? 'right-3 top-1 flex-col' : 'bottom-1 left-1/2 -translate-x-1/2 flex-col-reverse'} flex items-center gap-1 text-white"><span class="hy-bob text-5xl drop-shadow-lg">${top ? '⬆️' : '⬇️'}</span><span class="rounded-full bg-sun px-3 py-1 text-xs font-black">${top ? '이 위 공유 버튼' : '이 아래 공유 버튼'}</span></div>`;
+  document.querySelectorAll('#hy-coach').forEach(x => x.remove());
+  const el = document.createElement('div'); el.id = 'hy-coach'; el.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.78);z-index:2147483000;padding:0 16px';
+  el.innerHTML = `<style>@keyframes hybob{0%,100%{transform:translateY(0)}50%{transform:translateY(${top ? '-10px' : '10px'})}}.hy-bob{animation:hybob 1s ease-in-out infinite}</style>${arrow}<div class="absolute inset-x-4 ${top ? 'top-24' : 'bottom-28'}">${box}</div>`;
+  el.addEventListener('click', e => { if (e.target === el || e.target.closest('[data-coach-x]')) el.remove(); });
+  document.body.append(el);
+}
 async function installApp() {
   if (PWA.prompt) { PWA.prompt.prompt(); const r = await PWA.prompt.userChoice.catch(() => ({})); PWA.prompt = null; instHide(r.outcome === 'accepted' ? 365 : 7); return; }
   instHide(3);
@@ -2440,15 +2455,7 @@ async function installApp() {
     </ol>
     <a href="install.html" target="_blank" rel="noopener" class="mt-4 block text-center text-sm font-bold text-cool underline">그림으로 자세히 보기 · 알림 켜는 방법</a>
     <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
-  openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
-    <p class="mt-2 text-sm text-sea/70">아이폰은 <b>사파리</b>에서만 추가할 수 있어요.</p>
-    <ol class="mt-4 space-y-3 text-sm">
-      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">1</span><span>화면 아래(또는 위)의 <b>공유 버튼</b> <span class="inline-block rounded border border-mist px-1.5">⬆︎</span> 을 눌러요</span></li>
-      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">2</span><span>목록을 내려서 <b>‘홈 화면에 추가’</b>를 눌러요</span></li>
-      <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">3</span><span>오른쪽 위 <b>‘추가’</b>를 누르면 끝!</span></li>
-    </ol>
-    <a href="install.html" target="_blank" rel="noopener" class="mt-4 block text-center text-sm font-bold text-cool underline">그림으로 자세히 보기 · 알림 켜는 방법</a>
-    <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
+  iosCoach();
 }
 /* 휴대폰 키보드가 올라오면 아래에서 올라오는 창도 키보드 위로 올려요 */
 function fitSheets() {
