@@ -30,7 +30,7 @@ window.HY_CONFIG = {
   PRO_CHAT_URL: 'https://open.kakao.com/o/gsBerCRi',
 
   // 고객센터 연락처 (비워 두면 표시 안 함)
-  CS_PHONE: '010-8748-2305',
+  CS_PHONE: '',
   CS_EMAIL: 'l87482305@gmail.com',
 
   // 사업자 정보 (전자상거래법상 하단 표시 필요 — 사업자등록 후 채워 주세요)

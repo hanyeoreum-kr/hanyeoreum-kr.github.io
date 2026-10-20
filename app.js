@@ -95,7 +95,7 @@ function moneyAdd(spec) {
   el.value = v ? String(v) : ''; el.dispatchEvent(new Event('input', { bubbles:true }));
 }
 /* 사업자 정보 (config.js 의 BIZ 값이 있으면 그것을 우선 사용) */
-const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'010-8748-2305', mailOrderNo:'제2026-서울중랑-1254호' }, C.BIZ || {});
+const BIZ = Object.assign({ name:'한여름', ceo:'이형주', bizNo:'333-50-01132', address:'서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)', phone:'', mailOrderNo:'제2026-서울중랑-1254호' }, C.BIZ || {});
 /* 충전 계좌: config.js 의 BANK 값이 비어 있거나 예시 글자면 아래 기본값을 써요 */
 const BANK = (() => { const d = { name:'카카오뱅크', account:'3333-38-5718558', holder:'한여름' }, c = C.BANK || {}, ok = v => typeof v === 'string' && v.trim() && !/YOUR|OOO|○|예시|은행명|계좌번호|예금주/.test(v); return { name:ok(c.name) ? c.name : d.name, account:ok(c.account) && /[1-9]/.test(c.account) ? c.account : d.account, holder:ok(c.holder) ? c.holder : d.holder }; })();
 /* 토스 카드결제: 실제 운영 키(live_)가 들어 있을 때만 켜요. 테스트 키(test_)면 계좌이체 충전으로 보여요 */
@@ -452,6 +452,7 @@ function renderAuth() {
       ${pro ? `<div id="au-spec">${specHTML(au, 'au')}</div>
         ${credBlock(au.certs, 'acert')}${freeToggle(au.free, 'afree')}
         <p class="mt-4 text-sm font-bold">활동 가능 지역 <span class="text-xs font-normal text-sea/60">(1곳 이상)</span></p>${areaGrid(au.areas, 'aarea')}
+        <label for="au-biz" class="mt-4 block text-sm font-bold">사업자등록번호 <span class="text-xs font-normal text-sea/60">(필수 · 10자리)</span></label>${bizInput('au-biz', au.v.biz, inp)}
         <label class="mt-4 block text-sm font-bold">사업자등록증 <span class="text-xs font-normal text-sea/60">(필수 · 사진 또는 PDF · 10MB 이하)</span></label>
         <label class="mt-2 flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed ${auDoc ? 'border-cool bg-cool/5' : 'border-sun/60 bg-sun/5'} px-4 py-5 text-center hover:bg-mist">
           <span id="au-doc-name" class="font-bold">${auDoc ? '✅ ' + esc(auDoc.name || '사업자등록증') : '📄 사업자등록증 올리기'}</span>
@@ -503,11 +504,11 @@ async function alogin(el) {
 async function asignup(el) {
   saveAuth(); const v = au.v, pro = au.type === 'pro', name = (v.name || '').trim(), email = (v.email || '').trim().toLowerCase(), pw = v.pw || '';
   const err = !name ? (pro ? '상호명 또는 기사명을 입력해 주세요.' : '이름을 입력해 주세요.') : !emailOk(email) ? '이메일 형식을 확인해 주세요.' : !pwOk(pw) ? '비밀번호는 8자 이상, 영문과 숫자를 모두 넣어 주세요.'
-    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && specErr(au) ? specErr(au) : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : pro && !auDoc ? '사업자등록증 사진이나 PDF를 올려 주세요.' : !au.agree ? '필수 약관 3개에 모두 동의해 주세요.' : pro && !($('#au-as') && $('#au-as').checked) ? '재점검·보완 보장 동의에 체크해 주세요.' : '';
+    : pw !== v.pw2 ? '두 비밀번호가 달라요.' : pro && specErr(au) ? specErr(au) : pro && !au.areas.size ? '활동 가능 지역을 1곳 이상 선택해 주세요.' : pro && !bizOk(v.biz) ? '사업자등록번호 10자리를 정확히 입력해 주세요. (사업자등록증 맨 위의 등록번호)' : pro && !auDoc ? '사업자등록증 사진이나 PDF를 올려 주세요.' : !au.agree ? '필수 약관 3개에 모두 동의해 주세요.' : pro && !($('#au-as') && $('#au-as').checked) ? '재점검·보완 보장 동의에 체크해 주세요.' : '';
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
-    if (pro) data.as_agree = true;
+    if (pro) { const be = await bizCheck(bizDigits(v.biz)); if (be) return setErr(be); data.as_agree = true; data.biz_no = bizDigits(v.biz); }
     if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
     let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
@@ -556,6 +557,12 @@ async function resetConfirm(el) {
 }
 async function logout() { await sb.auth.signOut(); S.mode = 'customer'; toast('로그아웃했어요.'); }
 
+/* 사업자등록번호: 10자리 + 국세청 검증 규칙 */
+const bizDigits = s => String(s || '').replace(/\D/g, '');
+const bizOk = s => { const d = bizDigits(s); if (d.length !== 10) return false; const w = [1, 3, 7, 1, 3, 7, 1, 3, 5]; let t = 0; for (let i = 0; i < 9; i++) t += +d[i] * w[i]; t += Math.floor(+d[8] * 5 / 10); return (10 - t % 10) % 10 === +d[9]; };
+const bizFmt = s => { const d = bizDigits(s); return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}` : d; };
+const bizInput = (id, val, inp) => `<input id="${id}" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="예) 123-45-67890" value="${esc(val || '')}" class="${inp}">`;
+async function bizCheck(d) { try { const r = await rpc('check_biz_no', { p_no:d }); if (r === 'blocked') return '이 사업자등록번호로는 기사 등록을 할 수 없어요. 고객센터로 문의해 주세요.'; } catch (_) {} return ''; }
 /* 사업자등록증: 비공개 보관함(docs)에 저장 · 본인과 관리자만 열람 */
 const docErr = f => !/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(f.type) ? 'JPG·PNG·WEBP 사진이나 PDF만 올릴 수 있어요.' : f.size > 10 * 1024 * 1024 ? '10MB 이하 파일만 올릴 수 있어요.' : '';
 async function uploadBizDoc(f) {
@@ -575,7 +582,12 @@ async function openBizDoc(path) {
 const bizDocCard = p => `<div class="mt-4 rounded-2xl border-2 ${p.biz_doc ? 'border-cool/40 bg-cool/5' : 'border-sun/50 bg-sun/5'} p-5">
   <p class="font-bold">${p.biz_doc ? '📄 사업자등록증 제출 완료' : '📄 사업자등록증을 올려 주세요'}</p>
   <p class="mt-1 text-sm text-sea/70">${p.biz_doc ? `${fmtT(p.biz_doc_at)}에 제출했어요. 다른 파일로 바꾸려면 다시 올리세요.` : '관리자가 사업자등록증을 확인한 뒤 승인해요. 사진이나 PDF(10MB 이하)를 올려 주세요.'}</p>
+  ${p.biz_no ? `<p class="mt-2 text-sm"><b>사업자등록번호</b> ${esc(bizFmt(p.biz_no))}</p>` : `<div class="mt-3 rounded-xl bg-white p-3"><label for="bn-in" class="text-sm font-bold">사업자등록번호 <span class="text-xs font-normal text-sun">입력 필요</span></label><div class="mt-2 flex gap-2">${bizInput('bn-in', '', 'min-w-0 flex-1 rounded-xl bg-ice px-3 py-2.5')}${btn('bnsave', '', '저장', 'a')}</div></div>`}
   <div class="mt-3 flex flex-wrap items-center gap-2"><input id="bd-file" type="file" accept="image/*,application/pdf" class="min-w-0 flex-1 rounded-xl bg-white px-3 py-2.5 text-sm">${btn('bdsend', '', p.biz_doc ? '다시 올리기' : '올리기', p.biz_doc ? 's' : 'a')}${p.biz_doc ? btn('bdview', '', '내 파일 보기', 's') : ''}</div></div>`;
+async function bnSave(el) {
+  const d = bizDigits($('#bn-in').value); if (!bizOk(d)) return toast('사업자등록번호 10자리를 정확히 입력해 주세요.');
+  await busy(el, async () => { await rpc('set_biz_no', { p_no:d }); await load('pro'); render(); if (mmOpen() && menuCur === 'prof') profModal(); toast('사업자등록번호를 저장했어요.'); });
+}
 async function bdSend(el) {
   const f = ($('#bd-file').files || [])[0]; if (!f) return toast('올릴 파일을 골라 주세요.');
   await busy(el, async () => { await uploadBizDoc(f); await load('pro'); render(); if (mmOpen() && menuCur === 'prof') profModal(); toast('사업자등록증을 올렸어요. 관리자가 확인할게요.'); });
@@ -594,6 +606,7 @@ function becomeProModal() {
     <div id="bp-spec">${specHTML(bp, 'bp')}</div>
     ${credBlock(bp.certs, 'bcert')}${freeToggle(bp.free, 'bfree')}
     <p class="mt-4 text-sm font-bold">활동 가능 지역</p>${areaGrid(bp.areas, 'barea')}
+    <label for="bp-biz" class="block mt-4 text-sm font-bold">사업자등록번호 <span class="text-xs font-normal text-sea/60">(10자리)</span></label>${bizInput('bp-biz', '', inp)}
     <label for="bp-doc" class="block mt-4 text-sm font-bold">사업자등록증 <span class="text-xs font-normal text-sea/60">(사진 또는 PDF · 10MB 이하)</span></label><input id="bp-doc" type="file" accept="image/*,application/pdf" class="${inp} text-sm">
     <p class="mt-1 text-xs text-sea/60">관리자만 볼 수 있는 비공개 보관함에 저장돼요. 사업자가 없는 개인 기사님은 나중에 고객센터로 문의해 주세요.</p>${asBox('bp-as')}${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('bpsend', '', '등록 신청')}</div>`, true);
@@ -603,11 +616,14 @@ async function bpSend(el) {
   if (!name) return setErr('상호명 또는 기사명을 입력해 주세요.');
   specRead(bp, 'bp'); if (specErr(bp)) return setErr(specErr(bp));
   if (!bp.areas.size) return setErr('활동 가능 지역을 1곳 이상 선택해 주세요.');
+  const biz = bizDigits($('#bp-biz').value);
+  if (!S.admin && !bizOk(biz)) return setErr('사업자등록번호 10자리를 정확히 입력해 주세요.');
   if (doc && docErr(doc)) return setErr(docErr(doc));
   if (!doc && !S.admin) return setErr('사업자등록증을 올려 주세요.');
   if (!$('#bp-as').checked) return setErr('재점검·보완 보장 동의에 체크해 주세요.');
   await busy(el, async () => {
-    const bpArgs = { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:'', p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift };
+    if (biz) { const be = await bizCheck(biz); if (be) return setErr(be); }
+    const bpArgs = { p_name:name, p_fields:specFields(bp), p_areas:[...bp.areas], p_certs:[...bp.certs], p_free:bp.free, p_biz:biz, p_kind:kindsOrdered(bp)[0], p_ton:bp.kinds.has('truck') ? bp.ton : null, p_lift:bp.kinds.has('truck') && bp.lift };
     try { await rpc('become_pro', bpArgs); } catch (e) { if (['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(bpArgs.p_kind)) throw e; await rpc('become_pro', Object.assign(bpArgs, { p_kind:'aircon' })); }
     await saveKinds(kindsOrdered(bp));
     try { await rpc('agree_as', {}); } catch (e) { console.warn('agree_as', e); }
@@ -664,13 +680,18 @@ function setBadge(el, n) { if (!el) return; let b = el.querySelector('.tbadge');
 async function delModal() {
   if (needLogin()) return;
   let req = null; try { req = await rpc('my_deletion_status'); } catch (e) {}
+  let bl = []; try { bl = (await rpc('my_deletion_blockers')) || []; } catch (e) {}
+  if (!req && bl.length) return openM(head('지금은 탈퇴할 수 없어요') + `<p class="leading-relaxed text-sea/80">아래 건이 끝나야 탈퇴를 신청할 수 있어요. 손님과의 약속(작업·재점검·보증)을 지키기 위한 규칙이에요.</p>
+    <ul class="mt-3 space-y-2">${bl.map(b => `<li class="rounded-xl bg-sun/10 px-4 py-3 text-sm font-bold">⏳ ${esc(b.text)}</li>`).join('')}</ul>
+    ${S.pro ? '<p class="mt-3 text-xs leading-relaxed text-sea/60">남은 예치금 환불도 위 건이 모두 끝난 뒤에 처리돼요. 보증 기간은 거래 확정 후 설비 14일 · 청소 3일이에요.</p>' : ''}
+    <div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('cs', '', '고객센터 문의', 's')}</div>`);
   if (req) return openM(head('회원 탈퇴 신청됨') + `<p class="leading-relaxed">${esc(new Date(req).toLocaleString('ko-KR'))}에 탈퇴를 신청하셨어요. 진행 중인 거래가 없으면 <b>7일 안에</b> 처리돼요. 처리되면 이름·이메일이 지워지고 다시 로그인할 수 없어요.</p>
     <div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${btn('delcancel', '', '탈퇴 신청 취소', 's')}</div>`);
   openM(head('회원 탈퇴') + `<ul class="space-y-2 rounded-2xl bg-ice p-4 text-sm leading-relaxed">
       <li>탈퇴하면 이름·이메일·프로필이 지워지고 같은 계정으로 다시 로그인할 수 없어요.</li>
       <li>진행 중인 계약·분쟁이 있으면 끝난 뒤에 처리돼요.</li>
       <li>기사 회원의 남은 예치금은 약관에 따라 환불해 드려요.</li>
-      <li>계약·결제 기록은 법에 따라 정해진 기간 동안 이름 없이 보관돼요.</li></ul>
+      <li>계약·결제 기록은 법에 따라 정해진 기간 동안 보관돼요. 기사 회원의 상호·사업자등록번호·연락처는 분쟁 대응을 위해 탈퇴 후 5년간 비공개로 보관돼요.</li></ul>
     <label for="del-why" class="mt-4 block text-sm font-bold">떠나시는 이유 (선택)</label><textarea id="del-why" rows="2" maxlength="200" class="mt-2 w-full resize-none rounded-xl bg-ice px-4 py-3"></textarea>
     <label class="mt-3 flex items-start gap-2 text-sm"><input id="del-ok" type="checkbox" class="mt-1 h-4 w-4"> 위 내용을 확인했고 탈퇴를 신청해요.</label>${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('delgo', '', '탈퇴 신청', 'p')}</div>`);
@@ -685,12 +706,34 @@ function loadDels(force) {
   dlAt = Date.now();
   rpc('admin_list_deletions').then(d => { DL = d || []; if (S.mode === 'admin') adminView(); }).catch(() => { DL = []; });
 }
+let ARC = null, BLK = null, arcAt = 0;
+function loadArc(force) {
+  if (!S.admin || (!force && Date.now() - arcAt < 60000)) return;
+  arcAt = Date.now();
+  Promise.all([rpc('admin_list_archive').catch(() => null), rpc('admin_list_blocked').catch(() => null)]).then(([a, b]) => { ARC = a; BLK = b; if (S.mode === 'admin') adminView(); });
+}
+function arcCard() {
+  loadArc();
+  if (ARC === null && BLK === null) return `<p class="mt-6 rounded-xl bg-sun/10 p-3 text-xs">탈퇴 회원 보관함·사업자 차단을 쓰려면 Supabase에서 <b>75_supabase_탈퇴안전장치.sql</b>을 실행해 주세요.</p>`;
+  const a = (ARC || []).filter(x => x.role === 'pro' || x.biz_no), b = BLK || [];
+  return `<section class="mt-8 rounded-3xl border border-mist bg-white p-5 sm:p-6"><h2 class="text-xl font-bold">탈퇴 기사 보관함 · 재가입 차단</h2>
+    <p class="mt-1 text-sm text-sea/70">탈퇴한 기사의 상호·사업자등록번호·연락처는 5년간 여기 남아요. 분쟁이 생기면 손님에게 사업자 정보를 안내하고, 소비자원(1372)·전자거래분쟁조정위원회를 함께 알려 주세요.</p>
+    <details class="mt-3"><summary class="cursor-pointer text-sm font-bold">탈퇴한 기사 ${a.length}명</summary>${a.map(x => `<div class="mt-2 rounded-xl bg-ice px-3 py-2 text-sm"><b>${esc(x.name || '이름 없음')}</b> · 사업자 ${esc(bizFmt(x.biz_no) || '없음')}<p class="text-xs text-sea/60">${esc(x.email || '')}${x.phone ? ' · ' + esc(x.phone) : ''} · ${fmtT(x.deleted_at)} 탈퇴 · ${String(x.keep_until).slice(0, 10)}까지 보관</p>${x.biz_doc ? `<button type="button" data-act="adoc" data-id="${esc(x.biz_doc)}" class="mt-1 text-xs font-bold text-cool underline">사업자등록증 보기</button>` : ''}${blkHas(x.biz_no) ? ' <span class="text-xs font-bold text-red-600">재가입 차단됨</span>' : ` <button type="button" data-act="pblock" data-id="${x.user_id}" class="mt-1 text-xs font-bold text-red-600 underline">재가입 차단</button>`}</div>`).join('') || '<p class="mt-2 text-sm text-sea/60">아직 없어요.</p>'}</details>
+    <details class="mt-3"><summary class="cursor-pointer text-sm font-bold">재가입 차단된 사업자 ${b.length}곳</summary>${b.map(x => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm"><span><b>${esc(x.name || '')}</b> · ${esc(bizFmt(x.biz_no))}<span class="block text-xs text-sea/60">${esc(x.reason || '사유 없음')} · ${String(x.until).slice(0, 10)}까지</span></span>${btn('bunblock', x.biz_no, '차단 해제', 's')}</div>`).join('') || '<p class="mt-2 text-sm text-sea/60">차단된 사업자가 없어요.</p>'}</details></section>`;
+}
+const blkHas = n => !!n && (BLK || []).some(x => x.biz_no === bizDigits(n));
+function blockModal(id) {
+  const p = S.adminPros.find(x => x.id === id) || (ARC || []).find(x => x.user_id === id) || {};
+  openM(head('기사 차단') + `<p class="leading-relaxed"><b>${esc(p.name || '기사')}</b>을(를) 활동 정지하고, 사업자등록번호 <b>${esc(bizFmt(p.biz_no) || '(등록 안 됨)')}</b>로는 3년간 다시 기사 등록을 못 하게 막아요.</p>
+    <label for="blk-why" class="mt-4 block text-sm font-bold">차단 사유 (관리자만 봐요)</label><input id="blk-why" maxlength="200" placeholder="예) 재점검 3회 불응, 연락 두절" class="mt-2 w-full rounded-xl bg-ice px-4 py-3">${errBox()}
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${btn('pblockgo', id, '차단하기', 'p')}</div>`);
+}
 function delCard() {
   loadDels();
   if (!DL || !DL.length) return '';
   return `<section class="mt-8 rounded-3xl border-2 border-sun/40 bg-white p-5 sm:p-6"><h2 class="text-xl font-bold">회원 탈퇴 신청 ${DL.length}건</h2><p class="mt-1 text-sm text-sea/70">진행 중 거래가 없으면 처리할 수 있어요. 남은 예치금은 먼저 계좌로 돌려준 뒤 처리하세요.</p>
-    ${DL.map(d => `<div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-4 py-3 text-sm"><div><b>${esc(d.name || '이름 없음')}</b> · ${esc(d.email || '')} · ${d.role === 'pro' ? '기사' : '고객'}<p class="text-xs text-sea/60">${esc(new Date(d.delete_req).toLocaleString('ko-KR'))} 신청${d.open_deals ? ` · <b class="text-sun">진행 중 거래 ${d.open_deals}건</b>` : ''}${d.balance ? ` · 예치금 ${won(d.balance)}` : ''}</p></div>
-      ${d.open_deals ? '<span class="text-xs font-bold text-sea/50">거래 끝난 뒤 처리</span>' : btn(d.balance ? 'deldone2' : 'deldone', d.id, d.balance ? '환불했어요 · 탈퇴 처리' : '탈퇴 처리', 's')}</div>`).join('')}</section>`;
+    ${DL.map(d => `<div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-4 py-3 text-sm"><div><b>${esc(d.name || '이름 없음')}</b> · ${esc(d.email || '')} · ${d.role === 'pro' ? '기사' : '고객'}<p class="text-xs text-sea/60">${esc(new Date(d.delete_req).toLocaleString('ko-KR'))} 신청${d.biz_no ? ` · 사업자 ${esc(bizFmt(d.biz_no))}` : ''}${(d.blockers || []).length ? ` · <b class="text-sun">${d.blockers.map(b => esc(b.text)).join(', ')}</b>` : d.open_deals ? ` · <b class="text-sun">처리할 건 ${d.open_deals}건</b>` : ''}${d.balance ? ` · 예치금 ${won(d.balance)}` : ''}</p></div>
+      ${d.open_deals ? '<span class="text-xs font-bold text-sea/50">끝난 뒤 처리 · 예치금 환불 보류</span>' : btn(d.balance ? 'deldone2' : 'deldone', d.id, d.balance ? '환불했어요 · 탈퇴 처리' : '탈퇴 처리', 's')}</div>`).join('')}</section>`;
 }
 function navMenu() {
   const it = (attrs, t, cls = '') => `<button type="button" ${attrs} class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice ${cls}">${t}<span class="text-sea/30" aria-hidden="true">›</span></button>`;
@@ -1869,14 +1912,14 @@ function areqModal(id) {
   id = +id; const r = S.adminReq.find(x => x.id === id); if (!r) return;
   const c = custOf(r), qs = reqQs(id).slice().sort((a, b) => a.price - b.price), st = RST[reqState(r)];
   const pname = pid => (S.adminPros.find(p => p.id === pid) || {}).name || '기사';
-  const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && proKinds(p).includes(kind) && (!(p.areas || []).length || p.areas.includes(r.gu)));
+  const kind = kindOf(r.service), near = S.adminPros.filter(p => p.approval === 'APPROVED' && proKinds(p).includes(kind) && p.id !== r.customer_id).sort((a, b) => ((b.areas || []).includes(r.gu) - (a.areas || []).includes(r.gu)));
   const rows = [['서비스', svcOf(r) || r.service], ['지역', place(r.gu) + (r.to_gu ? ' → ' + place(r.to_gu) : '')], ['희망일', r.wish_date || '-'], ['접수', fmtT(r.created_at) + ' (' + ago(r.created_at) + ')'], ['고객', (c.name || '고객') + (c.email ? ' · ' + c.email : '')], ...(r.ton ? [['차량', r.ton + (r.lift ? ' · 리프트' : '')]] : []), ...(r.target_pro ? [['지정 기사', pname(r.target_pro)]] : [])];
   openM(head(reqCode(r.id)) + `<span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}</span>
     <dl class="mt-3 grid grid-cols-[72px_1fr] gap-y-1.5 text-sm">${rows.map(([k, v]) => `<dt class="text-sea/60">${k}</dt><dd class="font-bold">${esc(v)}</dd>`).join('')}</dl>
     <p class="mt-4 text-sm font-bold">요청 내용</p><p class="mt-1 whitespace-pre-wrap rounded-xl bg-ice p-3 text-sm leading-relaxed">${esc(r.details || '(내용 없음)')}</p>
     ${(r.photos || []).length ? `<div class="mt-3 flex flex-wrap gap-2">${r.photos.filter(isPhotoUrl).map(p => `<a href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="요청 사진" class="h-20 w-20 rounded-lg object-cover"></a>`).join('')}</div>` : ''}
     <p class="mt-5 text-sm font-bold">받은 견적 ${qs.length}건</p>${qs.map(q => `<div class="mt-2 flex items-center justify-between gap-2 rounded-xl border border-mist px-3 py-2 text-sm"><span>${esc(pname(q.pro_id))} <span class="text-xs text-sea/50">${ago(q.created_at)}</span></span><b>${won(q.price)} <span class="text-xs font-normal text-sea/60">${esc(QL[q.status] || '')}</span></b></div>`).join('') || '<p class="mt-1 text-sm text-sea/60">아직 견적이 없어요.</p>'}
-    ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl bg-sun/10 p-3 text-sm"><b>이 요청을 받을 수 있는 기사님 ${near.length}명</b> <span class="text-xs text-sea/60">(같은 분야 · 활동 지역 일치 · 승인됨)</span><p class="mt-1 text-xs leading-relaxed">${near.slice(0, 15).map(p => esc(p.name) + (p.online === false ? '(쉬는 중)' : '')).join(', ') || '해당 지역 기사님이 없어요. 기사 모집이 필요한 지역이에요.'}</p></div>` : ''}
+    ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl bg-sun/10 p-3 text-sm"><b>이 요청에 견적을 낼 수 있는 기사님 ${near.length}명</b> <span class="text-xs text-sea/60">(같은 분야 · 승인됨 · 지역 무관 · 알림 발송 ${near.filter(p => p.online !== false).length}명)</span><p class="mt-1 text-xs leading-relaxed">${near.slice(0, 30).map(p => esc(p.name) + ((p.areas || []).includes(r.gu) ? '📍' : '') + (p.online === false ? '(쉬는 중)' : '')).join(', ')}${near.length > 30 ? ` 외 ${near.length - 30}명` : ''}${near.length ? '' : '같은 분야 기사님이 아직 없어요. 기사 모집이 필요해요.'}</p><p class="mt-1 text-[11px] text-sea/50">📍 = 이 지역을 활동 지역으로 고른 기사님</p></div>` : ''}
     <div class="mt-5"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
   menuCur = 'areq';
 }
@@ -2046,14 +2089,14 @@ function adminView() {
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">${memStat()}${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
-    ${backupCard()}${reqBoard()}${delCard()}${visitCard()}
+    ${backupCard()}${reqBoard()}${delCard()}${arcCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">예치금 충전 확인</h2><p class="mt-1 text-sm text-sea/70">통장에 입금된 걸 확인한 뒤 승인하세요. 승인하면 바로 기사 예치금에 더해져요.</p>
         ${chg.map(c => card(`<div class="flex flex-wrap items-start justify-between gap-2"><div><p class="font-bold">${esc(proName(c.pro_id))} · ${won(c.amount)}</p><p class="text-xs text-sea/60">입금자명 ${esc(c.depositor)} · ${fmtT(c.created_at)}</p></div><div class="flex gap-2">${btn('chgok', c.id, '입금 확인 · 승인', 'a')}${btn('chgno', c.id, '반려', 's')}</div></div>`)).join('') || `<div class="mt-3">${empty('확인할 충전 신청이 없어요.')}</div>`}</section>
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">기사 가입 승인</h2><p class="mt-1 text-sm text-sea/70">사업자등록증을 열어 상호·대표자를 확인하세요. 사업자 상태(휴·폐업)는 국세청 홈택스에서 조회할 수 있어요.</p>
-        ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs ${p.biz_doc ? 'text-cool font-bold' : 'text-red-600 font-bold'}">${p.biz_doc ? '📄 사업자등록증 제출됨 · ' + fmtT(p.biz_doc_at) : '📄 사업자등록증 미제출'}</p>${(p.certs || []).length ? `<p class="text-xs text-sea/70">자격/장비 ${p.certs.map(esc).join(', ')}</p>` : ''}<p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex flex-wrap gap-2">${p.biz_doc ? btn('pdoc', p.id, '사업자등록증 보기', 'p') : ''}${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
-        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · 데려온 손님 ${(S.adminRefs || []).filter(r => r.pro_id === p.id).length}명 · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}</div>`).join('')}</details></section>
+        ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs ${p.biz_doc ? 'text-cool font-bold' : 'text-red-600 font-bold'}">${p.biz_doc ? '📄 사업자등록증 제출됨 · ' + fmtT(p.biz_doc_at) : '📄 사업자등록증 미제출'}</p>${(p.certs || []).length ? `<p class="text-xs text-sea/70">자격/장비 ${p.certs.map(esc).join(', ')}</p>` : ''}<p class="text-xs ${p.biz_no ? 'text-sea/70' : 'font-bold text-red-600'}">사업자등록번호 ${p.biz_no ? esc(bizFmt(p.biz_no)) + (bizOk(p.biz_no) ? '' : ' ⚠️ 번호 규칙 불일치') + (blkHas(p.biz_no) ? ' 🚫 차단된 번호' : '') : '미입력'}</p><p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex flex-wrap gap-2">${p.biz_doc ? btn('pdoc', p.id, '사업자등록증 보기', 'p') : ''}${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
+        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · 데려온 손님 ${(S.adminRefs || []).filter(r => r.pro_id === p.id).length}명 · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span><span class="flex gap-2">${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}${blkHas(p.biz_no) ? '<span class="self-center text-xs font-bold text-red-600">차단됨</span>' : btn('pblock', p.id, '🚫 차단', 's')}</span></div>`).join('')}</details></section>
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
@@ -2170,7 +2213,7 @@ const ACT = {
   bkrm: id => { bk.splice(+id, 1); bkDraw(); },
   delacct: () => { closeM(); delModal(); }, delgo: (id, el) => delGo(el),
   delcancel: (id, el) => busy(el, async () => { await rpc('cancel_account_deletion'); closeM(); toast('탈퇴 신청을 취소했어요.'); }),
-  deldone: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:false }); loadDels(true); toast('탈퇴 처리했어요.'); }); },
+  deldone: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:false }); loadDels(true); loadArc(true); toast('탈퇴 처리했어요.'); }); },
   deldone2: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:true }); loadDels(true); await load('adminPros'); render(); toast('예치금 환불 기록 후 탈퇴 처리했어요.'); }); },
   navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
   navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
@@ -2194,6 +2237,10 @@ const ACT = {
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
   papprove: (id, el) => adminSimple(el, 'admin_set_approval', { p_pro:id, p_approve:true }, '기사를 승인했어요.', ['adminPros', 'prosPub', 'aud']),
+  pblock: id => blockModal(id),
+  pblockgo: (id, el) => busy(el, async () => { await rpc('admin_block_pro', { p_user:id, p_reason:$('#blk-why').value.trim() }); closeM(); await load('adminPros'); loadArc(true); render(); toast('차단했어요. 이 사업자등록번호로는 다시 가입할 수 없어요.'); }),
+  bunblock: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_unblock_biz', { p_biz:id }); loadArc(true); toast('차단을 해제했어요.'); }); },
+  adoc: id => openBizDoc(id), bnsave: (id, el) => bnSave(el),
   preject: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_set_approval', { p_pro:id, p_approve:false }, '반려(정지)했어요.', ['adminPros', 'prosPub', 'aud']); },
   chgok: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_handle_charge', { p_charge:+id, p_approve:true }, '충전을 승인했어요.', ['chg', 'led', 'adminPros', 'aud']); },
   chgno: (id, el) => adminSimple(el, 'admin_handle_charge', { p_charge:+id, p_approve:false }, '충전 신청을 반려했어요.', ['chg', 'aud'])
@@ -2391,6 +2438,7 @@ async function installApp() {
       <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">2</span><span><b>‘홈 화면에 추가’</b> 또는 <b>‘앱 설치’</b>를 눌러요</span></li>
       <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">3</span><span><b>‘추가’</b> 또는 <b>‘설치’</b>를 누르면 끝!</span></li>
     </ol>
+    <a href="install.html" target="_blank" rel="noopener" class="mt-4 block text-center text-sm font-bold text-cool underline">그림으로 자세히 보기 · 알림 켜는 방법</a>
     <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
   openM(`<h3 class="font-display text-2xl">홈 화면에 추가하기</h3>
     <p class="mt-2 text-sm text-sea/70">아이폰은 <b>사파리</b>에서만 추가할 수 있어요.</p>
@@ -2399,6 +2447,7 @@ async function installApp() {
       <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">2</span><span>목록을 내려서 <b>‘홈 화면에 추가’</b>를 눌러요</span></li>
       <li class="flex gap-3"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sea text-white font-bold">3</span><span>오른쪽 위 <b>‘추가’</b>를 누르면 끝!</span></li>
     </ol>
+    <a href="install.html" target="_blank" rel="noopener" class="mt-4 block text-center text-sm font-bold text-cool underline">그림으로 자세히 보기 · 알림 켜는 방법</a>
     <button type="button" data-mclose class="mt-6 w-full rounded-xl bg-sea py-3 font-bold text-white">확인</button>`);
 }
 /* 휴대폰 키보드가 올라오면 아래에서 올라오는 창도 키보드 위로 올려요 */
@@ -2446,7 +2495,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
           <p>상호: ${esc(z.name)} | 대표: ${esc(z.ceo)} | 사업자등록번호: ${esc(z.bizNo)} <a class="underline" href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=${bizNoD}" target="_blank" rel="noopener">사업자정보 확인</a></p>
           <p>통신판매업 신고번호: ${z.mailOrderNo ? esc(z.mailOrderNo) : '신고 진행 중'}</p>
           <p>주소: ${esc(z.address)}</p>
-          <p>전화: ${esc(C.CS_PHONE || z.phone)} | 이메일: ${esc(CS_EMAIL)}</p>
+          <p>${C.CS_PHONE || z.phone ? `전화: ${esc(C.CS_PHONE || z.phone)} | ` : ''}고객센터: 사이트 1:1 문의 | 이메일: ${esc(CS_EMAIL)}</p>
         </div></details></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">서비스</p><ul class="mt-3 space-y-2">${Object.entries(KINDS).map(([k, v]) => `<li><button type="button" data-act="qcat" data-id="${k}" class="hover:text-sea">${v.title}</button></li>`).join('')}<li><button type="button" data-act="mkt" class="hover:text-sea">중고마켓</button></li></ul></div>
     <div class="mt-5 hidden lg:mt-0 lg:block"><p class="font-bold text-sea">고객지원</p><ul class="mt-3 space-y-2"><li><button type="button" data-act="guarantee" class="hover:text-sea">14일 재점검 안심 보장</button></li><li><button type="button" data-act="cs" class="hover:text-sea">고객센터 · 1:1 문의</button></li><li><button type="button" data-act="gopro" class="hover:text-sea">기사님 등록</button></li><li><button type="button" data-act="install" class="hover:text-sea">앱 설치 안내</button></li></ul></div></div>
