@@ -399,7 +399,7 @@
   const rpDraw = pfx => { const u = document.getElementById(pfx + '-thumbs'); if (u) u.innerHTML = RP.files.map((f, i) => `<li class="relative aspect-square"><img src="${URL.createObjectURL(f)}" alt="후기 사진 ${i + 1}" class="h-full w-full rounded-lg object-cover"><button type="button" data-rprm="${i}" data-pfx="${pfx}" aria-label="사진 ${i + 1} 빼기" class="absolute -right-1.5 -top-1.5 h-6 w-6 rounded-full bg-sea text-sm leading-none text-white">&times;</button></li>`).join(''); };
   const rpReset = cid => { if (RP.cid !== +cid) { RP.cid = +cid; RP.files = []; } };
   document.addEventListener('change', e => {
-    const m = e.target.id && e.target.id.match(/^(rm|rv)-file$/); if (!m) return;
+    const m = e.target.id && e.target.id.match(/^(rm|rv|rx)-file$/); if (!m) return;
     for (const f of e.target.files) { if (RP.files.length >= 5) { toast('사진은 최대 5장까지 올릴 수 있어요.'); break; } if (f.type.startsWith('image/')) RP.files.push(f); }
     e.target.value = ''; rpDraw(m[1]);
   });
@@ -456,5 +456,27 @@
       box.append(h); if (p) box.append(p); if (grid) box.append(grid);
       top.insertAdjacentElement('afterend', box);
     } catch (_) {}
+  };
+  /* ---------- 14) 이미 후기를 쓴 고객도 나중에 사진만 따로 올리기 ---------- */
+  const _custMenu14 = custMenu;
+  custMenu = function (keep) {
+    _custMenu14(keep);
+    try {
+      S.con.filter(c => c.client_id === me() && c.kind === 'service' && c.status === 'completed' && reviewOf(c.id)).forEach(c => {
+        const r = document.querySelector(`#mm-body [data-act="rcpt"][data-id="${c.id}"]`);
+        if (r && !document.querySelector(`#mm-body [data-act="rxopen"][data-id="${c.id}"]`)) r.insertAdjacentHTML('afterend', btn('rxopen', c.id, '📷 후기 사진 올리기', 's'));
+      });
+    } catch (_) {}
+  };
+  ACT.rxopen = id => {
+    const c = S.con.find(x => x.id === +id); if (!c) return;
+    RP.cid = c.id; RP.files = [];
+    openM(head('후기 사진 올리기') + `<p class="text-sm leading-relaxed text-sea/70">${esc(c.provider_name)} 기사님 작업 사진을 올려 주세요. 기사님 프로필의 '고객이 올린 작업 사진'에 보여요. 전에 올린 사진이 있으면 새 사진으로 바뀌어요.</p>${rpBlock('rx')}${errBox()}
+      <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('rxsave', c.id, '사진 올리기')}</div>`);
+    menuCur = 'rx';
+  };
+  ACT.rxsave = (id, el) => {
+    if (!RP.files.length) return setErr('올릴 사진을 골라 주세요.');
+    busy(el, async () => { await rpSave(id); closeM(); });
   };
 })();
