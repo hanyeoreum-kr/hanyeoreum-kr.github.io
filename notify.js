@@ -147,8 +147,9 @@
     const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null;
     if (c && c.request_id) { const r = S.req.find(x => x.id === c.request_id) || S.adminReq.find(x => x.id === c.request_id); return r ? [r] : []; }
     const quoted = id => S.quo.some(q => q.request_id === id && q.pro_id === t.u2);
-    return S.req.filter(r => r.customer_id === t.u1 && r.status !== 'closed')
-      .sort((a, b) => (quoted(b.id) - quoted(a.id)) || b.id - a.id).slice(0, 2);
+    const other = r => S.con.some(c => c.request_id === r.id && c.provider_id !== t.u2);
+    return S.req.filter(r => r.customer_id === t.u1 && r.status !== 'closed' && !other(r))
+      .sort((a, b) => ((b.status === 'open') - (a.status === 'open')) || (quoted(b.id) - quoted(a.id)) || b.id - a.id).slice(0, 2);
   };
   const reqCard = (t, rs) => `<details id="chat-req" class="mt-3 rounded-2xl border-2 border-brand-200 bg-brand-50 p-3"${reqCardOpen ? ' open' : ''}>
     <summary class="cursor-pointer text-sm font-bold">📋 고객 요청 내용 · ${esc(t.u1_name || '고객')} 고객님</summary>
@@ -217,4 +218,104 @@
   }, true);
   const _qShow2 = qShow;
   qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; } };
+  /* ---------- 7) 거래 마무리: 성사 기사님 표시 · 고객 직접 확정 · 관리자 대신 완료 요청 ---------- */
+  const conOfReq = id => S.con.find(c => c.request_id === id);
+  const CST = c => c.status === 'completed' ? '거래 확정' : c.status === 'pending' ? '고객 확인 대기' : '진행 중';
+  const feeTxt = c => c.fee_waived ? '면제(기사님 손님)' : c.fee_charged ? `${won(c.fee)} 차감 완료` : `${won(c.fee)} (확정 때 차감)`;
+  const overdue = c => c.kind === 'service' && c.status === 'confirmed' && (!c.work_date || c.work_date <= today());
+
+  /* 관리자 요청 목록: 성사된 기사님 이름 */
+  const _adminView2 = adminView;
+  adminView = function () {
+    _adminView2();
+    try {
+      if (!S.admin) return;
+      const list = S.con.filter(overdue);
+      const h = [...document.querySelectorAll('#pview h2')].find(x => x.textContent.trim() === '고객 견적 요청 한눈에 보기');
+      if (h && list.length && !document.getElementById('hy-overdue')) {
+        h.closest('section').insertAdjacentHTML('afterend', `<section id="hy-overdue" class="mt-6 rounded-3xl border-2 border-sun bg-sun/5 p-5 sm:p-6">
+          <h2 class="text-xl font-bold">작업일이 지났는데 완료 요청이 없는 계약 ${list.length}건</h2>
+          <p class="mt-1 text-sm text-sea/70">기사님이 '작업 완료 요청'을 안 눌러서 수수료가 아직 안 빠진 건이에요. 작업이 끝난 게 확인되면 대신 눌러 주세요. 고객에게 확인 요청이 가고, 고객이 확정하지 않아도 ${S.autoH}시간 뒤 자동 확정돼요.</p>
+          ${list.map(c => `<div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-4 py-3 text-sm"><div><b>${conCode(c.id)} · ${conTitle(c)} · ${won(c.price)}</b><p class="text-xs text-sea/60">👷 ${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 작업일 ${esc(c.work_date || '미정')}</p></div>${btn('acomp', c.id, '완료 요청 대신 보내기', 'a')}</div>`).join('')}</section>`);
+      }
+    } catch (_) {}
+  };
+  ACT.acomp = (id, el) => {
+    if (!confirmBox(el)) return;
+    busy(el, async () => { await rpc('start_completion', { p_contract:+id }); await load('con'); render(); toast(`완료 요청을 보냈어요. 고객이 확인하지 않아도 ${S.autoH}시간 뒤 자동 확정돼요.`); });
+  };
+
+  /* 관리자 요청 상세: 계약 정보 */
+  const _areq = areqModal;
+  areqModal = function (id) {
+    _areq(id);
+    try {
+      const c = conOfReq(+id), body = document.getElementById('mm-body'); if (!c || !body) return;
+      const close = body.querySelector('[data-mclose].' + B.s.split(' ')[0]) || [...body.querySelectorAll('[data-mclose]')].pop();
+      const box = `<div class="mt-5 rounded-2xl border-2 border-sea/15 bg-ice p-4 text-sm"><p class="font-bold">🤝 계약 정보 · ${conCode(c.id)}</p>
+        <dl class="mt-2 grid grid-cols-[84px_1fr] gap-y-1.5"><dt class="text-sea/60">기사님</dt><dd class="font-bold">${esc(c.provider_name || '')}</dd><dt class="text-sea/60">계약 금액</dt><dd class="font-bold">${won(c.price)}${c.final_price != null ? ` → 최종 ${won(c.final_price)}` : ''}</dd>
+        <dt class="text-sea/60">작업일</dt><dd class="font-bold">${esc(c.work_date || '미정')}</dd><dt class="text-sea/60">상태</dt><dd class="font-bold">${CST(c)}</dd><dt class="text-sea/60">수수료</dt><dd class="font-bold">${feeTxt(c)}</dd></dl>
+        ${overdue(c) ? `<div class="mt-3">${btn('acomp', c.id, '완료 요청 대신 보내기', 'a')}</div>` : ''}</div>`;
+      if (close && close.parentElement) close.parentElement.insertAdjacentHTML('beforebegin', box); else body.insertAdjacentHTML('beforeend', box);
+    } catch (_) {}
+  };
+
+  /* 고객: 기사님이 완료 요청을 안 눌러도 '작업 끝났어요'로 직접 확정 */
+  const _cfin = ACT.cfin;
+  ACT.cfin = async (id, el) => {
+    const c = S.con.find(x => x.id === +id);
+    if (c && c.kind === 'service' && c.status === 'confirmed' && c.client_id === me()) {
+      try { await rpc('start_completion', { p_contract:c.id }); await load('con'); }
+      catch (e) { return toast(errMsg(e)); }
+    }
+    return _cfin(id, el);
+  };
+  const _custMenu = custMenu;
+  custMenu = function (keep) {
+    _custMenu(keep);
+    try {
+      S.con.filter(c => c.client_id === me() && overdue(c)).forEach(c => {
+        const r = document.querySelector(`#mm-body [data-act="rcpt"][data-id="${c.id}"]`);
+        if (r && !document.getElementById('hy-done-' + c.id)) r.insertAdjacentHTML('beforebegin', `<span id="hy-done-${c.id}" class="w-full rounded-xl bg-brand-50 p-3 text-sm"><b>작업이 끝났나요?</b> 결제한 금액을 확인하고 거래를 확정해 주세요. 확정하면 무상 A/S 보증서가 발급돼요.<span class="mt-2 block">${btn('cfin', c.id, '✅ 작업 끝났어요 · 거래 확정', 'a')}</span></span>`);
+      });
+    } catch (_) {}
+  };
+  /* ---------- 8) 관리자 요청 목록: 계약 성사 / 거래 완료 구분 · 성사 기사님 ---------- */
+  const conOfR = r => conOfReq(r.id);
+  const rstate = r => { const c = conOfR(r); if (r.status === 'matched' || c) return c && c.status === 'completed' ? 'fin' : 'done'; return r.status !== 'open' ? 'closed' : reqQs(r.id).length ? 'got' : 'wait'; };
+  RST.done = ['계약 성사', 'bg-sea text-white']; RST.fin = ['거래 완료', 'bg-emerald-600 text-white'];
+  const conStep = c => !c ? '' : c.status === 'completed' ? `거래 완료 · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제' : ' 차감'}` : c.status === 'pending' ? `완료 확인 대기 · 자동 확정까지 ${hms(remainMs(c))}` : '작업 진행 중 · 완료 요청 전';
+  reqBoard = function () {
+    const R = S.adminReq, t0 = T0(), wk = Date.now() - 7 * 24 * HR;
+    const today = R.filter(r => +new Date(r.created_at) >= t0).length, week = R.filter(r => +new Date(r.created_at) >= wk);
+    const late = R.filter(r => rstate(r) === 'wait' && Date.now() - new Date(r.created_at) > 2 * HR);
+    const stuck = S.con.filter(overdue);
+    const rate = week.length ? Math.round(week.filter(r => ['done', 'fin'].includes(rstate(r))).length / week.length * 100) : 0;
+    const cnt = k => k === 'ALL' ? R.length : R.filter(r => rstate(r) === k).length;
+    const list = (RF === 'ALL' ? R : R.filter(r => rstate(r) === RF)).slice(0, 200);
+    const byGu = {}; week.forEach(r => byGu[r.gu] = (byGu[r.gu] || 0) + 1);
+    const bySvc = {}; week.forEach(r => bySvc[r.service] = (bySvc[r.service] || 0) + 1);
+    const top = (o, f) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, n]) => `<span class="rounded-full bg-ice px-2.5 py-1 text-xs font-bold">${esc(f(k))} ${n}</span>`).join(' ') || '<span class="text-xs text-sea/50">아직 없어요</span>';
+    const mini = (t, v, hot) => `<div class="rounded-2xl ${hot ? 'bg-sun/10 ring-2 ring-sun/40' : 'bg-ice'} p-3"><p class="text-xs text-sea/60">${t}</p><p class="mt-0.5 font-display text-2xl tabular-nums ${hot ? 'text-sun' : ''}">${v}</p></div>`;
+    const row = r => { const s = rstate(r), st = RST[s], n = reqQs(r.id).length, c = conOfR(r), cu = custOf(r), isLate = s === 'wait' && Date.now() - new Date(r.created_at) > 2 * HR;
+      return `<button type="button" data-act="areq" data-id="${r.id}" class="grid w-full grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 border-b border-mist px-2 py-3 text-left hover:bg-ice sm:grid-cols-[92px_1.4fr_1fr_100px_90px_130px]">
+        <span class="hidden text-xs text-sea/60 sm:block"><b class="block text-sea">${reqCode(r.id)}</b>${ago(r.created_at)}</span>
+        <span class="min-w-0"><b class="block truncate">${esc(svcOf(r) || r.service)}${r.target_pro ? ' <span class="text-xs text-sun">지정</span>' : ''}${(r.photos || []).length ? ' <span class="text-xs text-sea/50">📷' + r.photos.length + '</span>' : ''}</b><span class="block truncate text-xs text-sea/60 sm:hidden">${reqCode(r.id)} · ${ago(r.created_at)} · ${esc(place(r.gu))} · 희망 ${esc(r.wish_date || '-')}</span>${c ? `<span class="block truncate text-xs font-bold text-brand">🤝 ${esc(c.provider_name)} · ${won(c.final_price != null ? c.final_price : c.price)}</span>` : ''}</span>
+        <span class="hidden truncate text-sm sm:block">${esc(place(r.gu))}${r.to_gu ? ' → ' + esc(r.to_gu) : ''}</span>
+        <span class="hidden text-sm tabular-nums sm:block">${esc(r.wish_date || '-')}</span>
+        <span class="hidden truncate text-sm sm:block">${esc(cu.name || '고객')}</span>
+        <span class="row-span-2 flex flex-col items-end gap-1 sm:row-span-1"><span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}${!c && n ? ' ' + n : ''}</span>${c ? `<span class="text-right text-[11px] font-bold ${c.status === 'confirmed' ? 'text-sun' : 'text-sea/60'}">${c.status === 'completed' ? '수수료 ' + won(c.fee) : c.status === 'pending' ? '완료 확인 대기' : '완료 요청 전'}</span>` : ''}${isLate ? '<span class="text-[11px] font-bold text-red-600">2시간+ 무응답</span>' : ''}</span></button>`; };
+    const fchip = (k, t) => `<button type="button" data-act="rfilt" data-id="${k}" aria-pressed="${RF === k}" class="${chipCls(RF === k)}">${t} ${cnt(k)}</button>`;
+    return `<section class="mt-8 rounded-3xl border-2 border-cool/30 bg-white p-5 sm:p-6"><div class="flex flex-wrap items-baseline justify-between gap-2"><h2 class="text-xl font-bold">고객 견적 요청 한눈에 보기</h2><span class="text-xs text-sea/50">줄을 누르면 상세 내용 · 받은 견적 · 계약이 보여요</span></div>
+      <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">${mini('오늘 들어온 요청', today + '건')}${mini('최근 7일 요청', week.length + '건')}${mini('견적 0건 · 2시간 넘음', late.length + '건', late.length > 0)}${mini('작업일 지났는데 완료 요청 없음', stuck.length + '건', stuck.length > 0)}${mini('7일 계약 성사율', rate + '%')}</div>
+      <div class="mt-3 grid gap-2 text-sm sm:grid-cols-2"><p><b class="mr-1 text-xs text-sea/60">많이 찾는 지역(7일)</b> ${top(byGu, place)}</p><p><b class="mr-1 text-xs text-sea/60">많이 찾는 서비스(7일)</b> ${top(bySvc, k => SVC[k] || k)}</p></div>
+      <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="요청 상태 필터">${fchip('wait', '견적 대기')}${fchip('got', '견적 받음')}${fchip('done', '계약 성사')}${fchip('fin', '거래 완료')}${fchip('closed', '마감·취소')}${fchip('ALL', '전체')}</div>
+      <div class="mt-3 hidden grid-cols-[92px_1.4fr_1fr_100px_90px_130px] gap-3 border-b-2 border-mist px-2 pb-2 text-xs font-bold text-sea/60 sm:grid"><span>번호·접수</span><span>서비스 · 성사 기사님</span><span>지역</span><span>희망일</span><span>고객</span><span class="text-right">상태</span></div>
+      <div class="max-h-[520px] overflow-y-auto">${list.map(row).join('') || `<div class="mt-3">${empty(RF === 'wait' ? '견적을 기다리는 요청이 없어요. 👍' : '해당하는 요청이 없어요.')}</div>`}</div></section>`;
+  };
+  const _areq2 = areqModal;
+  areqModal = function (id) {
+    _areq2(id);
+    try { const r = S.adminReq.find(x => x.id === +id), b = document.querySelector('#mm-body span.rounded-full'); if (r && b) { const st = RST[rstate(r)]; b.textContent = st[0]; b.className = `rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}`; } } catch (_) {}
+  };
 })();
