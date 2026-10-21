@@ -428,7 +428,7 @@ async function socialCheck() {
 }
 const SOC_STYLE = { kakao:'bg-[#FEE500] text-[#191919]', naver:'bg-[#03C75A] text-white', google:'border-2 border-mist bg-white text-sea' };
 const SOC_ICON = { kakao:'<svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>', naver:'<svg viewBox="0 0 24 24" class="h-4 w-4" aria-hidden="true"><path fill="currentColor" d="M16.3 12.8 7.4 0H0v24h7.7V11.2L16.6 24H24V0h-7.7z"/></svg>', google:'G' };
-function saveAuth() { specRead(au, 'au'); ['name', 'email', 'pw', 'pw2', 'biz'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const cs = [...document.querySelectorAll('.au-c')]; if (cs.length) au.agree = cs.every(c => c.checked); }
+function saveAuth() { specRead(au, 'au'); ['name', 'email', 'pw', 'pw2', 'biz'].forEach(k => { const el = $('#au-' + k); if (el) au.v[k] = el.value; }); const cs = [...document.querySelectorAll('.au-c')]; if (cs.length) au.agree = cs.every(c => c.checked); const mk = $('#au-mkt'); if (mk) au.mkt = mk.checked; }
 function authModal(tab, type) { if (!sb) return toast('사이트 설정(config.js)이 아직 끝나지 않았어요.'); if (tab) au.tab = tab; if (type) au.type = type; renderAuth(); if (!SOC.length) socialCheck(); }
 const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격증 · 장비 보유 <span class="text-xs font-normal text-sea/60">(선택)</span></p>
   <div id="${act}-chips" class="mt-2 flex flex-wrap gap-1.5">${[...CERTS, ...[...set].filter(c => !CERTS.includes(c))].map(c => chip(act, c, set.has(c))).join('')}</div>
@@ -468,6 +468,7 @@ function renderAuth() {
           <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] 개인정보 제3자 제공에 동의 <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">제공받는 자: 견적 요청 시 승인된 기사 회원, 계약·장터 거래 시 거래 상대방 회원<br>목적: 견적 작성, 작업·거래 진행, 일정 조율, 14일 재점검<br>항목: 견적 요청 내용(지역·희망일·요청사항·사진), 이름(닉네임)·상호, 거래 내용, 채팅 내용 (전화번호·이메일은 제공하지 않음)<br>기간: 거래 종료(재점검 기간 포함) 시까지<br>동의를 거부할 수 있으나, 거부하면 중개 서비스를 이용할 수 없어요.</span></details></span></label>
         </div>
       </div>
+      <label class="mt-2 flex items-start gap-2 rounded-2xl border border-mist p-3 text-sm text-sea/80"><input id="au-mkt" type="checkbox" class="mt-1 h-4 w-4"${au.mkt ? ' checked' : ''}><span>[선택] 이벤트·혜택 알림 받기 (앱 알림·이메일) <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">목적: 할인·이벤트·새 서비스 등 광고성 정보 안내<br>항목: 이메일 주소, 앱 알림 수신 정보, 동의 일시<br>기간: 동의 철회 또는 회원 탈퇴 시까지 (2년마다 수신 여부를 다시 확인해요)<br>동의하지 않아도 가입과 서비스 이용에 제한이 없어요. ☰ 메뉴에서 언제든 끌 수 있어요.</span></details></span></label>
       ${au.type === 'pro' ? asBox('au-as') : ''}
       ${errBox()}${btn('asignup', '', '가입하기', 'a', 'mt-2 w-full')}`));
   menuCur = 'auth';
@@ -508,6 +509,7 @@ async function asignup(el) {
   if (err) return setErr(err);
   await busy(el, async () => {
     const data = { name, role:au.type };
+    if (au.mkt) data.marketing = true;
     if (pro) { const be = await bizCheck(bizDigits(v.biz)); if (be) return setErr(be); data.as_agree = true; data.biz_no = bizDigits(v.biz); }
     if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
@@ -735,13 +737,21 @@ function delCard() {
     ${DL.map(d => `<div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-4 py-3 text-sm"><div><b>${esc(d.name || '이름 없음')}</b> · ${esc(d.email || '')} · ${d.role === 'pro' ? '기사' : '고객'}<p class="text-xs text-sea/60">${esc(new Date(d.delete_req).toLocaleString('ko-KR'))} 신청${d.biz_no ? ` · 사업자 ${esc(bizFmt(d.biz_no))}` : ''}${(d.blockers || []).length ? ` · <b class="text-sun">${d.blockers.map(b => esc(b.text)).join(', ')}</b>` : d.open_deals ? ` · <b class="text-sun">처리할 건 ${d.open_deals}건</b>` : ''}${d.balance ? ` · 예치금 ${won(d.balance)}` : ''}</p></div>
       ${d.open_deals ? '<span class="text-xs font-bold text-sea/50">끝난 뒤 처리 · 예치금 환불 보류</span>' : btn(d.balance ? 'deldone2' : 'deldone', d.id, d.balance ? '환불했어요 · 탈퇴 처리' : '탈퇴 처리', 's')}</div>`).join('')}</section>`;
 }
+let MKT = null;
+async function mktPaint() { const el = $('#mkt-st'); if (!el) return; try { if (MKT === null) MKT = await rpc('my_marketing'); } catch (_) { MKT = { on:false, err:true }; } const on = MKT && MKT.on; el.textContent = MKT && MKT.err ? '준비 중' : on ? '받는 중' : '받지 않음'; el.className = `rounded-full px-2.5 py-0.5 text-xs ${on ? 'bg-brand text-white' : 'bg-ice text-sea/60'}`; }
+async function mktToggle(el) {
+  if (MKT && MKT.err) return toast('잠시 후 다시 시도해 주세요.');
+  const next = !(MKT && MKT.on);
+  await busy(el, async () => { MKT = await rpc('set_marketing', { p_on:next }); mktPaint(); toast(next ? `${new Date().toLocaleDateString('ko-KR')} 이벤트·혜택 알림 수신에 동의했어요.` : `${new Date().toLocaleDateString('ko-KR')} 이벤트·혜택 알림 수신을 거부했어요.`); });
+}
 function navMenu() {
   const it = (attrs, t, cls = '') => `<button type="button" ${attrs} class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice ${cls}">${t}<span class="text-sea/30" aria-hidden="true">›</span></button>`;
   openM(head('전체 메뉴') + `<div class="-mx-2 divide-y divide-mist">
     <div class="py-1">${it('data-act="qopen0"', '⚡ 무료 견적 요청', 'text-brand')}${it('data-act="pros"', '기사님 찾기', 'text-cyan-600')}${it('data-act="mkt"', '중고마켓', 'text-emerald-600')}${it('data-act="gopro"', '기사님 등록', 'text-sun')}</div>
     <div class="py-1">${it('data-act="navgo" data-id="#process"', '이용 방법')}${it('data-act="guarantee"', '14일 재점검 안심 보장')}${it('data-act="cs"', '고객센터')}</div>
-    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
+    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? `<button type="button" data-act="mktgo" class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>` : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
     ${S.user ? `<p class="mt-3 px-2 text-xs text-sea/50">${esc((S.profile && S.profile.name) || S.user.email || '')}님으로 로그인 중</p>` : ''}`);
+  if (S.user) mktPaint();
 }
 function sellOpen() { if (S.mode === 'customer' && S.view !== 'market') openMarket(); sellModal('normal'); }
 function openPros() { closeM(); if (S.mode !== 'customer') S.mode = 'customer', updateAuthUI(); showView('pros'); renderPros(); }
@@ -2241,6 +2251,7 @@ const ACT = {
   pblockgo: (id, el) => busy(el, async () => { await rpc('admin_block_pro', { p_user:id, p_reason:$('#blk-why').value.trim() }); closeM(); await load('adminPros'); loadArc(true); render(); toast('차단했어요. 이 사업자등록번호로는 다시 가입할 수 없어요.'); }),
   bunblock: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_unblock_biz', { p_biz:id }); loadArc(true); toast('차단을 해제했어요.'); }); },
   adoc: id => openBizDoc(id), bnsave: (id, el) => bnSave(el),
+  mktgo: (id, el) => mktToggle(el),
   preject: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_set_approval', { p_pro:id, p_approve:false }, '반려(정지)했어요.', ['adminPros', 'prosPub', 'aud']); },
   chgok: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_handle_charge', { p_charge:+id, p_approve:true }, '충전을 승인했어요.', ['chg', 'led', 'adminPros', 'aud']); },
   chgno: (id, el) => adminSimple(el, 'admin_handle_charge', { p_charge:+id, p_approve:false }, '충전 신청을 반려했어요.', ['chg', 'aud'])
