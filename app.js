@@ -1649,7 +1649,7 @@ async function tossWidgetInit() {
     await Promise.all([tossW.renderPaymentMethods({ selector:'#toss-methods', variantKey:'DEFAULT' }), tossW.renderAgreement({ selector:'#toss-agree', variantKey:'AGREEMENT' })]);
   } catch (e) { console.warn('toss widget', e); setErr('결제 화면을 불러오지 못했어요. 잠시 후 다시 열어 주세요.'); }
 }
-const tossBlock = () => TOSS_WIDGET ? `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
+const tossBlock = () => TOSS_WIDGET ? `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>${C.TOSS_NOTE ? `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm font-semibold leading-relaxed text-sea">💳 ${esc(C.TOSS_NOTE)}</p>` : ''}
   <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[5000, 10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
   <div id="toss-methods" class="mt-3"></div><div id="toss-agree"></div>${errBox()}
   <div class="mt-3">${btn('tosspay', '', '결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">결제 영수증은 토스페이먼츠에서 발급돼요. 예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>` : `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>

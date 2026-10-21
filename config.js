@@ -16,6 +16,8 @@ window.HY_CONFIG = {
   // 토스페이먼츠 클라이언트 키 (넣으면 카드·간편결제·계좌이체로 바로 충전, 비워 두면 아래 계좌 입금 방식)
   // 토스페이먼츠 개발자센터 → API 키 → 한여름 상점 '결제위젯 연동 키'의 클라이언트 키 (test_gck_... → 심사 후 live_gck_...)
   TOSS_CLIENT_KEY: 'live_gck_Z61JOxRQVE1qJYLpQA50VW0X9bAq',
+  // 결제창 위 안내 문구 (카드사 심사가 모두 끝나면 '' 로 비우면 사라져요)
+  TOSS_NOTE: '지금은 신한·농협·우리 카드로만 결제돼요. 다른 카드사와 간편결제(토스페이 등)는 카드사 심사가 끝나면 열려요.',
 
   // 토스 테스트 키를 쓰는 동안 결제창이 보이는 심사용 테스트 계정 이메일 (Supabase Secrets의 TOSS_TEST_EMAIL과 같게)
   TOSS_TEST_EMAIL: 'abcqwer7734@naver.com',
