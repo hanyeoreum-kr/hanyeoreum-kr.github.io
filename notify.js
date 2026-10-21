@@ -94,7 +94,7 @@
   walletModal = function (keep) {
     _wallet(keep);
     try {
-      if (!tossOn() || document.getElementById('card-help')) return;
+      if (document.getElementById('card-help')) return;
       const b = document.querySelector('#mm-body [data-act="tosspay"]');
       if (b && b.parentElement) b.parentElement.insertAdjacentHTML('afterend', cardHelp());
     } catch (_) {}
