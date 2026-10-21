@@ -141,4 +141,31 @@
       render(); toast(`${won(amt)}을 예치금에 넣었어요.`);
     });
   };
+  /* ---------- 5) 안심 채팅: 위쪽에 고객 요청 내용(이름·사진·요청사항) 보여주기 ---------- */
+  let reqCardOpen = true;
+  const reqsOfThread = t => {
+    const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null;
+    if (c && c.request_id) { const r = S.req.find(x => x.id === c.request_id) || S.adminReq.find(x => x.id === c.request_id); return r ? [r] : []; }
+    const quoted = id => S.quo.some(q => q.request_id === id && q.pro_id === t.u2);
+    return S.req.filter(r => r.customer_id === t.u1 && r.status !== 'closed')
+      .sort((a, b) => (quoted(b.id) - quoted(a.id)) || b.id - a.id).slice(0, 2);
+  };
+  const reqCard = (t, rs) => `<details id="chat-req" class="mt-3 rounded-2xl border-2 border-brand-200 bg-brand-50 p-3"${reqCardOpen ? ' open' : ''}>
+    <summary class="cursor-pointer text-sm font-bold">📋 고객 요청 내용 · ${esc(t.u1_name || '고객')} 고객님</summary>
+    ${rs.map(r => `<div class="mt-2 rounded-xl bg-white p-3 text-sm">
+      <p class="font-bold">${esc(svcOf(r) || '')} · ${reqWhere(r)} <span class="text-xs font-normal text-sea/60">${reqCode(r.id)} · 희망일 ${esc(r.wish_date || '-')}</span></p>
+      <p class="mt-1 whitespace-pre-wrap leading-relaxed">${esc(r.details) || '<span class="text-sea/50">요청사항 없음</span>'}</p>
+      ${(r.photos || []).filter(isPhotoUrl).length ? `<div class="mt-2 flex flex-wrap gap-2">${r.photos.filter(isPhotoUrl).map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="고객 사진 ${i + 1}" loading="lazy" class="h-16 w-16 rounded-lg object-cover"></a>`).join('')}</div><p class="mt-1 text-[11px] text-sea/50">사진을 누르면 크게 보여요</p>` : ''}</div>`).join('')}</details>`;
+  const _chat = chatModal;
+  chatModal = async function (tid, keep) {
+    await _chat(tid, keep);
+    try {
+      const t = S.thr.find(x => x.id === +tid), box = document.getElementById('chatbox');
+      if (!t || !box || document.getElementById('chat-req')) return;
+      const rs = reqsOfThread(t); if (!rs.length) return;
+      box.insertAdjacentHTML('beforebegin', reqCard(t, rs));
+      const d = document.getElementById('chat-req');
+      d.addEventListener('toggle', () => { reqCardOpen = d.open; });
+    } catch (_) {}
+  };
 })();
