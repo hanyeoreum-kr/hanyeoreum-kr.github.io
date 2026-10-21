@@ -318,4 +318,79 @@
     _areq2(id);
     try { const r = S.adminReq.find(x => x.id === +id), b = document.querySelector('#mm-body span.rounded-full'); if (r && b) { const st = RST[rstate(r)]; b.textContent = st[0]; b.className = `rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}`; } } catch (_) {}
   };
+  /* ---------- 9) 거래 확정은 고객만 (기사님은 '작업 완료 요청'까지) ---------- */
+  const proSvc = c => c && c.kind === 'service' && c.provider_id === me() && c.client_id !== me();
+  const _cfin9 = ACT.cfin;
+  ACT.cfin = (id, el) => {
+    const c = S.con.find(x => x.id === +id);
+    if (proSvc(c)) {
+      openM(head('거래 확정은 고객님이 해요') + `<p class="leading-relaxed text-sea/80">작업이 끝났다면 <b>[작업 완료 요청]</b>을 눌러 주세요. 고객님이 <b>실제 결제한 금액</b>을 확인하고 거래를 확정해요.</p>
+        <p class="mt-2 text-sm text-sea/60">고객님이 확인하지 않으면 ${S.autoH}시간 뒤 자동 확정돼요.</p>
+        <div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${c.status === 'confirmed' ? wbtn('done', c.id, '작업 완료 요청') : ''}</div>`);
+      return;
+    }
+    return _cfin9(id, el);
+  };
+  const stripProFin = () => document.querySelectorAll('#mm-body [data-act="cfin"]').forEach(b => { if (proSvc(S.con.find(x => x.id === +b.dataset.id))) b.remove(); });
+  const _proMenu9 = proMenu;
+  proMenu = function (keep) { _proMenu9(keep); try { stripProFin(); } catch (_) {} };
+  const _chat9 = chatModal;
+  chatModal = async function (tid, keep) { await _chat9(tid, keep); try { stripProFin(); } catch (_) {} };
+
+  /* ---------- 10) 관리자: 최종 금액 정정 (수수료 차액 자동 차감·환급) ---------- */
+  const fixPct = c => { const base = c.final_price != null ? c.final_price : c.price; return base > 0 ? Math.round((c.fee - 3500) * 100 / base) : 10; };
+  const _adminView10 = adminView;
+  adminView = function () {
+    _adminView10();
+    try {
+      if (!S.admin || document.getElementById('fix-open')) return;
+      const h = [...document.querySelectorAll('#pview h2')].find(x => x.textContent.trim() === '최근 계약'); if (!h) return;
+      h.insertAdjacentHTML('afterend', `<div id="fix-open" class="mt-2 flex flex-wrap items-center gap-2 rounded-2xl bg-ice p-3 text-sm"><span class="min-w-0 flex-1 text-sea/70">견적보다 실제 금액이 컸는데 견적 금액으로 확정된 거래는 최종 금액을 고치면 <b>수수료 차액이 기사님 예치금에서 자동으로 빠져요.</b></span>${btn('fixopen', '', '✏️ 최종 금액 정정', 'a')}</div>`);
+    } catch (_) {}
+  };
+  ACT.fixopen = () => {
+    const list = S.con.filter(c => c.kind === 'service' && c.status === 'completed' && !c.fee_waived && +c.fee_ver === 2).slice(0, 60);
+    const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
+    openM(head('최종 금액 정정') + (list.length ? `<p class="text-sm leading-relaxed text-sea/70">고객님이 실제로 결제한 금액을 넣으면, 그 기사님 등급 %로 수수료를 다시 계산해서 <b>차액만</b> 예치금에서 빼거나 돌려줘요.</p>
+      <label for="fx-con" class="block mt-4 text-sm font-bold">계약</label>
+      <select id="fx-con" class="${inp}">${list.map(c => `<option value="${c.id}">${conCode(c.id)} · ${esc(SVC[c.service] || '')} · ${esc(c.provider_name)} · 확정 ${won(c.final_price != null ? c.final_price : c.price)} · 수수료 ${won(c.fee)}</option>`).join('')}</select>
+      <label for="fx-amt" class="block mt-4 text-sm font-bold">실제 결제 금액 (원)</label>${moneyInp('fx-amt', '', inp)}
+      <label for="fx-why" class="block mt-4 text-sm font-bold">정정 사유</label><input id="fx-why" maxlength="100" placeholder="예) 고객 확인 결과 실제 15만 원 결제" class="${inp}">
+      <p id="fx-pre" class="mt-3 rounded-xl bg-brand-50 p-3 text-sm font-bold text-brand"></p>${errBox()}
+      <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('fixgo', '', '정정하기')}</div>` : empty('정정할 수 있는 확정 거래가 없어요.')));
+    menuCur = 'fix';
+    const pre = () => { const c = S.con.find(x => x.id === +($('#fx-con') || {}).value), v = moneyVal('#fx-amt'), el = $('#fx-pre'); if (!el || !c) return;
+      if (!v) { el.textContent = `지금: 확정 금액 ${won(c.final_price != null ? c.final_price : c.price)} · 수수료 ${won(c.fee)} (등급 ${fixPct(c)}%)`; return; }
+      const nf = 3500 + Math.round(v * fixPct(c) / 100), d = nf - c.fee; el.textContent = `새 수수료 ${won(nf)} (3,500원 + ${fixPct(c)}%) → ${d > 0 ? '기사님 예치금에서 ' + won(d) + ' 추가 차감' : d < 0 ? '기사님께 ' + won(-d) + ' 돌려줌' : '차액 없음'}`; };
+    ['#fx-con', '#fx-amt'].forEach(sel => { const e = $(sel); if (e) { e.addEventListener('input', pre); e.addEventListener('change', pre); } }); pre();
+  };
+  ACT.fixgo = (id, el) => {
+    const cid = +($('#fx-con') || {}).value, v = moneyVal('#fx-amt'), why = (($('#fx-why') || {}).value || '').trim();
+    if (!cid) return setErr('계약을 골라 주세요.');
+    if (!(v >= 1000)) return setErr('실제 결제 금액을 넣어 주세요.');
+    if (!why) return setErr('정정 사유를 적어 주세요. 기사님 문의 때 근거가 돼요.');
+    if (!confirmBox(el)) return;
+    busy(el, async () => {
+      const r = await rpc('admin_fix_final', { p_contract:cid, p_final:v, p_reason:why });
+      closeM(); await Promise.all(['con', 'led', 'inc', 'adminPros', 'aud'].map(load)); render();
+      toast(r && r.diff ? (r.diff > 0 ? `수수료 ${won(r.diff)}를 추가로 차감했어요.` : `수수료 ${won(-r.diff)}를 돌려줬어요.`) : '최종 금액을 정정했어요.');
+    });
+  };
+  /* ---------- 11) 작업 완료 요청 → 손님에게 '작업 완료 확인 요청' 알림톡 ---------- */
+  const askConfirm = cid => { const c = S.con.find(x => x.id === +cid); if (sb && c && c.status === 'pending') sb.functions.invoke('alimtalk', { body:{ contract_id:+cid } }).catch(() => {}); };
+  ['done', 'acomp'].forEach(k => { const f = ACT[k]; if (!f) return; ACT[k] = async (id, el) => { await f(id, el); setTimeout(() => askConfirm(id), 900); }; });
+
+  /* 카톡 버튼(?my=1)으로 들어오면: 로그인 후 '내 요청 관리'를 바로 열어요 */
+  (() => {
+    let q; try { q = new URLSearchParams(location.search); } catch (_) { return; }
+    if (!q.has('my')) return;
+    q.delete('my'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash);
+    const t0 = Date.now(); let asked = false;
+    const tick = () => {
+      if (S.user) { if (S.mode !== 'customer') setMode('customer'); setTimeout(() => custMenu(), 300); return; }
+      if (!asked && Date.now() - t0 > 2500) { asked = true; toast('로그인하면 거래 확정 화면이 바로 열려요.'); authModal('login'); }
+      if (Date.now() - t0 < 180000) setTimeout(tick, 700);
+    };
+    setTimeout(tick, 800);
+  })();
 })();
