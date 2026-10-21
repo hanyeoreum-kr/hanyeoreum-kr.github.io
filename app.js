@@ -128,8 +128,19 @@ const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold te
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
 const flat = code => /^(aircon|heat|kitchen|clean|home)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
-const calcFee = (code, price) => ['freezer_removal', 'freezer_stock'].includes(code) ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
-const feeNote = code => ['freezer_removal', 'freezer_stock'].includes(code) ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
+/* 기사 등급제 (2026-11-21 성사 거래부터: 3,500원 + 최종 금액 × 등급 %) */
+const GRADES = { sprout:{ e:'🐣', n:'새싹', pct:10, c:'bg-lime-50 text-lime-700', need:'처음 시작하는 기사님' }, eagle:{ e:'🦅', n:'우수', pct:7, c:'bg-sky-50 text-sky-700', need:'완료 10건 이상 · 평점 4.5 이상' }, crown:{ e:'👑', n:'베스트', pct:5, c:'bg-amber-50 text-amber-700', need:'완료 30건 이상 · 평점 4.8 이상' } };
+const gradeOf = p => GRADES[(p && p.grade) || 'sprout'] || GRADES.sprout;
+const gbadge = p => { const g = gradeOf(p); return `<span class="rounded-full ${g.c} px-2 py-0.5 text-[11px] font-bold">${g.e} ${g.n} 기사님</span>`; };
+const V2_DEFAULT = Date.parse('2026-11-21T00:00:00+09:00');
+const v2On = () => Date.now() >= ((typeof S !== 'undefined' && S.v2From) || V2_DEFAULT);
+const v2Day = () => { const d = new Date((typeof S !== 'undefined' && S.v2From) || V2_DEFAULT); return `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+const v2Me = () => v2On() || !!(typeof S !== 'undefined' && S.pro && S.pro.fee_v2_at);
+const feeOk = () => v2Me();
+const myPct = () => gradeOf(typeof S !== 'undefined' ? S.pro : null).pct;
+const gradeFee = (price, pct) => 3500 + Math.round((+price || 0) * pct / 100);
+const calcFee = (code, price) => ['freezer_sale', 'freezer_stock'].includes(code) ? 0 : v2Me() ? gradeFee(price, myPct()) : code === 'freezer_removal' ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
+const feeNote = code => ['freezer_sale', 'freezer_stock'].includes(code) ? '0원 (중고장터)' : v2Me() ? `3,500원 + 최종 금액의 ${myPct()}%` : code === 'freezer_removal' ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; if (/listings_years_check/i.test(m)) return '연식(4자리 연도) 저장 준비가 안 됐어요. 관리자: supabase_update.sql 을 실행해 주세요.'; if (/violates check constraint/i.test(m)) return '입력한 값 중 저장할 수 없는 값이 있어요. 숫자 칸을 다시 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
 
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3200); }
@@ -217,13 +228,14 @@ async function load(key) {
   if (!PUBLIC.includes(key) && !S.user) return;
   const { data, error } = await Q[key]();
   if (error) { console.warn(key, error.message); return; }
-  if (key === 'settings') { const a = (data || []).find(x => x.key === 'auto_hours'); if (a) S.autoH = +a.value || 24; return; }
+  if (key === 'settings') { const a = (data || []).find(x => x.key === 'auto_hours'); if (a) S.autoH = +a.value || 24; const v = (data || []).find(x => x.key === 'fee_v2_from'); if (v) S.v2From = Date.parse(v.value) || S.v2From; return; }
   if (key === 'pro') { S.pro = data || null; return; }
   if (key === 'profile') { S.profile = data || null; return; }
   if (key === 'myRev') { S.myRev = data || []; return; }
   if (key === 'adminReq') { S.adminReq = data || []; const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
     for (let i = 0; i < ids.length; i += 200) { const { data:ps } = await sb.from('profiles').select('id, name, email').in('id', ids.slice(i, i + 200)); (ps || []).forEach(p => S.custNm[p.id] = p); } return; }
-  if (key === 'prosPub') { S.prosPub = data || []; try { const ks = await rpc('pros_kinds_public'); const m = new Map((ks || []).map(x => [x.id, x.kinds])); S.prosPub.forEach(p => { if (!(p.kinds || []).length && m.get(p.id)) p.kinds = m.get(p.id); }); } catch (_) {} return; }
+  if (key === 'prosPub') { S.prosPub = data || []; try { const ks = await rpc('pros_kinds_public'); const m = new Map((ks || []).map(x => [x.id, x.kinds])); S.prosPub.forEach(p => { if (!(p.kinds || []).length && m.get(p.id)) p.kinds = m.get(p.id); }); } catch (_) {}
+    try { const gs = await rpc('pros_grades_public'); const gm = new Map((gs || []).map(x => [x.id, x])); S.prosPub.forEach(p => { const g = gm.get(p.id); if (g) { p.grade = g.grade; if (p.done == null) p.done = g.done; } }); } catch (_) {} return; }
   if (key === 'proPh') { S.proPh = Object.fromEntries((data || []).map(x => [x.id, x.url])); return; }
   S[key] = data || [];
 }
@@ -311,6 +323,16 @@ async function shareLink(el) {
   try { if (navigator.share) { await navigator.share({ title:'한여름 견적 요청', text, url }); return; } } catch (_) { return; }
   try { await navigator.clipboard.writeText(text); toast('링크를 복사했어요. 카톡에 붙여넣어 보내세요.'); } catch (_) { prompt('아래 링크를 복사하세요', url); }
 }
+const gradeCard = p => {
+  const g = gradeOf(p), key = (p && p.grade) || 'sprout', n = +p.rating_count || 0, avg = n ? (+p.rating_sum || 0) / n : 0, d = +p.done_count || 0;
+  const next = key === 'sprout' ? ['eagle', 10, 4.5] : key === 'eagle' ? ['crown', 30, 4.8] : null;
+  const goal = next ? `<p class="mt-2 text-sm text-sea/80">다음 등급 ${GRADES[next[0]].e} <b>${GRADES[next[0]].n}</b>까지: 완료 <b>${Math.max(0, next[1] - d)}건</b> 더${avg < next[2] || n < 3 ? ` · 평점 ${next[2]} 이상(후기 3개 이상)` : ''} <span class="text-xs text-sea/60">(지금 완료 ${d}건 · ${n ? '★ ' + avg.toFixed(1) + ' / 후기 ' + n + '개' : '후기 없음'})</span></p>` : '<p class="mt-2 text-sm font-bold text-amber-700">최고 등급이에요. 지금처럼만 유지해 주세요!</p>';
+  return `<section class="mt-6 rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 lg:p-6"><div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-xs font-black text-amber-700">내 기사 등급</p><p class="mt-1 text-2xl font-black">${g.e} ${g.n} 기사님</p></div>
+    <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-card"><p class="text-xs text-sea/60">${v2Me() ? '내 수수료' : '동의하면 내 수수료'}</p><p class="font-display text-xl">3,500원 + ${g.pct}%</p></div></div>${goal}
+    <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">${Object.entries(GRADES).map(([k, x]) => `<div class="rounded-xl ${k === key ? 'bg-sea text-white' : 'bg-white'} px-2 py-2"><p class="font-bold">${x.e} ${x.n}</p><p class="mt-0.5 ${k === key ? 'text-white/80' : 'text-sea/60'}">+${x.pct}%</p></div>`).join('')}</div>
+    ${v2Me() ? '' : `<p class="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-sea/80">📢 수수료가 <b>3,500원 + 최종 결제 금액 × 등급 %</b>로 바뀌었어요. <b>동의하면 바로 적용</b>되고 견적을 낼 수 있어요. 냉장·냉동 철거를 포함한 모든 서비스가 같은 방식이고, <b>중고장터 사고팔기와 내 손님 거래는 0원</b>이에요. <a href="pricing.html" target="_blank" rel="noopener" class="font-bold underline">자세히 보기</a></p>`}
+    <p class="mt-2 text-xs text-sea/60">등급 배지는 기사님 찾기·견적 비교·프로필에 표시되고, 우수·베스트 기사님은 추천순에서 더 위에 보여요.</p></section>`;
+};
 const rankCard = ks => {
   const meP = proPub(me()) || { rating_count:0, rating:0, done:0 };
   const peers = S.prosPub.filter(p => proKinds(p).some(k => ks.includes(k)));
@@ -481,6 +503,18 @@ const asBox = id => `<label class="mt-4 flex items-start gap-2 rounded-2xl borde
 const asOk = () => !!(S.pro && S.pro.as_agreed_at);
 async function agreeAs(el) {
   await busy(el, async () => { await rpc('agree_as', {}); await load('pro'); closeM(); render(); toast('동의가 저장됐어요. 이제 견적을 낼 수 있어요.'); });
+}
+function feeModal(qid) {
+  openM(head('새 수수료(기사 등급제) 동의') + `<p class="text-sm leading-relaxed text-sea/80">한여름 수수료가 <b>모든 분야 공통</b>으로 바뀌었어요. 동의하면 <b>지금부터 성사되는 거래</b>에 적용되고, 바로 견적을 낼 수 있어요.</p>
+    <div class="mt-3 rounded-2xl bg-ice p-4 text-sm leading-relaxed"><p class="font-black">거래 확정 시 3,500원 + 최종 결제 금액 × 등급 %</p>
+    <ul class="mt-2 space-y-1">${Object.values(GRADES).map(g => `<li>${g.e} <b>${g.n}</b> ${g.pct}% <span class="text-xs text-sea/60">· ${g.need}</span></li>`).join('')}</ul>
+    <p class="mt-2 text-xs text-sea/70">· 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요 (상한 없음)<br>· 냉장·냉동 철거를 포함한 <b>모든 서비스</b>가 같은 방식 · <b>중고장터 사고팔기(재고 판매 포함)·내 손님 거래는 0원</b><br>· 이미 낸 견적이 동의 전에 성사되면 예전 수수료가 적용돼요</p></div>
+    <label class="mt-4 flex items-start gap-2 text-sm font-bold"><input id="fv-ck" type="checkbox" class="mt-1 h-4 w-4"><span>위 수수료와 <a href="terms.html#c4" target="_blank" rel="noopener" class="underline">개정 이용약관(제20조·제20조의2)</a>에 동의해요</span></label>${errBox()}
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('fvagree', qid || '', '동의하고 계속하기')}</div>
+    <p class="mt-3 text-xs text-sea/60">동의하지 않으면 새 견적은 낼 수 없고, 진행 중인 거래는 그대로 마무리할 수 있어요. 궁금한 점은 고객센터나 기사님 소통방으로 물어봐 주세요.</p>`);
+}
+async function agreeFee(el, qid) {
+  await busy(el, async () => { await rpc('agree_fee_v2', {}); await load('pro'); closeM(); render(); toast('동의가 저장됐어요. 이제 견적을 낼 수 있어요.'); if (qid) quoteModal(qid); });
 }
 function asModal() {
   openM(head('재점검·보완 보장 동의') + `<p class="text-sm leading-relaxed text-sea/80">한여름 고객에게는 거래 확정 후 <b>보증서</b>가 발급돼요. 견적을 내기 전에 아래 내용에 한 번만 동의해 주세요.</p>
@@ -894,7 +928,7 @@ function sellModal(kind) {
   if (kind === 'stock' && !approved()) return toast('승인된 기사·업체만 재고 판매글을 올릴 수 있어요.');
   sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false; sellCat = MK.cat || 'cold';
   const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
-  openM(head(sellKind === 'stock' ? '중고 재고 판매글 올리기' : '중고 설비 판매글 올리기') + `${sellKind === 'stock' ? '<p class="mb-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">거래가 확정되면 <b>거래금액의 5%(건당 최대 10만 원)</b>만 예치금에서 차감돼요.</p>' : '<p class="mb-4 rounded-xl bg-emerald-50 p-3 text-sm leading-relaxed">일반 판매는 <b>수수료 0원</b>이에요. 개인 구매자와 서울·경기 설비 업체가 함께 보는 공동 마켓이라 더 빨리 팔려요.</p>'}
+  openM(head(sellKind === 'stock' ? '중고 재고 판매글 올리기' : '중고 설비 판매글 올리기') + `${sellKind === 'stock' ? '<p class="mb-4 rounded-xl bg-emerald-50 p-3 text-sm leading-relaxed">중고장터 재고 판매는 <b>수수료 0원</b>이에요.</p>' : '<p class="mb-4 rounded-xl bg-emerald-50 p-3 text-sm leading-relaxed">일반 판매는 <b>수수료 0원</b>이에요. 개인 구매자와 서울·경기 설비 업체가 함께 보는 공동 마켓이라 더 빨리 팔려요.</p>'}
     <p class="text-sm font-bold">어떤 설비인가요?</p><div class="mt-2 mb-4 flex flex-wrap gap-1.5" role="group" aria-label="설비 분야">${Object.entries(MCAT).map(([k, v]) => `<button type="button" data-act="scat" data-id="${k}" aria-pressed="${sellCat === k}" class="rounded-full border-2 px-3 py-1.5 text-sm font-bold ${sellCat === k ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}">${v.n}</button>`).join('')}</div>
     <div class="grid grid-cols-2 gap-1 rounded-2xl bg-ice p-1" role="group" aria-label="판매 방식"><button type="button" data-act="smode" data-id="one" aria-pressed="true" class="rounded-xl py-3 text-sm font-bold bg-sea text-white">한 대만 팔기</button><button type="button" data-act="smode" data-id="bulk" aria-pressed="false" class="rounded-xl py-3 text-sm font-bold text-sea/60">여러 대 일괄 판매</button></div>
     <div id="bk-box" class="hidden mt-3 rounded-2xl border-2 border-sun/40 bg-sun/5 p-4"><p class="text-sm font-bold">파실 물건을 모두 담아 주세요</p><p class="mt-0.5 text-xs text-sea/60">폐업·리뉴얼 매장은 한 번에 올리면 매입 업체 연락이 더 빨라요.</p>
@@ -971,9 +1005,9 @@ async function lclose(el, lid) {
    ===================================================================== */
 const FS = { kind:'', gu:'', sort:'rating', free:false };
 /* 추천 점수: 후기 수가 가장 크게 반영 (평점 4점 이상일 때 후기 1개당 +0.06, 최대 50개) + 보정 평점 + 완료 건수 */
-const pscore = p => { if (!p) return 0; const n = +p.rating_count || 0, r = n ? +p.rating || 0 : 0; return (r * n + 20) / (n + 5) + Math.min(n, 50) * (r >= 4 ? 0.06 : 0.02) + Math.min(+p.done || 0, 100) * 0.01; };
+const pscore = p => { if (!p) return 0; const n = +p.rating_count || 0, r = n ? +p.rating || 0 : 0; return (r * n + 20) / (n + 5) + Math.min(n, 50) * (r >= 4 ? 0.06 : 0.02) + Math.min(+p.done || 0, 100) * 0.01 + (p.grade === 'crown' ? 0.4 : p.grade === 'eagle' ? 0.2 : 0); };
 const byScore = (a, b) => pscore(b) - pscore(a);
-const pbadges = p => `${p.biz_verified ? '<span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">사업자 인증</span>' : ''}${p.online === false ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">휴무</span>' : ''}`;
+const pbadges = p => `${gbadge(p)}${p.biz_verified ? '<span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">사업자 인증</span>' : ''}${p.online === false ? '<span class="rounded-full bg-sun/15 px-2 py-0.5 text-xs font-bold text-sun">휴무</span>' : ''}`;
 const prate = p => p.rating_count ? `★ ${(+p.rating).toFixed(1)} · 후기 ${p.rating_count}` : '신규 · 아직 후기가 없어요';
 const ptags = p => (p.fields || []).map(f => `<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">${esc(f)}</span>`).join('') + (p.free ? '<span class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand">무료 출장 견적</span>' : '');
 const cbadge = q => `<span class="rounded-full border border-sea/30 bg-white px-2.5 py-0.5 text-xs font-bold">${q.includes('장비') ? '🧰' : '🏅'} ${esc(q)}</span>`;
@@ -1025,6 +1059,9 @@ function proCard(p) {
       <span class="border-t border-mist pt-3 text-xs text-sub">활동 지역 ${(p.areas || []).slice(0, 4).join(' · ')}${(p.areas || []).length > 4 ? ` 외 ${p.areas.length - 4}곳` : ''}</span></button>
     <div class="mt-3 grid grid-cols-[1fr_1.4fr] gap-2">${p.id === me() ? '<p class="col-span-2 text-center text-xs text-sub">내 프로필이에요</p>' : `${btn('pchat', p.id, '안심 채팅', 's', 'py-2.5')}${btn('preq', p.id, '견적 요청', 'a', 'py-2.5')}`}</div></article>`;
 }
+const gradeNote = () => `<div class="rounded-3xl bg-gradient-to-r from-amber-50 to-sky-50 p-4 lg:col-span-2 lg:p-5"><p class="font-black">🏅 한여름 기사 등급</p>
+  <div class="mt-2 flex flex-wrap gap-1.5">${Object.values(GRADES).map(g => `<span class="rounded-full ${g.c} px-2.5 py-1 text-xs font-bold">${g.e} ${g.n} <span class="font-medium opacity-80">· ${g.need}</span></span>`).join('')}</div>
+  <p class="mt-2 text-xs leading-relaxed text-sub">한여름에서 <b>실제로 거래한 손님의 후기</b>와 완료 건수로만 올라가는 등급이에요. 배지를 보고 믿을 수 있는 기사님을 골라 보세요.</p></div>`;
 function renderPros() {
   let ps = S.prosPub.filter(p => KINDS[p.kind || 'aircon']);
   const kinds = [['', '전체'], ...Object.entries(KINDS).map(([k, v]) => [k, v.name])];
@@ -1036,7 +1073,7 @@ function renderPros() {
   if (FS.gu) ps = ps.filter(p => (p.areas || []).includes(FS.gu));
   ps.sort(FS.sort === 'reviews' ? (a, b) => b.rating_count - a.rating_count : FS.sort === 'done' ? (a, b) => (b.done || 0) - (a.done || 0) : FS.sort === 'new' ? (a, b) => T(b.created_at) - T(a.created_at) : byScore);
   $('#pcount').textContent = `${ps.length}명`;
-  $('#prows').innerHTML = ps.map(proCard).join('') || `<div class="lg:col-span-2">${empty(S.prosPub.length ? '조건에 맞는 기사님이 없어요. 필터를 바꿔 보세요.' : '아직 등록된 기사님이 없어요. 곧 만나요!')}</div>`;
+  $('#prows').innerHTML = gradeNote() + ps.map(proCard).join('') || `<div class="lg:col-span-2">${empty(S.prosPub.length ? '조건에 맞는 기사님이 없어요. 필터를 바꿔 보세요.' : '아직 등록된 기사님이 없어요. 곧 만나요!')}</div>`;
 }
 /* 홈: 3대 분야 카드 · 기사님 미리보기 */
 /* 홈 상단: 분야 6개 · 우리 동네 · 검색 */
@@ -1143,7 +1180,7 @@ function renderHome() {
   const hp = $('#home-pros'); if (!hp) return;
   const top = S.prosPub.filter(p => KINDS[p.kind || 'aircon']).sort(byScore).slice(0, 4);
   hp.innerHTML = top.length ? top.map(p => `<button type="button" data-act="pdet" data-id="${p.id}" class="w-44 shrink-0 rounded-2xl bg-white p-4 text-left shadow-card transition lg:w-auto lg:rounded-3xl lg:p-5 lg:hover:-translate-y-1">
-    ${proAvatar(p, 'h-12 w-12 text-base')}<b class="mt-3 block truncate">${esc(p.name)}</b><span class="block text-xs font-bold text-brand">${pkindLine(p)}</span>
+    ${proAvatar(p, 'h-12 w-12 text-base')}<b class="mt-3 block truncate">${esc(p.name)}</b><span class="mt-1 inline-block">${gbadge(p)}</span><span class="block text-xs font-bold text-brand">${pkindLine(p)}</span>
     <span class="mt-1 block text-sm">${p.rating_count ? `<b class="text-amber-500">★ ${(+p.rating).toFixed(1)}</b> <span class="text-xs text-sub">후기 ${p.rating_count}</span>` : '<span class="text-xs text-sub">신규 기사님</span>'}</span><span class="mt-1 block truncate text-xs text-sub">${esc((p.areas || []).slice(0, 2).join(' · '))}</span></button>`).join('')
     : `<div class="w-full rounded-2xl bg-white p-6 text-center text-sm text-sub shadow-card lg:col-span-4">기사님 모집 중이에요. 곧 만나요!</div>`;
 }
@@ -1321,7 +1358,7 @@ function compare(rid, keep) {
   const tb = (k, t) => `<button type="button" data-act="cmpsort" data-id="${k}" aria-pressed="${cmpSort === k}" class="rounded-full px-3 py-1.5 text-xs font-bold ${cmpSort === k ? 'bg-sea text-white' : 'bg-ice'}">${t}</button>`;
   openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${svcOf(r)} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
     (qs.map(q => { const p = proPub(q.pro_id) || { name:'기사', rating:0, rating_count:0 };
-      return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="font-bold">${esc(p.name)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
+      return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="flex flex-wrap items-center gap-1.5 font-bold">${esc(p.name)} ${gbadge(p)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
       <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}</p>
       <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pro_id, '프로필 보기', 's')}${r.status === 'open' ? btn('pick', q.id, '계약하기', 'a') : `<span class="text-sm font-bold">${QL[q.status]}</span>`}</div>`); }).join('') || `<div class="mt-3">${empty('아직 도착한 견적이 없어요.')}</div>`) + `<div class="mt-4">${btn('menu', '', '← 내 요청으로', 's')}</div>`, keep);
   menuCur = 'cmp';
@@ -1337,8 +1374,8 @@ function receipt(cid, fresh) {
   const c = S.con.find(x => x.id === +cid); if (!c) return;
   const svc = c.kind === 'service', provLabel = svc ? '담당 기사' : '판매자', cliLabel = svc ? '고객' : '구매자';
   openM(head('한여름 안심 작업 내역서') + `<div class="rounded-2xl bg-ice p-5"><p class="font-display text-xl text-cool">${conCode(c.id)}</p>
-    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.created_at))}${row(svc ? '서비스' : '품목', conTitle(c))}${row('지역', esc(place(c.gu)))}${row(provLabel, esc(c.provider_name))}${row(cliLabel, esc(c.client_name))}${c.work_date ? row(wdOf(c) + ' 예정일', esc(c.work_date)) : ''}${row('확정 금액', won(c.price))}
-    ${c.fee_payer === me() || S.admin ? row('수수료 (기사·업체 예치금에서 차감)', `${won(c.fee)} · ${esc(c.fee_label)}${c.fee_charged ? ' · 차감 완료' : ' · 거래 확정 시 차감'}`) : ''}${row('상태', c.status === 'completed' ? '거래 확정 (' + esc(c.method || '') + ')' : c.status === 'pending' ? '확정 대기' : '진행 중')}</dl></div>
+    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.created_at))}${row(svc ? '서비스' : '품목', conTitle(c))}${row('지역', esc(place(c.gu)))}${row(provLabel, esc(c.provider_name))}${row(cliLabel, esc(c.client_name))}${c.work_date ? row(wdOf(c) + ' 예정일', esc(c.work_date)) : ''}${row('견적 금액', won(c.price))}${c.final_price != null ? row('최종 결제 금액', won(c.final_price)) : ''}
+    ${c.fee_payer === me() || S.admin ? row('수수료 (기사·업체 예치금에서 차감)', `${+c.fee_ver === 2 && !c.fee_charged ? '예상 ' : ''}${won(c.fee)} · ${esc(c.fee_label)}${c.fee_charged ? ' · 차감 완료' : +c.fee_ver === 2 ? ' · 거래 확정 때 최종 금액으로 다시 계산해 차감' : ' · 거래 확정 시 차감'}`) : ''}${row('상태', c.status === 'completed' ? '거래 확정 (' + esc(c.method || '') + ')' : c.status === 'pending' ? '확정 대기' : '진행 중')}</dl></div>
     <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">💬 전화번호를 공개하지 않고 한여름 채팅으로 연락해요.${svc ? (isCleanSvc(c.service) ? '<br>거래 확정 후 <b>3일 이내</b> 미흡한 부분이 있으면 담당 기사님의 재방문 보완 청소를 신청할 수 있어요.' : '<br>작업 후 <b>14일 이내</b> 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 신청할 수 있어요.') : ''}</p>
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${wbtn('chatc', c.id, fresh ? '채팅방 열기' : '채팅방', 'p')}</div>`);
 }
@@ -1348,15 +1385,30 @@ function warrModal(cid, fresh) {
   openM(head('한여름 무상 A/S 전자 보증서') + `<div class="relative rounded-2xl border-2 border-sea/15 bg-ice p-5">
     <span class="absolute right-4 top-4 grid h-20 w-20 -rotate-12 place-items-center rounded-full border-2 border-sun text-center font-display text-sm leading-tight text-sun" aria-hidden="true">한여름<br>안심보증</span>
     <p class="font-display text-xl text-cool pr-24">${esc(c.warranty_no)}</p>
-    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.done_at))}${row('서비스', SVC[c.service])}${row('지역', esc(place(c.gu)))}${row('담당 기사', esc(c.provider_name))}${row('작업 금액', won(c.price))}${row('확정 방식', esc(c.method))}${row('보증 기간', `${fmtD(c.done_at)} ~ ${fmtD(c.warranty_until)} (${wDays(c)}일)`)}${row('작업 내역서', conCode(c.id))}</dl></div>
+    <dl class="mt-3 text-sm">${row('발급일', fmtD(c.done_at))}${row('서비스', SVC[c.service])}${row('지역', esc(place(c.gu)))}${row('담당 기사', esc(c.provider_name))}${row('작업 금액', won(c.final_price != null ? c.final_price : c.price))}${row('확정 방식', esc(c.method))}${row('보증 기간', `${fmtD(c.done_at)} ~ ${fmtD(c.warranty_until)} (${wDays(c)}일)`)}${row('작업 내역서', conCode(c.id))}</dl></div>
     <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">${isCleanSvc(c.service) ? '보증 기간 안에 <b>청소가 미흡한 부분</b>이 확인되면 담당 기사님이 <b>재방문해 무상으로 보완 청소</b>해요.' : '보증 기간 안에 <b>같은 증상</b>이 다시 생기면 담당 기사님이 <b>우선 방문해 무상으로 재점검</b>해요.'} <span class="font-bold text-cool">남은 기간 ${left}일</span><br><span class="text-xs text-sea/60">보증 범위는 작업 내역서에 적힌 작업과 같은 증상에 한해요.</span></p>
     ${w ? `<p class="mt-3 text-sm font-bold text-cool">재점검: ${RWL[w.status]}</p>` : ''}
     <div class="mt-4 flex flex-wrap gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${client && fresh && !v ? btn('rev', c.id, '후기 남기기', 's') : ''}${client && !w && left > 0 ? btn('rew', c.id, '무상 재점검 신청', 'a') : ''}</div>`);
 }
-async function confirmDeal(el, cid) {
+function finModal(c) {
+  openM(head('최종 결제 금액 확인') + `<p class="text-sm leading-relaxed text-sea/80">작업을 마치고 <b>기사님께 실제로 결제한 금액</b>을 적어 주세요. 현장에서 추가 작업이 있었다면 그 금액까지 포함해 주세요.</p>
+    <label for="fin-amt" class="mt-4 block text-sm font-bold">최종 결제 금액 (원)</label>
+    <input id="fin-amt" type="text" inputmode="numeric" autocomplete="off" value="${(+c.price || 0).toLocaleString('ko-KR')}" class="mt-1 w-full rounded-xl border border-mist px-4 py-3 text-lg font-bold">
+    <p class="mt-1 text-xs text-sea/60">견적 금액 ${won(c.price)} · 입력한 금액은 작업 내역서와 보증서에 기록돼요.</p>${errBox()}
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('cfinok', c.id, '금액 확인하고 거래 확정')}</div>`);
+  const i = $('#fin-amt'); if (i) i.addEventListener('input', () => { const v = i.value.replace(/[^0-9]/g, ''); i.value = v ? (+v).toLocaleString('ko-KR') : ''; });
+}
+/* 홈 '기사님 모집' 수수료 상자 */
+function feeBoxes() {
+  const el = $('#fee-boxes'); if (!el) return;
+  const gb = Object.values(GRADES).map(g => `<div class="rounded-3xl bg-white/10 p-4"><p class="text-sm text-white/70">${g.e} ${g.n} 기사님</p><p class="mt-1 text-2xl font-black text-sky-300">+${g.pct}%</p><p class="mt-1 text-[11px] leading-snug text-white/55">${g.need}</p></div>`).join('');
+  el.innerHTML = `<div class="col-span-2 rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">모든 분야 공통 · 거래 확정 시</p><p class="mt-2 text-3xl font-black text-sky-300">3,500원 <span class="text-xl text-white/80">+ 최종 금액의 등급 %</span></p><p class="mt-1 text-xs text-white/55">상한 없음 · 중고장터 사고팔기 0원 · 내 손님 거래 0원</p></div><div class="col-span-2 grid grid-cols-3 gap-2 lg:gap-3">${gb}</div>`;
+}
+async function confirmDeal(el, cid, fin) {
   const c = S.con.find(x => x.id === +cid); if (!c) return;
+  if (+c.fee_ver === 2 && c.client_id === me() && fin == null) return finModal(c);
   await busy(el, async () => {
-    await rpc('confirm_contract', { p_contract:c.id });
+    await rpc('confirm_contract', fin == null ? { p_contract:c.id } : { p_contract:c.id, p_final:fin });
     await Promise.all(['con', 'myRev'].map(load)); render();
     const nc = S.con.find(x => x.id === c.id) || c;
     if (nc.client_id === me() && nc.kind === 'service') { warrModal(nc.id, true); setTimeout(() => { if (!reviewOf(nc.id)) openRm(nc.id); }, 600); toast('거래가 확정됐어요. 무상 A/S 보증서가 발급됐어요.'); }
@@ -1557,16 +1609,16 @@ function proView() {
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-br from-brand to-brand-800 p-6 text-white shadow-lg shadow-brand/30">
       <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
-    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. <b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거·재고 판매는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
+    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 3,500원 + 최종 결제 금액의 등급 %(🐣10 · 🦅7 · 👑5%)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
+    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">3,500원 + 최종 금액의 등급 %(🐣10 · 🦅7 · 👑5%). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청 → 내 활동 지역 → 📍근처 지역 순서로 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
     ${myKinds.length ? `<h2 class="mt-10 text-2xl font-black">중고마켓 · 매입 제안</h2><p class="mt-1 text-sm text-sub">에어컨·보일러·냉장고·주방설비 중고를 업체와 소비자가 함께 사고팔아요. 매입 제안은 무료이고 매입 수수료도 0원이에요. 내 분야 물건이 먼저 보여요.</p>
     <div class="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${S.lst.filter(l => l.status === 'open' && l.seller_id !== me()).sort((a, b) => (myKinds.includes(lcat(b)) - myKinds.includes(lcat(a))) || b.id - a.id).map(proListing).join('') || empty('지금 올라온 판매글이 없어요.')}</div>
     <div class="mt-10 flex flex-wrap items-center justify-between gap-3"><h2 class="text-2xl font-black">내 재고 판매</h2>${btn('stockopen', '', '재고 판매글 올리기', 'a')}</div>
-    <p class="mt-1 text-sm text-sub">보유 중인 중고 재고를 소비자나 다른 업체에 팔 수 있어요. 거래 확정 시 거래금액의 5%(건당 최대 10만 원)만 차감돼요.</p>
+    <p class="mt-1 text-sm text-sub">보유 중인 중고 재고를 소비자나 다른 업체에 팔 수 있어요. 수수료는 <b>0원</b>이에요.</p>
     <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-4">${S.lst.filter(l => l.seller_id === me() && l.kind === 'stock').map(lcard).join('') || `<div class="col-span-2">${empty('아직 올린 재고가 없어요.')}</div>`}</div>` : ''}`;
 }
 function proReq(r) {
@@ -1652,10 +1704,10 @@ async function tossWidgetInit() {
 const tossBlock = () => TOSS_WIDGET ? `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>${C.TOSS_NOTE ? `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm font-semibold leading-relaxed text-sea">💳 ${esc(C.TOSS_NOTE)}</p>` : ''}
   <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[5000, 10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
   <div id="toss-methods" class="mt-3"></div><div id="toss-agree"></div>${errBox()}
-  <div class="mt-3">${btn('tosspay', '', '결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">결제 영수증은 토스페이먼츠에서 발급돼요. 예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>` : `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
+  <div class="mt-3">${btn('tosspay', '', '결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">결제 영수증은 토스페이먼츠에서 발급돼요. 예치금은 기간 제한 없이 쓸 수 있고, 남은 금액은 요청하면 환불해 드려요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>` : `<p class="mt-2 text-sm text-sea/75">결제가 끝나면 <b>바로</b> 예치금에 들어가요.</p>
   <fieldset class="mt-3"><legend class="text-sm font-bold">충전 금액</legend><div class="mt-2 grid grid-cols-2 gap-3">${[5000, 10000, 30000, 50000, 100000].map((a, i) => `<label class="relative"><input type="radio" name="ch-amt" value="${a}" class="peer sr-only"${i === 1 ? ' checked' : ''}><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-cool peer-checked:bg-mist">${won(a)}</span></label>`).join('')}</div></fieldset>
   <fieldset class="mt-3"><legend class="text-sm font-bold">결제 수단</legend><div class="mt-2 grid grid-cols-2 gap-2">${Object.entries(PAY).map(([k, t]) => `<button type="button" data-act="paymeth" data-id="${k}" aria-pressed="${payMethod === k}" class="rounded-xl border-2 px-2 py-3 text-sm font-bold ${payMethod === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>${errBox()}
-  <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.<br>예치금 이용 기간은 결제일로부터 1년이고, 남은 금액은 언제든 환불할 수 있어요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>`;
+  <div class="mt-3">${btn('tosspay', '', '토스페이먼츠로 결제하기', 'a', 'w-full')}</div><p class="mt-2 text-xs text-sea/60">카드·간편결제(토스페이·카카오페이 등)·계좌이체를 쓸 수 있어요. 결제 영수증은 토스페이먼츠에서 발급돼요.<br>예치금은 기간 제한 없이 쓸 수 있고, 남은 금액은 요청하면 환불해 드려요. <a class="underline" href="pricing.html" target="_blank" rel="noopener">요금 안내</a> · <a class="underline" href="refund.html" target="_blank" rel="noopener">환불정책</a>${/^test_/.test(TOSS_KEY) ? '<br><b class="text-sun">테스트 결제 모드 (실제 청구 없음)</b>' : ''}</p>`;
 function loadTossSdk() {
   if (window.TossPayments) return Promise.resolve();
   return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://js.tosspayments.com/v2/standard'; s.onload = res; s.onerror = () => rej(new Error('결제 모듈을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')); document.head.appendChild(s); });
@@ -1707,7 +1759,7 @@ function proMenu(keep) {
     ${pre.length ? '<h3 class="mt-4 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(t.u1_name)} 고객님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : ''}
     <h3 class="mt-4 font-bold">진행 중인 계약 · 정산</h3>${cs.length ? cs.map(c => { const w = reworkOf(c.id), v = reviewOf(c.id), prov = c.provider_id === me();
       return card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p>
-        <p class="text-xs text-sea/60">${conCode(c.id)} · ${esc(prov ? c.client_name : c.provider_name)} · ${c.status === 'completed' ? '완료' : c.status === 'pending' ? '고객 확인 대기' : wdOf(c) + ' 예정 ' + esc(c.work_date || '')}${c.fee_payer === me() ? ` · 수수료 ${won(c.fee)}${c.fee_charged ? ' 차감 완료' : ' (확정 시 차감)'}` : ''}</p>
+        <p class="text-xs text-sea/60">${conCode(c.id)} · ${esc(prov ? c.client_name : c.provider_name)} · ${c.status === 'completed' ? '완료' : c.status === 'pending' ? '고객 확인 대기' : wdOf(c) + ' 예정 ' + esc(c.work_date || '')}${c.fee_payer === me() ? ` · 수수료 ${+c.fee_ver === 2 && !c.fee_charged ? '예상 ' : ''}${won(c.fee)}${c.fee_charged ? ' 차감 완료' : ' (확정 시 차감)'}` : ''}</p>
         ${v ? `<p class="mt-1 text-sm">받은 후기: ${SL[v.mood]} ${'★'.repeat(v.stars)}${(v.tags || []).length ? ' · ' + v.tags.map(esc).join(', ') : ''}${v.body ? ' — ' + esc(v.body) : ''}</p>` : ''}
         ${c.status === 'pending' ? `<div class="mt-2 rounded-xl bg-sun/10 p-3 text-sm"><p class="font-bold text-sun">${c.paused ? '신고 접수 · 자동 확정 일시 정지' : '고객 확인 대기 중'}</p><p class="mt-1 text-xs text-sea/70">자동 확정까지</p><p class="font-display text-2xl tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</p><div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white"><i class="block h-full bg-sun" data-bar="${c.id}" style="width:${pctLeft(c)}%"></i></div></div>` : ''}
         ${c.warranty_no ? `<p class="mt-1 text-xs text-sea/60">무상 A/S 보증번호 ${esc(c.warranty_no)}</p>` : ''}
@@ -2106,7 +2158,7 @@ function adminView() {
         ${chg.map(c => card(`<div class="flex flex-wrap items-start justify-between gap-2"><div><p class="font-bold">${esc(proName(c.pro_id))} · ${won(c.amount)}</p><p class="text-xs text-sea/60">입금자명 ${esc(c.depositor)} · ${fmtT(c.created_at)}</p></div><div class="flex gap-2">${btn('chgok', c.id, '입금 확인 · 승인', 'a')}${btn('chgno', c.id, '반려', 's')}</div></div>`)).join('') || `<div class="mt-3">${empty('확인할 충전 신청이 없어요.')}</div>`}</section>
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">기사 가입 승인</h2><p class="mt-1 text-sm text-sea/70">사업자등록증을 열어 상호·대표자를 확인하세요. 사업자 상태(휴·폐업)는 국세청 홈택스에서 조회할 수 있어요.</p>
         ${pend.map(p => card(`<p class="font-bold">${esc(p.name)}</p><p class="mt-1 text-xs text-sea/70">${(p.fields || []).map(esc).join(', ')} · ${(p.areas || []).map(esc).join(', ')}</p><p class="mt-1 text-xs ${p.biz_doc ? 'text-cool font-bold' : 'text-red-600 font-bold'}">${p.biz_doc ? '📄 사업자등록증 제출됨 · ' + fmtT(p.biz_doc_at) : '📄 사업자등록증 미제출'}</p>${(p.certs || []).length ? `<p class="text-xs text-sea/70">자격/장비 ${p.certs.map(esc).join(', ')}</p>` : ''}<p class="text-xs ${p.biz_no ? 'text-sea/70' : 'font-bold text-red-600'}">사업자등록번호 ${p.biz_no ? esc(bizFmt(p.biz_no)) + (bizOk(p.biz_no) ? '' : ' ⚠️ 번호 규칙 불일치') + (blkHas(p.biz_no) ? ' 🚫 차단된 번호' : '') : '미입력'}</p><p class="text-xs text-sea/50">가입 ${fmtT(p.created_at)}</p><div class="mt-3 flex flex-wrap gap-2">${p.biz_doc ? btn('pdoc', p.id, '사업자등록증 보기', 'p') : ''}${btn('papprove', p.id, '승인', 'a')}${btn('preject', p.id, '반려', 's')}</div>`)).join('') || `<div class="mt-3">${empty('승인 대기 중인 기사가 없어요.')}</div>`}
-        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} · 예치금 ${won(p.balance)} · 데려온 손님 ${(S.adminRefs || []).filter(r => r.pro_id === p.id).length}명 · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span><span class="flex gap-2">${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}${blkHas(p.biz_no) ? '<span class="self-center text-xs font-bold text-red-600">차단됨</span>' : btn('pblock', p.id, '🚫 차단', 's')}</span></div>`).join('')}</details></section>
+        <details class="mt-4"><summary class="cursor-pointer text-sm font-bold">승인된 기사 ${S.adminPros.filter(p => p.approval === 'APPROVED').length}명 보기</summary>${S.adminPros.filter(p => p.approval !== 'PENDING').map(p => `<div class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-ice px-3 py-2 text-sm"><span>${esc(p.name)} ${gbadge(p)} · 예치금 ${won(p.balance)} · 완료 ${+p.done_count || 0}건 · 데려온 손님 ${(S.adminRefs || []).filter(r => r.pro_id === p.id).length}명 · ${p.approval === 'APPROVED' ? '활동 중' : '반려/정지'}${p.biz_doc ? ` <button type="button" data-act="pdoc" data-id="${p.id}" class="ml-1 underline text-cool">등록증</button>` : ''}</span><span class="flex gap-2"><label class="sr-only" for="gsel-${p.id}">등급</label><select id="gsel-${p.id}" data-grade="${p.id}" class="rounded-xl border border-mist bg-white px-2 py-2 text-xs font-bold"><option value="">등급 자동${p.grade_override ? '' : ' (' + gradeOf(p).e + ')'}</option>${Object.entries(GRADES).map(([k, x]) => `<option value="${k}"${p.grade_override === k ? ' selected' : ''}>${x.e} ${x.n} 고정</option>`).join('')}</select>${p.approval === 'APPROVED' ? btn('preject', p.id, '활동 정지', 's') : btn('papprove', p.id, '다시 승인', 's')}${blkHas(p.biz_no) ? '<span class="self-center text-xs font-bold text-red-600">차단됨</span>' : btn('pblock', p.id, '🚫 차단', 's')}</span></div>`).join('')}</details></section>
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
@@ -2210,12 +2262,13 @@ const ACT = {
   qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
   qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 계약하기”를 눌러 주세요.'; i.focus(); },
   qdirect: id => directModal(id), dsend: (id, el) => dsend(el, id),
-  cfin: (id, el) => confirmDeal(el, id), creport: id => rpModal(id, '분쟁', 'menu'), qreport: id => rpModal(id, '', 'chat'), rpsend: (id, el) => rpsend(el, id),
+  cfin: (id, el) => confirmDeal(el, id),
+  cfinok: (id, el) => { const v = +String(($('#fin-amt') || {}).value || '').replace(/[^0-9]/g, ''); if (!v) return setErr('최종 결제 금액을 숫자로 적어 주세요.'); if (v > 100000000) return setErr('금액을 다시 확인해 주세요.'); confirmDeal(el, id, v); }, creport: id => rpModal(id, '분쟁', 'menu'), qreport: id => rpModal(id, '', 'chat'), rpsend: (id, el) => rpsend(el, id),
   rev: id => revModal(id), rvsend: (id, el) => rvsend(el, id), rew: id => rewModal(id), rwsend: (id, el) => rwsend(el, id),
   rvs: k => { rv.s = k; rv.tags = []; rv.other = ''; revModal(rv.cid); },
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   rfilt: k => { RF = k; adminView(); }, refshare: (id, el) => shareLink(el), areq: id => areqModal(id),
-  online: (id, el) => toggleOnline(el), qopen: id => asOk() ? quoteModal(id) : asModal(), asopen: () => asModal(), asagree: (id, el) => $('#as-ck') && $('#as-ck').checked ? agreeAs(el) : setErr('동의 항목에 체크해 주세요.'), qsend: (id, el) => qsend(el, id),
+  online: (id, el) => toggleOnline(el), qopen: id => !asOk() ? asModal() : feeOk() ? quoteModal(id) : feeModal(id), fvopen: () => feeModal(), fvagree: (id, el) => $('#fv-ck') && $('#fv-ck').checked ? agreeFee(el, id) : setErr('동의 항목에 체크해 주세요.'), asopen: () => asModal(), asagree: (id, el) => $('#as-ck') && $('#as-ck').checked ? agreeAs(el) : setErr('동의 항목에 체크해 주세요.'), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
   lquote: k => { closeM(); openQuote({ cat:KINDS[k] ? k : 'aircon' }); }, smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
   bkadd: id => bkAdd(ITEMS_NOW()[+id]), scat: k => { if (!MCAT[k]) return; sellCat = k; bk = []; document.querySelectorAll('[data-act="scat"]').forEach(b => { const on = b.dataset.id === k; b.setAttribute('aria-pressed', on); b.className = `rounded-full border-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}`; }); const t = $('#sl-title'); if (t) t.placeholder = MCAT[k].ph; bkDraw(); }, bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
@@ -2286,6 +2339,7 @@ document.addEventListener('change', e => {
   if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
   if (e.target.name === 'ch-amt' && tossW && TOSS_WIDGET) tossW.setAmount({ currency:'KRW', value:+e.target.value }).catch(() => {});
   if (e.target.id === 'hgu') { hguSet(e.target.value); heroFind(); }
+  if (e.target.dataset && e.target.dataset.grade && S.admin) { const el = e.target; el.disabled = true; rpc('admin_set_grade', { p_pro:el.dataset.grade, p_grade:el.value || null }).then(async g => { await Promise.all(['adminPros', 'prosPub', 'aud'].map(load)); render(); toast(`등급을 ${GRADES[g] ? GRADES[g].e + ' ' + GRADES[g].n : g}(으)로 바꿨어요.`); }).catch(err => { el.disabled = false; toast(errMsg(err)); }); }
   if (e.target.id === 'chat-photo' || e.target.id === 'chat-cam') { sendChatPhoto(e.target.files[0]); e.target.value = ''; }
   if (e.target.id === 'au-doc') { const f = e.target.files[0]; e.target.value = ''; if (f) { const er = docErr(f); if (er) setErr(er); else { auDoc = f; setErr(''); saveAuth(); renderAuth(); } } }
   if (e.target.id === 'ph-file') { const f = e.target.files[0]; e.target.value = ''; if (f) phPick(f); }
@@ -2502,8 +2556,10 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     + '<button type="button" id="qm-allcat" class="hidden text-sm font-bold text-brand underline">다른 서비스도 보기</button>';
   $('#qm-allcat').addEventListener('click', () => qCat(''));
   ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
-  const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = ['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액(부가세 포함) · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요'; };
-  fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd();
+  const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), sale = ['freezer_sale', 'freezer_stock'].includes(fsvc.value), gl = Object.values(GRADES).map(g => `${g.e} ${won(gradeFee(p, g.pct))}`).join(' · ');
+    if (true) { $('#fc-out').textContent = sale ? won(0) : won(gradeFee(p, GRADES.sprout.pct)); $('#fc-note').textContent = sale ? '중고장터 사고팔기는 수수료가 없어요' : `🐣 새싹 기준 (3,500원 + 10%) · 등급별: ${gl}`; return; }
+    const f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = (['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액(부가세 포함) · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요') + (sale ? '' : ` · ${v2Day()} 성사 거래부터 등급제: ${gl}`); };
+  fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd(); feeBoxes();
   const z = BIZ, bizNoD = String(z.bizNo).replace(/\D/g, '');
   $('#foot').innerHTML = `<div class="lg:grid lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-10">
     <div><p class="font-logo text-xl text-[#0C2D48] lg:text-2xl">한여름<span class="text-[#1AA7C7]">.</span></p>

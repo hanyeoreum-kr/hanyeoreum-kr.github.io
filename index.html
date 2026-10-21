@@ -167,11 +167,11 @@ if (window.tailwind) tailwind.config = {
     </div>
     <div class="rounded-3xl border-2 border-sea/10 bg-white p-5 shadow-card lg:p-7">
       <p class="text-sm font-bold text-sub">🛠 기사님</p>
-      <p class="mt-1 text-2xl font-black text-sea lg:text-3xl">거래 확정 시에만 <span class="text-brand">3,500원</span></p>
+      <p class="mt-1 text-2xl font-black text-sea lg:text-3xl">거래 확정 시에만 <span class="text-brand">3,500원 + 등급 %</span></p>
       <ul class="mt-3 space-y-1 text-sm text-sub lg:text-[15px]">
         <li>✓ 가입비 · 월 이용료 · 견적 발송 0원</li>
         <li>✓ 직접 데려온 손님과의 거래는 0원</li>
-        <li>✓ 철거·재고 판매는 확정 금액의 5% (최대 10만 원)</li>
+        <li>✓ 🐣 새싹 10% · 🦅 우수 7% · 👑 베스트 5% (후기 쌓일수록 내려가요)</li>
       </ul>
       <a href="#pro" class="mt-4 inline-block rounded-full bg-sea px-5 py-2.5 text-sm font-black text-white">기사님 등록 ›</a>
     </div>
@@ -229,16 +229,15 @@ if (window.tailwind) tailwind.config = {
       <div>
         <span class="inline-block rounded-full bg-white/10 px-4 py-1.5 text-sm font-bold text-sun">기사님 · 업체 모집</span>
         <h2 class="mt-4 text-[1.75rem] font-black leading-tight lg:text-[2.6rem]">견적은 <span class="text-sun">0원</span>,<br>거래가 <span class="text-sky-300">확정될 때만</span> 수수료</h2>
-        <p class="mt-4 max-w-md leading-relaxed text-white/75">견적을 몇 번 내도, 중고 매입을 제안해도 비용이 없어요. 고객이 확인해서 <b class="text-white">거래가 확정될 때만</b> 미리 충전한 예치금에서 자동으로 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
+        <p class="mt-4 max-w-md leading-relaxed text-white/75">견적을 몇 번 내도, 중고장터에서 사고팔아도 비용이 없어요. 고객이 확인해서 <b class="text-white">거래가 확정될 때만</b> 미리 충전한 예치금에서 자동으로 차감돼요. 고객이 취소하면 차감되지 않아요.</p>
         <div class="mt-7 flex flex-wrap gap-3">
           <button type="button" data-act="gopro" class="rounded-full bg-sun px-7 py-3.5 font-black text-white hover:brightness-95">무료로 기사 등록하기</button>
           <a href="#pro-calc" class="rounded-full border-2 border-white/30 px-6 py-3 font-bold hover:bg-white/10">수수료 계산해 보기</a></div>
         <p class="mt-3 text-sm text-white/55">가입비 · 월 이용료 없음 · 예치금은 확정 수수료로만 쓰여요</p>
       </div>
       <div class="grid grid-cols-2 gap-3 text-center lg:gap-4">
-        <div class="col-span-2 rounded-3xl bg-sun p-6 text-white"><p class="text-sm font-bold text-white/90">견적 제출 · 중고 매입 제안 · 고객 이용</p><p class="mt-1 text-5xl font-black">0원</p><p class="mt-1 text-xs font-bold text-white/80">확정되기 전까지는 한 푼도 내지 않아요</p></div>
-        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</p><p class="mt-2 text-3xl font-black text-sky-300">3,500원</p><p class="mt-1 text-xs text-white/55">거래 확정 시 건당 정액 · 부가세 포함</p></div>
-        <div class="rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">냉장·냉동 철거 · 재고 판매</p><p class="mt-2 text-3xl font-black text-emerald-300">5%</p><p class="mt-1 text-xs text-white/55">확정 금액 기준 · 최대 10만 원</p></div>
+        <div class="col-span-2 rounded-3xl bg-sun p-6 text-white"><p class="text-sm font-bold text-white/90">견적 제출 · 중고장터 사고팔기 · 고객 이용</p><p class="mt-1 text-5xl font-black">0원</p><p class="mt-1 text-xs font-bold text-white/80">확정되기 전까지는 한 푼도 내지 않아요</p></div>
+        <div id="fee-boxes" class="col-span-2 grid grid-cols-2 gap-3 lg:gap-4"></div>
       </div>
     </div>
 
@@ -256,7 +255,7 @@ if (window.tailwind) tailwind.config = {
         <h3 class="text-xl font-black">수수료 미리 계산해 보기</h3>
         <p class="mt-1 text-sm text-sub">예상 거래 금액을 넣으면 확정 시 차감되는 수수료를 바로 알려드려요.</p>
         <label for="fc-svc" class="mt-5 block text-sm font-bold">서비스 종류</label>
-        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 냉장냉동 수리 · 주방설비</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">보유 재고 판매</option><option value="freezer_sale">중고 매입</option></select>
+        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 냉장냉동 · 주방설비 · 청소 · 가전</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">중고장터 판매 (재고)</option><option value="freezer_sale">중고장터 매입</option></select>
         <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
         <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
         <div class="mt-5 rounded-2xl bg-brand-50 p-5" aria-live="polite"><p class="text-sm text-sub">확정 시 차감 수수료</p><p id="fc-out" class="text-4xl font-black text-brand">3,500원</p><p id="fc-note" class="mt-1 text-sm text-sub"></p></div>
@@ -265,7 +264,7 @@ if (window.tailwind) tailwind.config = {
         <h3 class="text-xl font-black">3단계면 바로 시작해요</h3>
         <ol class="mt-5 space-y-4">
           <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sun font-black">1</span><div><p class="font-bold">기사·업체로 가입</p><p class="text-sm text-white/65">전문 분야와 활동 지역을 고르고, 사업자등록증을 올리면 확인 후 승인해요.</p></div></li>
-          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-400 font-black text-sea">2</span><div><p class="font-bold">예치금 충전</p><p class="text-sm text-white/65">확정 수수료로 쓸 만큼만 충전해요. 1만 원부터 가능해요.</p></div></li>
+          <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-400 font-black text-sea">2</span><div><p class="font-bold">예치금 충전</p><p class="text-sm text-white/65">확정 수수료로 쓸 만큼만 충전해요. 5천 원부터 가능해요.</p></div></li>
           <li class="flex gap-4"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-400 font-black text-sea">3</span><div><p class="font-bold">견적 제출</p><p class="text-sm text-white/65">내 분야 · 내 지역의 요청에 무료로 견적을 보내요.</p></div></li>
         </ol>
         <button type="button" data-act="gopro" class="mt-6 w-full rounded-full bg-sun py-3.5 font-black text-white hover:brightness-95">지금 무료로 시작하기</button>
@@ -454,6 +453,6 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=67"></script>
+<script src="app.js?v=70"></script>
 </body>
 </html>
