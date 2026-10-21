@@ -393,4 +393,68 @@
     };
     setTimeout(tick, 800);
   })();
+  /* ---------- 12) 후기 사진 (최대 5장) ---------- */
+  const RP = { cid:null, files:[] };
+  const rpBlock = pfx => `<div id="${pfx}-ph" class="mt-3"><label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-cool/50 bg-ice py-3 text-sm font-bold hover:bg-mist">📷 작업 사진 추가 <span class="font-normal text-sea/60">(선택 · 최대 5장)</span><input id="${pfx}-file" type="file" accept="image/*" multiple class="sr-only"></label><ul id="${pfx}-thumbs" class="mt-2 grid grid-cols-5 gap-2"></ul></div>`;
+  const rpDraw = pfx => { const u = document.getElementById(pfx + '-thumbs'); if (u) u.innerHTML = RP.files.map((f, i) => `<li class="relative aspect-square"><img src="${URL.createObjectURL(f)}" alt="후기 사진 ${i + 1}" class="h-full w-full rounded-lg object-cover"><button type="button" data-rprm="${i}" data-pfx="${pfx}" aria-label="사진 ${i + 1} 빼기" class="absolute -right-1.5 -top-1.5 h-6 w-6 rounded-full bg-sea text-sm leading-none text-white">&times;</button></li>`).join(''); };
+  const rpReset = cid => { if (RP.cid !== +cid) { RP.cid = +cid; RP.files = []; } };
+  document.addEventListener('change', e => {
+    const m = e.target.id && e.target.id.match(/^(rm|rv)-file$/); if (!m) return;
+    for (const f of e.target.files) { if (RP.files.length >= 5) { toast('사진은 최대 5장까지 올릴 수 있어요.'); break; } if (f.type.startsWith('image/')) RP.files.push(f); }
+    e.target.value = ''; rpDraw(m[1]);
+  });
+  document.addEventListener('click', e => { const b = e.target.closest('[data-rprm]'); if (!b) return; RP.files.splice(+b.dataset.rprm, 1); rpDraw(b.dataset.pfx); });
+  async function rpSave(cid) {
+    const c = S.con.find(x => x.id === +cid); if (!c || RP.cid !== +cid || !RP.files.length) return;
+    const files = RP.files.slice(); RP.files = [];
+    try {
+      toast('후기 사진을 올리는 중이에요...');
+      const photos = await uploadAll(files);
+      const { error } = await sb.from('review_photos').upsert({ contract_id:c.id, pro_id:c.provider_id, customer_id:me(), photos });
+      if (error) throw error;
+      toast('후기와 사진이 등록됐어요. 감사합니다!');
+    } catch (e) { console.warn('review photos', e); toast('후기는 등록됐지만 사진은 올리지 못했어요. ' + errMsg(e)); }
+  }
+  /* 별점 후기 창 (거래 확정 직후) */
+  const rmBox = document.getElementById('rm-text');
+  if (rmBox && !document.getElementById('rm-ph')) rmBox.insertAdjacentHTML('afterend', rpBlock('rm'));
+  const _openRm = openRm;
+  openRm = function (cid) { rpReset(cid); RP.files = []; _openRm(cid); rpDraw('rm'); };
+  const _rmSubmit = rmSubmit;
+  rmSubmit = async function () { const cid = rmCid; await _rmSubmit(); if (document.getElementById('rm').classList.contains('hidden') && reviewOf(cid)) await rpSave(cid); };
+  /* 만족도 후기 창 (내 요청 관리 → 후기 작성) */
+  const _revModal = revModal;
+  revModal = function (cid) { rpReset(cid); _revModal(cid); try { const anchor = document.getElementById('merr'); if (anchor && !document.getElementById('rv-ph')) { anchor.insertAdjacentHTML('beforebegin', rpBlock('rv')); rpDraw('rv'); } } catch (_) {} };
+  const _rvsend = ACT.rvsend;
+  ACT.rvsend = async (id, el) => { await _rvsend(id, el); if (reviewOf(+id)) await rpSave(id); };
+  /* 기사님 프로필: 고객이 올린 실제 작업 사진 */
+  const _pdet = pdet;
+  pdet = async function (id, back) {
+    await _pdet(id, back);
+    try {
+      const { data } = await sb.from('review_photos').select('photos, created_at').eq('pro_id', id).order('created_at', { ascending:false }).limit(12);
+      const urls = (data || []).flatMap(r => r.photos || []).filter(isPhotoUrl).slice(0, 12);
+      if (!urls.length || document.getElementById('pdet-rph')) return;
+      const h = [...document.querySelectorAll('#mm-body h3')].find(x => /실거래 후기/.test(x.textContent)); if (!h) return;
+      h.insertAdjacentHTML('beforebegin', `<div id="pdet-rph"><h3 class="mt-5 font-bold">📷 고객이 올린 작업 사진 ${urls.length}장</h3><div class="mt-2 grid grid-cols-4 gap-2">${urls.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="고객 작업 사진 ${i + 1}" loading="lazy" class="aspect-square w-full rounded-lg object-cover"></a>`).join('')}</div></div>`);
+    } catch (_) {}
+  };
+
+  /* ---------- 13) 기사님 대시보드: '들어온 견적 요청'을 맨 위로 ---------- */
+  const _proView = proView;
+  proView = function () {
+    _proView();
+    try {
+      const pv = document.getElementById('pview'), top = pv && pv.firstElementChild;
+      const h = [...pv.querySelectorAll('h2')].find(x => x.textContent.trim() === '들어온 견적 요청');
+      if (!h || !top || h.closest('#req-top')) return;
+      const p = h.nextElementSibling, grid = p && p.nextElementSibling;
+      const box = document.createElement('section'); box.id = 'req-top'; box.className = 'mt-6 rounded-3xl border-2 border-brand-200 bg-white p-4 sm:p-5';
+      h.className = 'text-xl font-black lg:text-2xl';
+      const n = grid ? grid.querySelectorAll('article').length : 0;
+      if (n) h.insertAdjacentHTML('beforeend', ` <span class="ml-1 rounded-full bg-sun px-2.5 py-0.5 align-middle text-sm text-white">${n}건</span>`);
+      box.append(h); if (p) box.append(p); if (grid) box.append(grid);
+      top.insertAdjacentElement('afterend', box);
+    } catch (_) {}
+  };
 })();
