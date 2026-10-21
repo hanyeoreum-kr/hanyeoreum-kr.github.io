@@ -168,4 +168,53 @@
       d.addEventListener('toggle', () => { reqCardOpen = d.open; });
     } catch (_) {}
   };
+  /* ---------- 6) 견적 요청 2단계: 기기 종류·대수 (청소는 평수) ---------- */
+  const DEV = {
+    aircon:{ t:'에어컨 종류와 대수', items:['벽걸이', '스탠드', '2in1 (스탠드+벽걸이)', '천장형 1way', '천장형 2way', '천장형 4way', '창문형', '실외기'] },
+    heat:{ t:'보일러·온수기 종류와 대수', items:['가스보일러', '기름보일러', '전기보일러', '온수기', '라디에이터'] },
+    cold:{ t:'설비 종류와 대수', items:['업소용 냉장고', '업소용 냉동고', '냉장·냉동 겸용', '테이블 냉장고', '쇼케이스', '제빙기', '저온창고'] },
+    kitchen:{ t:'설비 종류와 대수', items:['식기세척기', '후드·덕트', '가스레인지·화구', '오븐', '튀김기', '기타 주방설비'] },
+    home:{ t:'가전 종류와 대수', items:['통돌이 세탁기', '드럼 세탁기', '건조기', '가정용 냉장고', '김치냉장고', '식기세척기', '정수기', '기타 가전'] }
+  };
+  const PY = ['10평 미만', '10평대', '20평대', '30평대', '40평대', '50평대', '60평 이상'];
+  const DV = { kind:'', counts:{}, py:'' };
+  const devKind = () => qform.service === 'truck' || !qform.service ? '' : (qform.etc || kindOf(qform.service));
+  const devTotal = () => Object.values(DV.counts).reduce((a, b) => a + b, 0);
+  const devLine = () => DV.kind === 'clean' ? (DV.py ? `[평수] ${DV.py}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
+  function devRender() {
+    const sec = document.querySelector('#qm [data-step="2"]'); if (!sec) return;
+    const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; }
+    let box = document.getElementById('qm-dev');
+    if (!DEV[k] && k !== 'clean') { if (box) box.remove(); return; }
+    if (!box) { const dl = document.querySelector('#qm label[for="qm-date"]'); (dl || sec.lastElementChild).insertAdjacentHTML('beforebegin', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
+    const opt = !!qform.etc;
+    if (k === 'clean') {
+      box.innerHTML = `<p class="mt-5 text-sm font-bold">청소할 곳 평수 ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
+        <div class="mt-2 grid grid-cols-4 gap-2">${PY.map(x => `<button type="button" data-py="${x}" class="rounded-xl border-2 px-1 py-2.5 text-xs font-bold ${DV.py === x ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`).join('')}</div>`;
+      return;
+    }
+    box.innerHTML = `<p class="mt-5 text-sm font-bold">${DEV[k].t} ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
+      <p class="mt-1 text-xs text-sea/60">해당하는 종류의 대수를 + 로 눌러 주세요. 여러 종류를 함께 고를 수 있어요.</p>
+      <ul class="mt-2 divide-y divide-mist rounded-2xl border border-mist bg-white">${DEV[k].items.map(it => { const n = DV.counts[it] || 0; return `<li class="flex items-center gap-2 px-3 py-2.5"><span class="min-w-0 flex-1 text-sm font-bold ${n ? 'text-brand' : ''}">${it}</span>
+        <button type="button" data-dv="${it}" data-d="-1" aria-label="${it} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold ${n ? '' : 'opacity-40'}">−</button><span class="w-8 text-center font-bold tabular-nums">${n}</span><button type="button" data-dv="${it}" data-d="1" aria-label="${it} 한 대 더하기" class="h-8 w-8 rounded-full bg-brand font-bold text-white">+</button></li>`; }).join('')}</ul>
+      ${devTotal() ? `<p class="mt-2 text-right text-sm font-bold text-brand">총 ${devTotal()}대</p>` : ''}`;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-py]'); if (!b) return;
+    if (b.dataset.py) DV.py = DV.py === b.dataset.py ? '' : b.dataset.py;
+    else { const it = b.dataset.dv, n = Math.max(0, Math.min(50, (DV.counts[it] || 0) + +b.dataset.d)); if (n) DV.counts[it] = n; else delete DV.counts[it]; }
+    qErr(''); devRender();
+  });
+  /* 2단계 '다음'을 누르면: 필수 확인 → 요청사항 맨 위에 한 줄로 적어 둬요 (기사님이 그대로 봐요) */
+  if (qmEl) qmEl.addEventListener('click', e => {
+    if (!e.target.closest('#qm-next') || qstep !== 2) return;
+    const k = DV.kind; if (!DEV[k] && k !== 'clean') return;
+    if (!qform.etc && (k === 'clean' ? !DV.py : !devTotal())) { e.stopPropagation(); e.preventDefault(); qErr(k === 'clean' ? '청소할 곳의 평수를 골라 주세요.' : '종류와 대수를 1대 이상 골라 주세요.'); return; }
+    const d = document.getElementById('qm-details'); if (!d) return;
+    const rest = d.value.replace(/^\[(기기|평수)\][^\n]*\n?/, ''), line = devLine();
+    d.value = line ? line + (rest ? '\n' + rest : '') : rest;
+    d.dispatchEvent(new Event('input', { bubbles:true }));
+  }, true);
+  const _qShow2 = qShow;
+  qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; } };
 })();
