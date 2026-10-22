@@ -86,9 +86,11 @@
   };
 
   /* ---------- 3) 충전 화면: 카드가 안 되면 고객센터 문의 ---------- */
+  /* 결제 승인된 카드사가 늘어나면 여기에 추가해요 */
+  const CARDS_OK = ['BC(SC·IBK기업 등 BC계열 포함)', '신한', '농협(NH)', '우리'];
   const cardHelp = () => `<div id="card-help" class="mt-3 rounded-xl border border-mist bg-ice p-3 text-sm">
-    <p class="font-bold">💳 사용할 수 있는 카드가 없나요?</p>
-    <p class="mt-1 text-xs leading-relaxed text-sea/70">아직 결제가 안 되는 카드사가 있어요. 고객센터로 문의하시면 계좌이체 충전 방법을 안내해 드려요.</p>
+    <p class="font-bold">💳 지금 결제되는 카드: ${CARDS_OK.join(' · ')}</p>
+    <p class="mt-1 text-xs leading-relaxed text-sea/70">국민·하나·삼성·현대·롯데는 카드사 심사 중이라 곧 열려요. 사용할 수 있는 카드가 없으면 고객센터로 문의해 주세요. 계좌이체 충전 방법을 안내해 드려요.</p>
     <div class="mt-2">${btn('inqcharge', '', '계좌이체 충전 문의하기', 's')}</div></div>`;
   const _wallet = walletModal;
   walletModal = function (keep) {
