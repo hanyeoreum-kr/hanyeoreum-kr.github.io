@@ -88,14 +88,25 @@
   /* ---------- 3) 충전 화면: 카드가 안 되면 고객센터 문의 ---------- */
   /* 결제 승인된 카드사가 늘어나면 여기에 추가해요 */
   const CARDS_OK = ['BC(SC·IBK기업 등 BC계열 포함)', '신한', '농협(NH)', '우리'];
+  const cardsHtml = () => `💳 지금 결제되는 카드: <b>${CARDS_OK.join(' · ')}</b><br><span class="text-xs font-normal">국민·하나·삼성·현대·롯데와 간편결제는 카드사 심사가 끝나면 열려요.</span>`;
   const cardHelp = () => `<div id="card-help" class="mt-3 rounded-xl border border-mist bg-ice p-3 text-sm">
-    <p class="font-bold">💳 지금 결제되는 카드: ${CARDS_OK.join(' · ')}</p>
-    <p class="mt-1 text-xs leading-relaxed text-sea/70">국민·하나·삼성·현대·롯데는 카드사 심사 중이라 곧 열려요. 사용할 수 있는 카드가 없으면 고객센터로 문의해 주세요. 계좌이체 충전 방법을 안내해 드려요.</p>
+    <p class="font-bold">결제가 안 되나요?</p>
+    <p class="mt-1 text-xs leading-relaxed text-sea/70">사용할 수 있는 카드가 없으면 고객센터로 문의해 주세요. 계좌이체 충전 방법을 안내해 드려요.</p>
     <div class="mt-2">${btn('inqcharge', '', '계좌이체 충전 문의하기', 's')}</div></div>`;
+  /* 위쪽 안내(주황 상자)를 승인 카드 목록으로 바꾸고, 없으면 '결제가 끝나면' 문장 아래에 넣어요 */
+  const fixTopNotice = () => {
+    const body = document.getElementById('mm-body'); if (!body || document.getElementById('card-top')) return;
+    const cand = [...body.querySelectorAll('p, div')].filter(el => /지금은/.test(el.textContent) && /결제돼요/.test(el.textContent) && el.textContent.length < 200);
+    const top = cand.sort((a, b) => a.textContent.length - b.textContent.length)[0];
+    if (top) { top.id = 'card-top'; top.innerHTML = cardsHtml(); return; }
+    const lead = [...body.querySelectorAll('p')].find(el => /결제가 끝나면/.test(el.textContent));
+    if (lead) lead.insertAdjacentHTML('afterend', `<p id="card-top" class="mt-2 rounded-xl bg-orange-50 p-3 text-sm font-bold leading-relaxed">${cardsHtml()}</p>`);
+  };
   const _wallet = walletModal;
   walletModal = function (keep) {
     _wallet(keep);
     try {
+      fixTopNotice();
       if (document.getElementById('card-help')) return;
       const b = document.querySelector('#mm-body [data-act="tosspay"]');
       if (b && b.parentElement) b.parentElement.insertAdjacentHTML('afterend', cardHelp());
