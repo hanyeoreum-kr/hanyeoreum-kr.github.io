@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "kr.co.hanyeoreum.app",
+        "sha256_cert_fingerprints": ["AC:7C:82:54:5F:0D:45:AD:AC:56:46:5B:DC:BA:1B:4A:D4:B2:CB:B7:6A:A0:2F:DB:68:2C:96:54:C5:96:32:02"]
+      }
+    }]
