@@ -479,4 +479,16 @@
     if (!RP.files.length) return setErr('올릴 사진을 골라 주세요.');
     busy(el, async () => { await rpSave(id); closeM(); });
   };
+  /* ---------- 15) 중고장터 문구: 매입·매도(재고 판매) 모두 수수료 0원 ---------- */
+  const OLD_STOCK = '거래가 최종 확정될 때 거래금액의 5%(건당 최대 10만 원)가 예치금에서 차감돼요. 구매자는 수수료가 없어요.';
+  const NEW_STOCK = '중고장터는 매입·매도(재고 판매) 모두 수수료 0원이에요. 판매자·구매자 누구도 수수료를 내지 않아요.';
+  const fixMarketText = root => { try { (root || document).querySelectorAll('#mm-body p, #pview p').forEach(el => { if (el.textContent.trim() === OLD_STOCK) el.textContent = NEW_STOCK; }); } catch (_) {} };
+  new MutationObserver(() => fixMarketText()).observe(document.body, { childList:true, subtree:true });
+  /* 수수료 계산기: 중고장터 판매·매입은 0원으로 안내 */
+  const fsvc = document.getElementById('fc-svc'), famt = document.getElementById('fc-amt'), fnote = document.getElementById('fc-note');
+  if (fsvc) {
+    [...fsvc.options].forEach(o => { if (o.value === 'freezer_stock') o.textContent = '중고장터 판매 (재고 매도) · 0원'; if (o.value === 'freezer_sale') o.textContent = '중고장터 매입 · 0원'; });
+    const note = () => { if (['freezer_stock', 'freezer_sale'].includes(fsvc.value) && fnote) fnote.textContent = '중고장터 매입·매도는 수수료 0원이에요. 판매자·구매자 모두 무료예요.'; };
+    fsvc.addEventListener('change', () => setTimeout(note, 0)); if (famt) famt.addEventListener('input', () => setTimeout(note, 0)); note();
+  }
 })();
