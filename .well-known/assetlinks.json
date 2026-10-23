@@ -1,8 +1,11 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "kr.co.hanyeoreum.app",
-        "sha256_cert_fingerprints": ["AC:7C:82:54:5F:0D:45:AD:AC:56:46:5B:DC:BA:1B:4A:D4:B2:CB:B7:6A:A0:2F:DB:68:2C:96:54:C5:96:32:02"]
-      }
-    }]
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "kr.co.hanyeoreum.app",
+    "sha256_cert_fingerprints": [
+      "26:3A:FE:BB:78:33:91:2B:3D:B0:55:CB:44:09:B5:6C:D9:68:FA:DF:FF:D7:BE:14:37:2B:38:83:0A:10:99:BB",
+      "AC:7C:82:54:5F:0D:45:AD:AC:56:46:5B:DC:BA:1B:4A:D4:B2:CB:B7:6A:A0:2F:DB:68:2C:96:54:C5:96:32:02"
+    ]
+  }
+}]      
