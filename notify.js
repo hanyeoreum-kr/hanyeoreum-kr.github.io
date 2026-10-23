@@ -87,8 +87,8 @@
 
   /* ---------- 3) 충전 화면: 카드가 안 되면 고객센터 문의 ---------- */
   /* 결제 승인된 카드사가 늘어나면 여기에 추가해요 */
-  const CARDS_OK = ['BC(SC·IBK기업 등 BC계열 포함)', '신한', '농협(NH)', '우리'];
-  const cardsHtml = () => `💳 지금 결제되는 카드: <b>${CARDS_OK.join(' · ')}</b><br><span class="text-xs font-normal">국민·하나·삼성·현대·롯데와 간편결제는 카드사 심사가 끝나면 열려요.</span>`;
+  const CARDS_OK = ['국민', '하나', 'BC(SC·IBK기업 등 BC계열 포함)', '신한', '롯데', '농협(NH)', '우리'];
+  const cardsHtml = () => `💳 지금 결제되는 카드: <b>${CARDS_OK.join(' · ')}</b><br><span class="text-xs font-normal">토스페이 · 카카오페이 간편결제도 쓸 수 있어요.</span>`;
   const cardHelp = () => `<div id="card-help" class="mt-3 rounded-xl border border-mist bg-ice p-3 text-sm">
     <p class="font-bold">결제가 안 되나요?</p>
     <p class="mt-1 text-xs leading-relaxed text-sea/70">사용할 수 있는 카드가 없으면 고객센터로 문의해 주세요. 계좌이체 충전 방법을 안내해 드려요.</p>
@@ -107,9 +107,7 @@
     _wallet(keep);
     try {
       fixTopNotice();
-      if (document.getElementById('card-help')) return;
-      const b = document.querySelector('#mm-body [data-act="tosspay"]');
-      if (b && b.parentElement) b.parentElement.insertAdjacentHTML('afterend', cardHelp());
+      /* 모든 결제수단이 열려서 '결제가 안 되나요?' 안내는 더 이상 띄우지 않아요 */
     } catch (_) {}
   };
   ACT.inqcharge = () => {
