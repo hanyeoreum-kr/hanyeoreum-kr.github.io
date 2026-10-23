@@ -530,4 +530,15 @@
     try { const i = document.getElementById('chat-in'); if (i && hasPhone(i.value)) toast('전화번호로 따로 진행한 거래는 한여름이 보증하지 않아요.'); } catch (_) {}
     return _csend17(id, el);
   };
+  /* ---------- 18) 브랜드 파랑을 조금 밝게 (갤럭시 '선명한 화면'에서 너무 진하게 보이지 않게) ---------- */
+  try {
+    if (window.tailwind && tailwind.config) {
+      const c = JSON.parse(JSON.stringify(tailwind.config));
+      const col = c.theme.extend.colors;
+      col.cool = '#3B82F6';
+      col.brand = Object.assign({}, col.brand, { DEFAULT:'#3B82F6', 700:'#2563EB', 800:'#1D4ED8' });
+      tailwind.config = c;
+    }
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', '#3B82F6');
+  } catch (_) {}
 })();
