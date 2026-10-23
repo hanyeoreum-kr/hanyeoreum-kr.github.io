@@ -19,7 +19,7 @@ const NEAR = {"가평군":["남양주시","양평군","포천시"],"강남구":[
 const isNear = (areas, gu) => !!gu && (areas || []).some(g => (NEAR[gu] || []).includes(g));
 const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
 const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
-const SVC = { home_repair:'생활가전 수리', home_clean:'세탁기·건조기 청소', home_install:'생활가전 설치·이전', clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
+const SVC = { home_repair:'생활가전 수리', home_clean:'세탁기·건조기 청소', home_install:'생활가전 설치·이전', clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', plumb_drain:'하수구·싱크대 막힘', plumb_toilet:'변기 막힘·교체', plumb_thaw:'동파·해빙(배관 녹임)', plumb_leak:'누수 탐지·수리', plumb_pipe:'배관 교체·용접', plumb_fixture:'수전·싱크대·세면대 연결', plumb_jet:'하수관 고압 세척', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도' };
 /* 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통)
    용달·화물(truck)은 운송주선업 허가 전까지 보류: KINDS_OFF 에서 KINDS 로 옮기면 다시 켜져요 */
 const KINDS = {
@@ -32,6 +32,8 @@ const KINDS_ON = {
   aircon:KINDS.aircon,
   heat:{ name:'보일러·난방', title:'보일러 수리·교체·청소', desc:'가스·기름 보일러 · 온수 · 난방배관', pro:'보일러·난방 전문 기사님', subs:['보일러 수리', '보일러 교체', '난방배관 청소', '온수기'], svcs:['heat_repair', 'heat_install', 'heat_clean'], color:'bg-rose-50 text-rose-600', avatar:'bg-rose-500',
     icon:'<path d="M12 2.5c1 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-2 1-3.5 2-4.5.3 1.6 1 2.5 2 3 0-3 .5-5.5.5-8z"/><path d="M5 21h14"/>' },
+  plumb:{ name:'배관·하수구', title:'하수구 막힘 · 동파 해빙 · 누수 · 배관', desc:'하수구·변기 막힘 · 동파 해빙 · 누수 탐지 · 배관 교체', pro:'배관·하수구 전문 기사님', subs:['하수구·배수 막힘', '변기 막힘', '동파·해빙', '누수 탐지', '배관 교체·용접', '수전·싱크대 연결', '고압 세척'], svcs:['plumb_drain', 'plumb_toilet', 'plumb_thaw', 'plumb_leak', 'plumb_pipe', 'plumb_fixture', 'plumb_jet'], color:'bg-sky-50 text-sky-700', avatar:'bg-sky-600',
+    icon:'<path d="M3 5v6"/><path d="M3 8h9a3 3 0 0 1 3 3v2"/><path d="M9 8V5H6"/><path d="M17.5 18.5a2.5 2.5 0 0 1-5 0c0-1.6 2.5-4 2.5-4s2.5 2.4 2.5 4z"/>' },
   cold:KINDS.cold,
   kitchen:{ name:'주방설비', title:'업소용 주방설비 수리·청소', desc:'식기세척기 · 후드·덕트 · 가스레인지', pro:'업소용 주방설비 전문 기사님', subs:['식기세척기', '후드·덕트 청소', '가스레인지·오븐', '기타 주방설비'], svcs:['kitchen_repair', 'kitchen_clean'], color:'bg-amber-50 text-amber-700', avatar:'bg-amber-500',
     icon:'<path d="M4 10h16v10H4z"/><path d="M4 14h16"/><path d="M8 3v4M12 3v4M16 3v4"/>' },
@@ -47,9 +49,9 @@ const KINDS_OFF = {
 Object.keys(KINDS).forEach(k => delete KINDS[k]); Object.assign(KINDS, KINDS_ON);
 const GROUPS = Object.entries(KINDS).map(([k, v]) => [v.title, v.svcs, k]);
 const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
-const kindOf = code => { const c = String(code); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c === 'truck' ? 'truck' : 'cold'; };
+const kindOf = code => { const c = String(code); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c.startsWith('plumb') ? 'plumb' : c === 'truck' ? 'truck' : 'cold'; };
 /* 분야별 '기타 (직접 입력)': DB 서비스 코드는 그대로 쓰고, 요청 내용 앞에 [기타 요청] 표시를 붙여요 */
-const ETC_SVC = { aircon:'aircon_repair', heat:'heat_repair', cold:'cold_repair', kitchen:'kitchen_repair', clean:'clean_home', home:'home_repair' };
+const ETC_SVC = { aircon:'aircon_repair', heat:'heat_repair', cold:'cold_repair', kitchen:'kitchen_repair', clean:'clean_home', home:'home_repair', plumb:'plumb_drain' };
 const ETC_TAG = '[기타 요청]', SITE_TAG = '[현장]';
 const SITE_SVCS = ['freezer_removal'];   // 현장 정보(층·엘리베이터·사다리차·주차)를 꼭 받는 서비스
 const isEtc = r => String((r && r.details) || '').startsWith(ETC_TAG);
@@ -57,7 +59,7 @@ const svcOf = r => isEtc(r) ? ((KINDS[kindOf(r.service)] || {}).name || '') + ' 
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
-const CERTS = ['피복아크용접기능사','온수온돌기능사','가스기능사','에너지관리기능사','가스시설시공업 등록','공조냉동기계기능사','냉동기계산업기사','비파괴검사 검증','고압 세척 장비 보유','진공펌프·가스회수 장비 보유'];
+const CERTS = ['피복아크용접기능사','온수온돌기능사','가스기능사','에너지관리기능사','가스시설시공업 등록','공조냉동기계기능사','냉동기계산업기사','비파괴검사 검증','고압 세척 장비 보유','진공펌프·가스회수 장비 보유','배관 내시경·누수탐지 장비 보유','스팀 해빙기 보유'];
 const SL = { bad:'🙁 별로예요', good:'🙂 만족해요', great:'😄 최고예요' };
 const TAGS = { bad:['약속 시간 불응','마무리가 지저분함','작업 후 문제 발생'], good:['친절하고 설명이 자세함','약속 시간 준수','깔끔한 작업'], great:['전문성과 완벽한 시공','높은 가성비','친절한 사후 안내'] };
 const RWL = { requested:'접수됨', visit_scheduled:'방문 예정', resolved:'해결 완료' };
@@ -127,7 +129,7 @@ const row = (k, v) => `<div class="flex justify-between gap-4 py-2 border-b bord
 const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold text-red-600"></p>`;
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
-const flat = code => /^(aircon|heat|kitchen|clean|home)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
+const flat = code => /^(aircon|heat|kitchen|clean|home|plumb)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
 /* 기사 등급제 (2026-11-21 성사 거래부터: 3,500원 + 최종 금액 × 등급 %) */
 const GRADES = { sprout:{ e:'🐣', n:'새싹', pct:10, c:'bg-lime-50 text-lime-700', need:'처음 시작하는 기사님' }, eagle:{ e:'🦅', n:'우수', pct:7, c:'bg-sky-50 text-sky-700', need:'완료 10건 이상 · 평점 4.5 이상' }, crown:{ e:'👑', n:'베스트', pct:5, c:'bg-amber-50 text-amber-700', need:'완료 30건 이상 · 평점 4.8 이상' } };
 const gradeOf = p => GRADES[(p && p.grade) || 'sprout'] || GRADES.sprout;
@@ -1077,13 +1079,13 @@ function renderPros() {
 }
 /* 홈: 3대 분야 카드 · 기사님 미리보기 */
 /* 홈 상단: 분야 6개 · 우리 동네 · 검색 */
-const HCATS = [['aircon', '에어컨', '수리·청소·설치'], ['heat', '보일러', '고장·교체·청소'], ['clean', '입주청소', '입주·이사·상가'], ['home', '세탁기·가전', '수리·분해청소', true], ['cold', '업소용 냉장', '수리·철거·매입'], ['kitchen', '주방·덕트', '식기세척기·후드']];
+const HCATS = [['aircon', '에어컨', '수리·청소·설치'], ['heat', '보일러', '고장·교체·청소'], ['plumb', '배관·하수구', '막힘·동파·누수', true], ['clean', '입주청소', '입주·이사·상가'], ['home', '세탁기·가전', '수리·분해청소'], ['cold', '업소용 냉장', '수리·철거·매입'], ['kitchen', '주방·덕트', '식기세척기·후드']];
 const HGU_KEY = 'hy_gu';
 const hguGet = () => { try { return localStorage.getItem(HGU_KEY) || ''; } catch (_) { return ''; } };
 const hguSet = g => { try { g ? localStorage.setItem(HGU_KEY, g) : localStorage.removeItem(HGU_KEY); } catch (_) {} };
 /* 첫 화면 분야 선택: 한눈에 알아보게 이모지 + 짧은 이름 */
-const HK_EMOJI = { aircon:'❄️', heat:'🔥', cold:'🧊', kitchen:'🍳', clean:'🧹', home:'🫧', truck:'🚚' };
-const HK_SUB = { aircon:'수리·청소·설치', heat:'수리·교체·청소', cold:'업소용 수리·철거·매입', kitchen:'식기세척기·후드·덕트', clean:'거주·상가·사무실 청소', home:'세탁기·건조기·가전', truck:'운반·화물' };
+const HK_EMOJI = { aircon:'❄️', heat:'🔥', cold:'🧊', kitchen:'🍳', plumb:'🚰', clean:'🧹', home:'🫧', truck:'🚚' };
+const HK_SUB = { aircon:'수리·청소·설치', heat:'수리·교체·청소', cold:'업소용 수리·철거·매입', kitchen:'식기세척기·후드·덕트', plumb:'막힘·동파·누수', clean:'거주·상가·사무실 청소', home:'세탁기·건조기·가전', truck:'운반·화물' };
 function heroFind() {
   const hk = $('#hkind'); if (hk && !hk.dataset.done) { hk.dataset.done = 1; hk.innerHTML = '<option value="">🔧 필요한 분야 선택</option>' + Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${HK_EMOJI[k] || '🔧'} ${v.name}  ·  ${HK_SUB[k] || ''}</option>`).join('') + '<option value="sale">♻️ 중고 설비  ·  사고팔기 장터</option>'; }
   const sel = $('#hgu'); if (!sel) return;
@@ -1098,6 +1100,7 @@ const QMAP = [
   [/정수기|비데|김치냉장고|전자레인지|가전|가정용\s*냉장고|가정용\s*식기/, /설치|이전/, 'home', 'home_install', 'home_repair'],
   [/에어컨|냉난방|실외기|시스템\s*에어컨|천장형/, /청소|세척/, 'aircon', 'aircon_clean', null, /설치|이전|이사/, 'aircon_install', /수리|고장|안\s*나와|물\s*새|에러/, 'aircon_repair'],
   [/보일러|온수|난방|가스\s*보일러/, /교체|설치/, 'heat', 'heat_install', 'heat_repair', /배관|청소/, 'heat_clean'],
+  [/하수구|배수구|배수관|막혔|막힘|역류|변기|동파|얼었|해빙|녹임|누수|물이?\s*새|배관|용접|수전|수도꼭지|세면대|싱크대\s*(연결|설치|교체)|고압\s*세척|하수관|오수|맨홀/, /변기/, 'plumb', 'plumb_toilet', 'plumb_drain', /동파|얼었|해빙|녹임|안\s*나와/, 'plumb_thaw', /누수|물이?\s*새|아랫집/, 'plumb_leak', /배관|용접|수전|수도꼭지|세면대|연결|설치|교체/, 'plumb_pipe'],
   [/업소용|쇼케이스|제빙|저온|냉동고|냉장고|냉동|냉장/, /철거|폐업/, 'cold', 'freezer_removal', 'cold_repair', /매입|팔|판매|중고/, 'freezer_sale'],
   [/주방|후드|덕트|식기세척|가스레인지|오븐|화구/, /청소|후드|덕트/, 'kitchen', 'kitchen_clean', 'kitchen_repair'],
   [/입주|이사|청소|거주|상가|사무실|준공/, /이사\s*(나|퇴거)|퇴거/, 'clean', 'clean_moveout', null, /상가|사무실|매장/, 'clean_store', /거주|살면서|대청소/, 'clean_home', /입주|신축|준공/, 'clean_movein']
@@ -1122,7 +1125,14 @@ const SVC_KW = {
   clean_store:'상가 사무실 매장 준공 청소',
   home_repair:'세탁기 건조기 냉장고 김치냉장고 식기세척기 식세기 정수기 비데 전자레인지 가전 고장 수리',
   home_clean:'세탁기 건조기 청소 분해 냄새 곰팡이 통세척',
-  home_install:'세탁기 건조기 가전 설치 이전 이사'
+  home_install:'세탁기 건조기 가전 설치 이전 이사',
+  plumb_drain:'하수구 배수구 막힘 뚫음 뚫기 싱크대 막힘 역류 욕실 바닥 배수 냄새',
+  plumb_toilet:'변기 막힘 뚫기 변기 교체 물 안 내려감',
+  plumb_thaw:'동파 해빙 녹임 수도 얼었 배관 얼음 계량기 동파 물 안나와 겨울',
+  plumb_leak:'누수 탐지 아랫집 물샘 천장 물 배관 누수',
+  plumb_pipe:'배관 교체 용접 수도관 급수 배수관 공사',
+  plumb_fixture:'수전 수도꼭지 교체 싱크대 연결 세면대 설치 배수 연결',
+  plumb_jet:'고압 세척 하수관 식당 배관 기름 막힘 오수관'
 };
 let hsugList = [], hsugIdx = -1;
 function hsugFind(q) {
@@ -1175,7 +1185,7 @@ function renderHome() {
     cats.innerHTML = HCATS.filter(([k]) => KINDS[k]).map(([k, n, d, isNew]) => { const c = KINDS[k]; return `<button type="button" data-act="qcat" data-id="${k}" class="relative rounded-2xl bg-white px-1.5 pb-3 pt-3.5 text-center shadow-card transition active:scale-[.98] lg:rounded-3xl lg:px-3 lg:pb-5 lg:pt-6 lg:hover:-translate-y-1 lg:hover:shadow-xl">
       ${isNew ? '<span class="absolute right-1.5 top-1.5 rounded-full bg-sun px-1.5 py-0.5 text-[9px] font-black text-white lg:right-3 lg:top-3 lg:text-[11px]">NEW</span>' : ''}
       <span class="mx-auto grid h-12 w-12 place-items-center rounded-2xl ${c.color} lg:h-16 lg:w-16">${svgI(c.icon, 'h-6 w-6 lg:h-8 lg:w-8')}</span>
-      <b class="mt-2 block text-[14px] leading-tight lg:mt-3 lg:text-lg">${n}</b><span class="mt-0.5 block text-[11px] text-sub lg:text-[13px]">${d}</span></button>`; }).join(''); }
+      <b class="mt-2 block text-[14px] leading-tight lg:mt-3 lg:whitespace-nowrap lg:text-base">${n}</b><span class="mt-0.5 block text-[11px] text-sub lg:text-[13px]">${d}</span></button>`; }).join('') + [['mkt', '♻️', '중고 장터', '사고팔기 0원', 'bg-emerald-50'], ['pros', '👷', '기사님 찾기', '후기·등급 보기', 'bg-ice']].map(([a, e, n, d, bg]) => `<button type="button" data-act="${a}" class="relative rounded-2xl bg-white px-1.5 pb-3 pt-3.5 text-center shadow-card transition active:scale-[.98] lg:rounded-3xl lg:px-3 lg:pb-5 lg:pt-6 lg:hover:-translate-y-1 lg:hover:shadow-xl"><span class="mx-auto grid h-12 w-12 place-items-center rounded-2xl ${bg} text-2xl lg:h-16 lg:w-16 lg:text-3xl" aria-hidden="true">${e}</span><b class="mt-2 block text-[14px] leading-tight lg:mt-3 lg:whitespace-nowrap lg:text-base">${n}</b><span class="mt-0.5 block text-[11px] text-sub lg:text-[13px]">${d}</span></button>`).join(''); }
   heroFind();
   const hp = $('#home-pros'); if (!hp) return;
   const top = S.prosPub.filter(p => KINDS[p.kind || 'aircon']).sort(byScore).slice(0, 4);

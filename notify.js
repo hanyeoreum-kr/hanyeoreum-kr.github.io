@@ -189,18 +189,33 @@
     kitchen:{ t:'설비 종류와 대수', items:['식기세척기', '후드·덕트', '가스레인지·화구', '오븐', '튀김기', '기타 주방설비'] },
     home:{ t:'가전 종류와 대수', items:['통돌이 세탁기', '드럼 세탁기', '건조기', '가정용 냉장고', '김치냉장고', '식기세척기', '정수기', '기타 가전'] }
   };
+  /* 배관·하수구: 대수 대신 '어디가 / 어떤 건물 / 얼마나 급한지'를 눌러서 골라요 */
+  const PL = {
+    where:{ t:'문제가 생긴 곳', multi:true, items:['싱크대', '화장실 변기', '세면대', '욕실 바닥 배수구', '베란다 배수구', '세탁기 배수', '수도 계량기', '외부 하수구·맨홀', '천장·벽(누수)', '식당 주방 배관'] },
+    bld:{ t:'건물 종류', items:['아파트', '빌라·주택', '오피스텔', '상가·식당', '사무실·공장'] },
+    hurry:{ t:'얼마나 급한가요?', items:['오늘 바로', '1~2일 안에', '이번 주 안에', '날짜 맞춰서'] }
+  };
+  const PV = { where:[], bld:'', hurry:'' };
+  const plLine = () => { const p = []; if (PV.where.length) p.push('위치: ' + PV.where.join('·')); if (PV.bld) p.push('건물: ' + PV.bld); if (PV.hurry) p.push('급함: ' + PV.hurry); return p.length ? '[상황] ' + p.join(' / ') : ''; };
+  const plChip = (g, x, on) => `<button type="button" data-pl="${g}" data-v="${x}" aria-pressed="${on}" class="rounded-full border-2 px-3 py-2 text-sm font-bold ${on ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`;
   const PY = ['10평 미만', '10평대', '20평대', '30평대', '40평대', '50평대', '60평 이상'];
   const DV = { kind:'', counts:{}, py:'' };
   const devKind = () => qform.service === 'truck' || !qform.service ? '' : (qform.etc || kindOf(qform.service));
   const devTotal = () => Object.values(DV.counts).reduce((a, b) => a + b, 0);
-  const devLine = () => DV.kind === 'clean' ? (DV.py ? `[평수] ${DV.py}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
+  const devLine = () => DV.kind === 'plumb' ? plLine() : DV.kind === 'clean' ? (DV.py ? `[평수] ${DV.py}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
   function devRender() {
     const sec = document.querySelector('#qm [data-step="2"]'); if (!sec) return;
-    const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; }
+    const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; }
     let box = document.getElementById('qm-dev');
-    if (!DEV[k] && k !== 'clean') { if (box) box.remove(); return; }
+    if (!DEV[k] && k !== 'clean' && k !== 'plumb') { if (box) box.remove(); return; }
     if (!box) { const dl = document.querySelector('#qm label[for="qm-date"]'); (dl || sec.lastElementChild).insertAdjacentHTML('beforebegin', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
     const opt = true; /* 선택 사항: 몰라도 다음 단계로 넘어갈 수 있어요 */
+    if (k === 'plumb') {
+      box.innerHTML = Object.entries(PL).map(([g, v]) => `<p class="mt-5 text-sm font-bold">${v.t} <span class="font-normal text-sea/60">(선택${v.multi ? ' · 여러 개 가능' : ''})</span></p>
+        <div class="mt-2 flex flex-wrap gap-1.5">${v.items.map(x => plChip(g, x, v.multi ? PV[g].includes(x) : PV[g] === x)).join('')}</div>`).join('')
+        + `<p class="mt-3 rounded-xl bg-ice px-3 py-2 text-xs leading-relaxed text-sea/70">📸 막힌 곳·물 새는 곳 사진을 다음 단계에서 올려 주시면 기사님이 더 정확한 견적을 보내요.</p>`;
+      return;
+    }
     if (k === 'clean') {
       box.innerHTML = `<p class="mt-5 text-sm font-bold">청소할 곳 평수 ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
         <div class="mt-2 grid grid-cols-4 gap-2">${PY.map(x => `<button type="button" data-py="${x}" class="rounded-xl border-2 px-1 py-2.5 text-xs font-bold ${DV.py === x ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`).join('')}</div>`;
@@ -213,22 +228,23 @@
       ${devTotal() ? `<p class="mt-2 text-right text-sm font-bold text-brand">총 ${devTotal()}대</p>` : ''}`;
   }
   document.addEventListener('click', e => {
-    const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-py]'); if (!b) return;
-    if (b.dataset.py) DV.py = DV.py === b.dataset.py ? '' : b.dataset.py;
+    const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-py], #qm-dev [data-pl]'); if (!b) return;
+    if (b.dataset.pl) { const g = b.dataset.pl, x = b.dataset.v; if (PL[g].multi) PV[g] = PV[g].includes(x) ? PV[g].filter(y => y !== x) : [...PV[g], x]; else PV[g] = PV[g] === x ? '' : x; }
+    else if (b.dataset.py) DV.py = DV.py === b.dataset.py ? '' : b.dataset.py;
     else { const it = b.dataset.dv, n = Math.max(0, Math.min(50, (DV.counts[it] || 0) + +b.dataset.d)); if (n) DV.counts[it] = n; else delete DV.counts[it]; }
     qErr(''); devRender();
   });
   /* 2단계 '다음'을 누르면: 필수 확인 → 요청사항 맨 위에 한 줄로 적어 둬요 (기사님이 그대로 봐요) */
   if (qmEl) qmEl.addEventListener('click', e => {
     if (!e.target.closest('#qm-next') || qstep !== 2) return;
-    const k = DV.kind; if (!DEV[k] && k !== 'clean') return;
+    const k = DV.kind; if (!DEV[k] && k !== 'clean' && k !== 'plumb') return;
     const d = document.getElementById('qm-details'); if (!d) return;
-    const rest = d.value.replace(/^\[(기기|평수)\][^\n]*\n?/, ''), line = devLine();
+    const rest = d.value.replace(/^\[(기기|평수|상황)\][^\n]*\n?/, ''), line = devLine();
     d.value = line ? line + (rest ? '\n' + rest : '') : rest;
     d.dispatchEvent(new Event('input', { bubbles:true }));
   }, true);
   const _qShow2 = qShow;
-  qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; } };
+  qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; } };
   /* ---------- 7) 거래 마무리: 성사 기사님 표시 · 고객 직접 확정 · 관리자 대신 완료 요청 ---------- */
   const conOfReq = id => S.con.find(c => c.request_id === id);
   const CST = c => c.status === 'completed' ? '거래 확정' : c.status === 'pending' ? '고객 확인 대기' : '진행 중';
@@ -530,4 +546,26 @@
     try { const i = document.getElementById('chat-in'); if (i && hasPhone(i.value)) toast('전화번호로 따로 진행한 거래는 한여름이 보증하지 않아요.'); } catch (_) {}
     return _csend17(id, el);
   };
+
+  /* ---------- 19) 기사님 공지: 배관·하수구 분야 새로 열림 ---------- */
+  const PL_NOTE = 'hy_note_plumb_v1';
+  const noteSeen = () => { try { return localStorage.getItem(PL_NOTE) === '1'; } catch (_) { return false; } };
+  const _proView19 = proView;
+  proView = function () {
+    _proView19();
+    try {
+      if (!KINDS.plumb || !S.pro || document.getElementById('note-plumb')) return;
+      const has = proKinds(S.pro).includes('plumb');
+      if (has && noteSeen()) return;
+      const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
+      top.insertAdjacentHTML('afterend', `<section id="note-plumb" class="mt-6 rounded-3xl border-2 border-sky-300 bg-sky-50 p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-3"><p class="text-xs font-black tracking-wide text-sky-700">📢 한여름 공지 · NEW</p><button type="button" data-act="noteplx" aria-label="공지 닫기" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
+        <h2 class="mt-1 text-lg font-black lg:text-xl">🚰 '배관·하수구' 분야가 새로 열렸어요</h2>
+        <p class="mt-1 text-sm leading-relaxed text-sea/80">하수구·싱크대·변기 막힘, <b>겨울 동파·해빙</b>, 누수 탐지, 배관 교체·용접, 수전·싱크대 연결, 하수관 고압 세척 요청을 받을 수 있어요. 겨울에는 급한 요청이 많아 견적이 빨리 성사되는 분야예요.</p>
+        <p class="mt-2 text-xs text-sea/60">수수료는 다른 분야와 똑같아요. 기존 분야는 그대로 두고 추가만 하면 돼요.</p>
+        <div class="mt-3">${has ? '<p class="text-sm font-bold text-sky-700">✅ 이미 내 분야에 들어 있어요. 새 요청이 오면 바로 보여 드려요.</p>' : btn('noteplgo', '', '내 분야에 배관·하수구 추가하기', 'a')}</div></section>`);
+    } catch (_) {}
+  };
+  ACT.noteplx = () => { try { localStorage.setItem(PL_NOTE, '1'); } catch (_) {} const n = document.getElementById('note-plumb'); if (n) n.remove(); };
+  ACT.noteplgo = () => { profModal(); toast("'배관·하수구'를 눌러 고르고 맨 아래 저장을 눌러 주세요."); setTimeout(() => { try { const b = [...document.querySelectorAll('#mm-body button, #mm-body label')].find(x => /배관·하수구/.test(x.textContent)); if (b) b.scrollIntoView({ block:'center' }); } catch (_) {} }, 150); };
 })();

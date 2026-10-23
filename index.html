@@ -21,7 +21,7 @@
 <link rel="canonical" href="https://hanyeoreum.co.kr/">
 <title>한여름 | 시원하고 따뜻함의 모든 것 - 에어컨·보일러·업소용 냉장고 기사 매칭</title>
 <meta name="description" content="한여름, 시원하고 따뜻함의 모든 것 - 폐업·리뉴얼 매장 업소용 냉장고·냉동고·제빙기 매입과 철거, 에어컨 청소·수리·설치, 보일러·주방설비 수리를 서울·경기 기사님께 무료로 견적 비교. 14일 재점검 안심 보장.">
-<meta name="keywords" content="한여름,세탁기 청소,세탁기 수리,건조기 수리,건조기 청소,식기세척기 수리,한여름 시원하고 따뜻함,한여름 에어컨,한여름 보일러,한여름 냉장고 매입,한여름 설비,업소용 냉장고 매입,업소용 냉장고 철거,중고 업소용 냉장고,폐업 주방집기 매입,쇼케이스 매입,제빙기 매입,에어컨 청소 견적,에어컨 수리,보일러 수리,후드 덕트 청소,에어컨 기사 일감,냉동기사 일감">
+<meta name="keywords" content="한여름,세탁기 청소,세탁기 수리,건조기 수리,건조기 청소,식기세척기 수리,한여름 시원하고 따뜻함,한여름 에어컨,한여름 보일러,한여름 냉장고 매입,한여름 설비,업소용 냉장고 매입,업소용 냉장고 철거,중고 업소용 냉장고,폐업 주방집기 매입,쇼케이스 매입,제빙기 매입,에어컨 청소 견적,에어컨 수리,보일러 수리,하수구 막힘,싱크대 막힘,변기 막힘,수도 동파,배관 해빙,누수 탐지,후드 덕트 청소,에어컨 기사 일감,냉동기사 일감">
 <meta name="robots" content="index,follow">
 <!-- 검색엔진 소유확인 태그는 이 아래에 붙여 넣어요 (네이버 서치어드바이저 · 구글 서치콘솔) -->
 <meta name="naver-site-verification" content="40d61bc135e547c7e9c84179c4bd01be86b5d338" />
@@ -113,7 +113,7 @@ if (window.tailwind) tailwind.config = {
     <div class="px-1 lg:px-0">
       <span class="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울 전 지역 + 경기 인접 · 고객 견적 무료</span>
       <h1 class="mt-3 text-[1.6rem] font-black leading-tight lg:mt-5 lg:text-[3.1rem] lg:leading-[1.15]"><span class="text-sky-200">시원하고</span> <span class="text-orange-300">따뜻함</span>의 모든 것,<br>한여름에서 <span class="text-amber-300">한 번에!</span></h1>
-      <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">업소용 냉장·주방설비</b> · <b class="text-white">입주청소</b> · <b class="text-white">세탁기·생활가전</b>까지 검증된 기사님을 바로 연결해요.</p>
+      <p class="mt-2 text-sm text-white/80 lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">배관·하수구</b> · <b class="text-white">업소용 냉장·주방설비</b> · <b class="text-white">입주청소</b> · <b class="text-white">세탁기·생활가전</b>까지 검증된 기사님을 바로 연결해요.</p>
       <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold lg:mt-6 lg:text-sm"><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 견적 요청·비교 0원</span><span class="rounded-full bg-amber-300/25 px-2.5 py-1">🌙 24시간 요청 가능</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 실거래 후기만</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 14일 재점검 보장</span></div>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
@@ -140,7 +140,7 @@ if (window.tailwind) tailwind.config = {
 
 <!-- 분야 6개 한눈에 -->
 <section id="services" class="mx-auto -mt-8 max-w-6xl px-4 lg:-mt-12 lg:px-8">
-  <div id="cats" class="grid grid-cols-3 gap-2.5 lg:grid-cols-6 lg:gap-4"></div>
+  <div id="cats" class="grid grid-cols-3 gap-2.5 lg:grid-cols-9 lg:gap-3"></div>
 </section>
 
 <!-- 14일 보장 -->
@@ -181,11 +181,12 @@ if (window.tailwind) tailwind.config = {
     <a href="boiler.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">보일러 안내</a>
     <a href="fridge.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">업소용 냉장·냉동</a>
     <a href="kitchen.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">주방·후드덕트</a>
+    <a href="plumbing.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">배관·하수구</a>
     <a href="clean.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">입주·이사청소</a>
     <a href="pricing.html" class="rounded-full bg-white px-3 py-1.5 shadow-card">요금 안내</a>
   </div>
   <details class="mt-3 text-xs leading-relaxed text-sub lg:text-sm"><summary class="cursor-pointer font-bold">한여름은 어떤 서비스인가요?</summary>
-    <p class="mt-2">한여름은 서울·경기 지역의 에어컨, 보일러, 업소용 냉장·냉동고, 업소용 주방설비, 입주·이사청소, 세탁기·건조기 등 생활가전 고객과 사업자등록을 마친 기사님을 연결하는 견적 중개 서비스예요. 고객이 작업 내용과 지역, 희망 날짜를 남기면 해당 분야 기사님들이 견적을 보내고, 고객은 금액과 후기를 비교해 직접 기사님을 고릅니다. 작업이 끝나면 거래 내역서와 보증서(설비 14일 재점검 · 청소 3일 보완)가 발급돼요. 자세한 기준은 <a class="underline" href="terms.html">이용약관</a>과 <a class="underline" href="refund.html">환불정책</a>을 따라요.</p>
+    <p class="mt-2">한여름은 서울·경기 지역의 에어컨, 보일러, 배관·하수구(막힘·동파·누수), 업소용 냉장·냉동고, 업소용 주방설비, 입주·이사청소, 세탁기·건조기 등 생활가전 고객과 사업자등록을 마친 기사님을 연결하는 견적 중개 서비스예요. 고객이 작업 내용과 지역, 희망 날짜를 남기면 해당 분야 기사님들이 견적을 보내고, 고객은 금액과 후기를 비교해 직접 기사님을 고릅니다. 작업이 끝나면 거래 내역서와 보증서(설비 14일 재점검 · 청소 3일 보완)가 발급돼요. 자세한 기준은 <a class="underline" href="terms.html">이용약관</a>과 <a class="underline" href="refund.html">환불정책</a>을 따라요.</p>
   </details>
 </section>
 
@@ -205,7 +206,7 @@ if (window.tailwind) tailwind.config = {
   <p class="mt-1 text-sm text-sub">요청부터 계약 · 작업 확인 · 사후 보증까지 한여름 안에서 진행돼요.</p>
   <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-3 lg:gap-6"><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">📝</p><h3 class="mt-2 font-black lg:text-lg">견적 요청서</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 분야 · 작업 지역(서울 25개 구 · 경기) · 희망일 · 사진 최대 5장 · 요청사항을 한 번에 접수</li><li>· 냉장·냉동고 철거는 층수 · 엘리베이터 · 사다리차 · 주차 여부를 필수로 받아 정확한 견적을 받아요</li><li>· 분야마다 "기타(직접 입력)"로 목록에 없는 작업도 요청 가능</li><li>· 24시간 언제든 접수 · 지정 기사님에게만 보내는 1:1 견적 요청</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🪪</p><h3 class="mt-2 font-black lg:text-lg">기사님 검증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 사업자등록증을 제출하고 관리자 승인을 받은 기사님만 견적 제출</li><li>· 자격증 · 보유 장비 배지(예: 공조냉동기계기능사, 고압 세척 장비)</li><li>· 활동 지역 · 전문 분야 · 영업중/휴무 상태 공개</li><li>· 실거래 후기 수가 많은 기사님이 먼저 보여요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">⚖️</p><h3 class="mt-2 font-black lg:text-lg">견적 비교 · 계약</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 도착한 견적의 금액 · 작업 가능일 · 후기 · 자격을 한 화면에서 비교</li><li>· 마음에 드는 견적으로 계약하면 계약 번호가 발급돼요</li><li>· 작업 대금은 고객과 기사님이 직접 주고받고, 고객은 수수료 0원</li><li>· 작업 완료 요청 후 고객 확인(또는 정해진 시간 경과)으로 거래 확정</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">💬</p><h3 class="mt-2 font-black lg:text-lg">안심 채팅</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 전화번호를 공개하지 않고 기사님과 대화</li><li>· 현장 사진 보내기 · 일정 변경 요청 · 읽음 표시</li><li>· 채팅에서 합의한 내용으로 바로 계약 등록</li><li>· 🚨 분쟁·재점검 신고 버튼으로 고객센터에 바로 접수</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🧾</p><h3 class="mt-2 font-black lg:text-lg">작업 내역서 · 보증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 거래가 확정되면 전자 작업 내역서와 무상 A/S 보증서 발급</li><li>· 설비 작업은 14일 안에 같은 증상이 생기면 담당 기사님 재점검 연결</li><li>· 입주·이사·상가 청소는 3일 안에 미흡한 부분 재방문 보완</li><li>· 확정된 거래만 후기를 남길 수 있어 후기를 믿을 수 있어요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🧊</p><h3 class="mt-2 font-black lg:text-lg">중고 설비 장터</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 업소용 냉장고 · 제빙기 · 에어컨 · 보일러 · 주방설비 중고를 사고팔기</li><li>· 상태 등급(A/B/C) · 사용 연수 · 매장 위치 · 엘리베이터 · 사다리차 정보 표시</li><li>· 개인 직거래와 업체 매입 제안을 함께 받아요</li><li>· 폐업·리뉴얼 매장의 여러 설비를 한 번에 올리는 일괄 판매</li></ul></div></div>
   <h3 class="mt-8 font-black lg:text-xl">맡길 수 있는 작업</h3>
-  <dl class="mt-3 grid gap-2 lg:grid-cols-2 lg:gap-4"><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">❄️ 에어컨</dt><dd class="mt-1 text-sm leading-relaxed text-sub">벽걸이 · 스탠드 · 천장형(시스템) 에어컨 분해청소, 냉방·난방 불량 수리, 가스 충전, 신규 설치 · 이전 설치, 냉난방 점검</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🔥 보일러·난방</dt><dd class="mt-1 text-sm leading-relaxed text-sub">가스·기름 보일러 고장 수리 · 에러 점검, 보일러 교체 · 설치, 난방배관 청소, 온수기 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧊 업소용 냉장·냉동</dt><dd class="mt-1 text-sm leading-relaxed text-sub">업소용 냉장고 · 냉동고 · 제빙기 · 쇼케이스 · 저온창고 수리, 폐업·리뉴얼 매장 설비 철거 · 매입</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🍳 업소용 주방설비</dt><dd class="mt-1 text-sm leading-relaxed text-sub">식기세척기 수리, 후드 · 덕트 청소, 가스레인지 · 오븐 등 주방설비 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧹 청소</dt><dd class="mt-1 text-sm leading-relaxed text-sub">입주청소 · 이사(퇴거)청소 · 거주 중 청소 · 상가 · 사무실 청소</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🫧 생활가전</dt><dd class="mt-1 text-sm leading-relaxed text-sub">세탁기 · 건조기 분해청소, 가정용 냉장고 · 식기세척기 · 정수기 수리, 생활가전 설치 · 이전</dd></div></dl>
+  <dl class="mt-3 grid gap-2 lg:grid-cols-2 lg:gap-4"><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">❄️ 에어컨</dt><dd class="mt-1 text-sm leading-relaxed text-sub">벽걸이 · 스탠드 · 천장형(시스템) 에어컨 분해청소, 냉방·난방 불량 수리, 가스 충전, 신규 설치 · 이전 설치, 냉난방 점검</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🔥 보일러·난방</dt><dd class="mt-1 text-sm leading-relaxed text-sub">가스·기름 보일러 고장 수리 · 에러 점검, 보일러 교체 · 설치, 난방배관 청소, 온수기 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🚰 배관·하수구</dt><dd class="mt-1 text-sm leading-relaxed text-sub">하수구 · 싱크대 · 변기 막힘 뚫음, 겨울철 수도 동파 · 배관 해빙, 누수 탐지 · 수리, 배관 교체 · 용접, 수전 · 싱크대 · 세면대 연결, 하수관 고압 세척</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧊 업소용 냉장·냉동</dt><dd class="mt-1 text-sm leading-relaxed text-sub">업소용 냉장고 · 냉동고 · 제빙기 · 쇼케이스 · 저온창고 수리, 폐업·리뉴얼 매장 설비 철거 · 매입</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🍳 업소용 주방설비</dt><dd class="mt-1 text-sm leading-relaxed text-sub">식기세척기 수리, 후드 · 덕트 청소, 가스레인지 · 오븐 등 주방설비 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧹 청소</dt><dd class="mt-1 text-sm leading-relaxed text-sub">입주청소 · 이사(퇴거)청소 · 거주 중 청소 · 상가 · 사무실 청소</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🫧 생활가전</dt><dd class="mt-1 text-sm leading-relaxed text-sub">세탁기 · 건조기 분해청소, 가정용 냉장고 · 식기세척기 · 정수기 수리, 생활가전 설치 · 이전</dd></div></dl>
 </section>
 
 <!-- 기사님 몰아보기 미리보기 -->
@@ -255,7 +256,7 @@ if (window.tailwind) tailwind.config = {
         <h3 class="text-xl font-black">수수료 미리 계산해 보기</h3>
         <p class="mt-1 text-sm text-sub">예상 거래 금액을 넣으면 확정 시 차감되는 수수료를 바로 알려드려요.</p>
         <label for="fc-svc" class="mt-5 block text-sm font-bold">서비스 종류</label>
-        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 냉장냉동 · 주방설비 · 청소 · 가전</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">중고장터 판매 (재고)</option><option value="freezer_sale">중고장터 매입</option></select>
+        <select id="fc-svc" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium"><option value="aircon_install">에어컨 · 보일러 · 배관 · 냉장냉동 · 주방설비 · 청소 · 가전</option><option value="freezer_removal">냉장·냉동고 철거</option><option value="freezer_stock">중고장터 판매 (재고)</option><option value="freezer_sale">중고장터 매입</option></select>
         <label for="fc-amt" class="mt-4 block text-sm font-bold">예상 거래 금액 (원)</label>
         <input id="fc-amt" type="number" inputmode="numeric" min="0" step="10000" value="400000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
         <div class="mt-5 rounded-2xl bg-brand-50 p-5" aria-live="polite"><p class="text-sm text-sub">확정 시 차감 수수료</p><p id="fc-out" class="text-4xl font-black text-brand">3,500원</p><p id="fc-note" class="mt-1 text-sm text-sub"></p></div>
@@ -285,7 +286,7 @@ if (window.tailwind) tailwind.config = {
     <details class="rounded-2xl bg-white p-4 shadow-card lg:p-6"><summary class="cursor-pointer font-bold">기사님은 수수료가 어떻게 되나요?</summary><p class="mt-2 text-sm leading-relaxed text-sub">견적 제출과 중고 매입 제안은 0원이에요. 가입비·월 이용료 없이, 거래가 확정될 때만 미리 충전한 예치금에서 수수료가 차감돼요. 에어컨·냉동공조·보일러 기사님의 새로운 일감 통로로 써 보세요.</p></details>
   </div>
 </section>
-<nav aria-label="서비스 안내" class="mx-auto mt-8 max-w-6xl px-5 text-sm text-sub lg:px-8"><b class="text-sea">서비스 안내</b> · <a class="underline" href="aircon.html">한여름 에어컨</a> · <a class="underline" href="boiler.html">한여름 보일러</a> · <a class="underline" href="fridge.html">한여름 업소용 냉장고</a> · <a class="underline" href="kitchen.html">한여름 주방설비·덕트청소</a> · <a class="underline" href="clean.html">한여름 입주청소</a></nav>
+<nav aria-label="서비스 안내" class="mx-auto mt-8 max-w-6xl px-5 text-sm text-sub lg:px-8"><b class="text-sea">서비스 안내</b> · <a class="underline" href="aircon.html">한여름 에어컨</a> · <a class="underline" href="boiler.html">한여름 보일러</a> · <a class="underline" href="fridge.html">한여름 업소용 냉장고</a> · <a class="underline" href="kitchen.html">한여름 주방설비·덕트청소</a> · <a class="underline" href="plumbing.html">한여름 배관·하수구</a> · <a class="underline" href="clean.html">한여름 입주청소</a></nav>
 <nav aria-label="도움말" class="mx-auto mt-2 max-w-6xl px-5 text-sm text-sub lg:px-8"><b class="text-sea">도움말</b> · <a class="underline" href="guide-aircon-move.html">이사할 때 에어컨 이전설치</a> · <a class="underline" href="guide-aircon-clean.html">에어컨 청소</a> · <a class="underline" href="guide-boiler-check.html">추워지기 전에</a> · <a class="underline" href="guide-boiler-replace.html">보일러 교체</a> · <a class="underline" href="guide-closing-equipment.html">폐업·리뉴얼할 때 냉장고와 주방집기 정리하는 법</a> · <a class="underline" href="guide-fridge-cooling.html">업소용 냉장고 냉기가 약할 때</a> · <a class="underline" href="guide-duct-cleaning.html">식당 후드·덕트 청소</a> · <a class="underline" href="guide-dishwasher.html">업소용 식기세척기</a> · <a class="underline" href="guide-movein-checklist.html">입주청소 체크리스트</a> · <a class="underline" href="guide-movein-vs-moving.html">입주청소와 이사청소</a></nav>
 <span id="quote" class="sr-only"></span>
 </main>
@@ -453,7 +454,7 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=70"></script>
-<script src="notify.js?v=18"></script>
+<script src="app.js?v=71"></script>
+<script src="notify.js?v=24"></script>
 </body>
 </html>
