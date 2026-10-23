@@ -504,4 +504,32 @@
     const note = () => { if (['freezer_stock', 'freezer_sale'].includes(fsvc.value) && fnote) fnote.textContent = '중고장터 매입·매도는 수수료 0원이에요. 판매자·구매자 모두 무료예요.'; };
     fsvc.addEventListener('change', () => setTimeout(note, 0)); if (famt) famt.addEventListener('input', () => setTimeout(note, 0)); note();
   }
+  /* ---------- 16) 채팅 알림: 내가 참여한 대화만 (관리자에게 남의 대화 알림 안 뜨게) ---------- */
+  const _onNew = onNewMessage;
+  onNewMessage = function (m) {
+    try {
+      const t = S.thr.find(x => x.id === m.thread_id);
+      if (t && t.u1 !== me() && t.u2 !== me()) { const list = S.msgs[m.thread_id]; if (list && !list.some(x => x.id === m.id)) list.push(m); return; }
+      if (!t && S.admin) { queueLoad('thr'); return; }
+    } catch (_) {}
+    return _onNew(m);
+  };
+  /* ---------- 17) 채팅에 전화번호가 나오면: 한여름 밖 거래 주의 안내 ---------- */
+  const PHONE_RE = /(01[016789]|0505|0[2-6][0-9]?)[\s.\-)]*\d{3,4}[\s.\-]*\d{4}/;
+  const WARN = '⚠️ 전화번호로 따로 연락해 한여름 밖에서 진행한 거래는 작업 내역서, 14일 재점검, 무상 A/S 보증, 분쟁 중재를 받을 수 없고 한여름이 책임지지 않아요. 계약과 결제 확인은 한여름 안에서 진행해 주세요.';
+  const hasPhone = t => PHONE_RE.test(String(t || '').replace(/[^\d\s.\-)]/g, ' '));
+  const warnBox = () => `<div id="chat-warn" role="note" class="mt-3 rounded-2xl border-2 border-sun/40 bg-sun/10 p-3 text-xs font-bold leading-relaxed text-sea">${WARN}</div>`;
+  const _chat17 = chatModal;
+  chatModal = async function (tid, keep) {
+    await _chat17(tid, keep);
+    try {
+      const box = document.getElementById('chatbox'); if (!box || document.getElementById('chat-warn')) return;
+      if ((S.msgs[+tid] || []).some(m => m.kind !== 'photo' && hasPhone(m.body))) box.insertAdjacentHTML('beforebegin', warnBox());
+    } catch (_) {}
+  };
+  const _csend17 = ACT.csend;
+  ACT.csend = (id, el) => {
+    try { const i = document.getElementById('chat-in'); if (i && hasPhone(i.value)) toast('전화번호로 따로 진행한 거래는 한여름이 보증하지 않아요.'); } catch (_) {}
+    return _csend17(id, el);
+  };
 })();
