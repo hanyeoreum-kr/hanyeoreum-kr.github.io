@@ -21,8 +21,9 @@
   if (step3 && !document.getElementById('qm-phone')) {
     step3.insertAdjacentHTML('beforeend', `
       <div class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
-        <label for="qm-phone" class="block text-sm font-bold">📱 휴대폰 번호 <span class="text-sun">(필수)</span></label>
-        <p class="mt-1 text-xs text-sea/70">견적이 도착하면 카카오톡으로 알려드려요. <b>기사님께는 공개되지 않아요.</b></p>
+        <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로 딱 1번</span> 알려드려요</p>
+        <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
+        <label for="qm-phone" class="mt-3 block text-sm font-bold">📱 휴대폰 번호</label>
         <input id="qm-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-2 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
         <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="qm-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
           <span>견적 도착 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <b class="text-sun">(필수)</b>
@@ -199,14 +200,14 @@
     let box = document.getElementById('qm-dev');
     if (!DEV[k] && k !== 'clean') { if (box) box.remove(); return; }
     if (!box) { const dl = document.querySelector('#qm label[for="qm-date"]'); (dl || sec.lastElementChild).insertAdjacentHTML('beforebegin', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
-    const opt = !!qform.etc;
+    const opt = true; /* 선택 사항: 몰라도 다음 단계로 넘어갈 수 있어요 */
     if (k === 'clean') {
       box.innerHTML = `<p class="mt-5 text-sm font-bold">청소할 곳 평수 ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
         <div class="mt-2 grid grid-cols-4 gap-2">${PY.map(x => `<button type="button" data-py="${x}" class="rounded-xl border-2 px-1 py-2.5 text-xs font-bold ${DV.py === x ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`).join('')}</div>`;
       return;
     }
     box.innerHTML = `<p class="mt-5 text-sm font-bold">${DEV[k].t} ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
-      <p class="mt-1 text-xs text-sea/60">해당하는 종류의 대수를 + 로 눌러 주세요. 여러 종류를 함께 고를 수 있어요.</p>
+      <p class="mt-1 text-xs text-sea/60">아는 만큼만 + 로 눌러 주세요. <b>잘 모르겠으면 비워 두고 다음 단계에서 사진만 올려도 돼요.</b></p>
       <ul class="mt-2 divide-y divide-mist rounded-2xl border border-mist bg-white">${DEV[k].items.map(it => { const n = DV.counts[it] || 0; return `<li class="flex items-center gap-2 px-3 py-2.5"><span class="min-w-0 flex-1 text-sm font-bold ${n ? 'text-brand' : ''}">${it}</span>
         <button type="button" data-dv="${it}" data-d="-1" aria-label="${it} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold ${n ? '' : 'opacity-40'}">−</button><span class="w-8 text-center font-bold tabular-nums">${n}</span><button type="button" data-dv="${it}" data-d="1" aria-label="${it} 한 대 더하기" class="h-8 w-8 rounded-full bg-brand font-bold text-white">+</button></li>`; }).join('')}</ul>
       ${devTotal() ? `<p class="mt-2 text-right text-sm font-bold text-brand">총 ${devTotal()}대</p>` : ''}`;
@@ -221,7 +222,6 @@
   if (qmEl) qmEl.addEventListener('click', e => {
     if (!e.target.closest('#qm-next') || qstep !== 2) return;
     const k = DV.kind; if (!DEV[k] && k !== 'clean') return;
-    if (!qform.etc && (k === 'clean' ? !DV.py : !devTotal())) { e.stopPropagation(); e.preventDefault(); qErr(k === 'clean' ? '청소할 곳의 평수를 골라 주세요.' : '종류와 대수를 1대 이상 골라 주세요.'); return; }
     const d = document.getElementById('qm-details'); if (!d) return;
     const rest = d.value.replace(/^\[(기기|평수)\][^\n]*\n?/, ''), line = devLine();
     d.value = line ? line + (rest ? '\n' + rest : '') : rest;
@@ -530,15 +530,4 @@
     try { const i = document.getElementById('chat-in'); if (i && hasPhone(i.value)) toast('전화번호로 따로 진행한 거래는 한여름이 보증하지 않아요.'); } catch (_) {}
     return _csend17(id, el);
   };
-  /* ---------- 18) 브랜드 파랑을 조금 밝게 (갤럭시 '선명한 화면'에서 너무 진하게 보이지 않게) ---------- */
-  try {
-    if (window.tailwind && tailwind.config) {
-      const c = JSON.parse(JSON.stringify(tailwind.config));
-      const col = c.theme.extend.colors;
-      col.cool = '#3B82F6';
-      col.brand = Object.assign({}, col.brand, { DEFAULT:'#3B82F6', 700:'#2563EB', 800:'#1D4ED8' });
-      tailwind.config = c;
-    }
-    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', '#3B82F6');
-  } catch (_) {}
 })();
