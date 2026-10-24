@@ -1369,7 +1369,7 @@ function compare(rid, keep) {
   openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${svcOf(r)} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
     (qs.map(q => { const p = proPub(q.pro_id) || { name:'기사', rating:0, rating_count:0 };
       return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="flex flex-wrap items-center gap-1.5 font-bold">${esc(p.name)} ${gbadge(p)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
-      <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}</p>
+      <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}${q.edited_at ? ` · <b class="text-sun">✏️ ${fmtT(q.edited_at)} 기사님이 견적 수정</b>` : ''}</p>
       <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pro_id, '프로필 보기', 's')}${r.status === 'open' ? btn('pick', q.id, '계약하기', 'a') : `<span class="text-sm font-bold">${QL[q.status]}</span>`}</div>`); }).join('') || `<div class="mt-3">${empty('아직 도착한 견적이 없어요.')}</div>`) + `<div class="mt-4">${btn('menu', '', '← 내 요청으로', 's')}</div>`, keep);
   menuCur = 'cmp';
 }
@@ -1640,7 +1640,7 @@ function proReq(r) {
     <p class="mt-3 leading-relaxed line-clamp-3 whitespace-pre-wrap">${esc(r.details) || '<span class="text-sea/50">세부 요청사항 없음</span>'}</p>
     ${(r.photos || []).length ? `<div class="mt-3 flex gap-2">${r.photos.slice(0, 5).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="고객 첨부 사진" loading="lazy" class="h-16 w-16 rounded-xl object-cover"></a>`).join('')}</div>` : ''}
     <p class="mt-3 text-xs text-sea/60">${reqCode(r.id)} · ${ago(r.created_at)} · 확정 시 수수료 ${myCust ? '0원 (내 손님)' : feeNote(r.service)} · 제출은 무료</p>
-    <div class="mt-3">${my ? `<span class="font-bold text-cool">내 견적 ${won(my.price)} · ${QL[my.status]}</span>` : btn('qopen', r.id, '무료 견적 제출', 'a')}</div></article>`;
+    <div class="mt-3">${my ? `<div class="flex flex-wrap items-center gap-2"><span class="font-bold text-cool">내 견적 ${won(my.price)} · ${QL[my.status]}${my.edited_at ? ' (수정함)' : ''}</span>${qEditable(my) ? btn('qedit', my.id, '✏️ 견적 수정', 's') : ''}</div>` : btn('qopen', r.id, '무료 견적 제출', 'a')}</div></article>`;
 }
 function proListing(l) {
   const my = S.off.find(o => o.listing_id === l.id && o.buyer_id === me());
@@ -1669,6 +1669,28 @@ async function qsend(el, rid) {
     const { error } = await sb.from('quotes').insert({ request_id:+rid, price, visit, msg });
     if (error) throw (error.code === '23505' ? new Error('이미 견적을 제출한 요청이에요.') : /row-level/.test(error.message) ? new Error('견적을 낼 수 없어요. 예치금·영업 상태·요청 마감 여부를 확인해 주세요.') : error);
     await load('quo'); closeM(); render(); toast('견적을 제출했어요. 고객이 계약하면 채팅방이 열려요.');
+  });
+}
+/* 견적 수정: 고객이 계약하기 전(요청이 열려 있고 내 견적이 '제출됨')까지 가능 */
+const qEditable = q => !!q && q.pro_id === me() && q.status === 'submitted' && ((S.req.find(x => x.id === q.request_id) || {}).status === 'open');
+function qeditModal(qid) {
+  const q = S.quo.find(x => x.id === +qid); if (!qEditable(q)) return toast('이미 고객이 계약했거나 마감된 요청이라 수정할 수 없어요.');
+  const r = S.req.find(x => x.id === q.request_id);
+  openM(head('견적 수정') + `<p class="text-sm"><b>${svcOf(r)}</b> · ${reqWhere(r)} · 희망일 ${esc(r.wish_date)}</p>
+    <p class="mt-3 rounded-xl bg-sun/10 p-3 text-sm leading-relaxed">고객이 계약하기 전까지 고칠 수 있어요. 고치면 고객 화면에 <b>'기사님이 견적 수정'</b> 표시가 붙어요.</p>
+    <label for="qp" class="block mt-4 text-sm font-bold">견적 금액(원) <span class="font-normal text-sea/60">지금 ${won(q.price)}</span></label><input id="qp" type="number" min="1000" step="1000" inputmode="numeric" value="${+q.price}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+    <label for="qd" class="block mt-4 text-sm font-bold">작업 가능일</label><input id="qd" type="date" min="${today()}" value="${esc(q.visit >= today() ? q.visit : today())}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
+    <label for="qmsg" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="qmsg" maxlength="100" value="${esc(q.msg || '')}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
+    <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('qeditgo', q.id, '수정 저장')}</div>`);
+}
+async function qeditSave(el, qid) {
+  const price = +$('#qp').value, visit = $('#qd').value, msg = $('#qmsg').value.trim();
+  if (!(price >= 1000)) return setErr('견적 금액을 입력해 주세요.');
+  if (!visit || visit < today()) return setErr('오늘 이후의 작업 가능일을 선택해 주세요.');
+  await busy(el, async () => {
+    try { await rpc('update_my_quote', { p_quote:+qid, p_price:price, p_visit:visit, p_msg:msg }); }
+    catch (e) { throw /function|schema cache/i.test(e.message || '') ? new Error('견적 수정 기능 준비 중이에요. 잠시 후 다시 해 주세요.') : e; }
+    await load('quo'); closeM(); render(); toast('견적을 수정했어요.');
   });
 }
 function lowModal(need) {
@@ -1775,7 +1797,7 @@ function proMenu(keep) {
         ${c.warranty_no ? `<p class="mt-1 text-xs text-sea/60">무상 A/S 보증번호 ${esc(c.warranty_no)}</p>` : ''}
         <div class="mt-2 flex flex-wrap gap-2">${btn('rcpt', c.id, '내역서', 's')}${btn('chatc', c.id, '채팅방', 's')}${c.kind === 'service' && prov && c.status === 'confirmed' ? btn('done', c.id, '작업 완료 요청') : ''}${c.status !== 'completed' ? btn('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료', 'a') : ''}
         ${w && w.status !== 'resolved' && prov ? btn('rwstep', c.id, `재점검: ${w.status === 'requested' ? '방문 일정 확정' : '재점검 완료'}`, 'a') : ''}${w && w.status === 'resolved' ? '<span class="text-sm font-bold text-cool">재점검 해결 완료</span>' : ''}</div>`); }).join('') : `<div class="mt-2">${empty('아직 계약이 없어요.')}</div>`}
-    <h3 class="mt-6 font-bold">제출한 견적</h3>${qs.length ? qs.slice(0, 30).map(q => { const r = S.req.find(x => x.id === q.request_id); return card(`<p class="font-bold">${r ? svcOf(r) + ' · ' + esc(r.gu) : reqCode(q.request_id)} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]} · ${fmtT(q.created_at)}</p>`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
+    <h3 class="mt-6 font-bold">제출한 견적</h3>${qs.length ? qs.slice(0, 30).map(q => { const r = S.req.find(x => x.id === q.request_id); return card(`<p class="font-bold">${r ? svcOf(r) + ' · ' + esc(r.gu) : reqCode(q.request_id)} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]} · ${fmtT(q.created_at)}${q.edited_at ? ' · 수정함' : ''}</p>${qEditable(q) ? `<div class="mt-2">${btn('qedit', q.id, '✏️ 견적 수정', 's')}</div>` : ''}`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
     <h3 class="mt-6 font-bold">내 매입·구매 제안</h3>${offs.map(o => { const l = S.lst.find(x => x.id === o.listing_id); return card(`<p class="font-bold">${l ? esc(l.title) : '판매글'} · ${won(o.price)}</p><p class="text-xs text-sea/60">${QL[o.status]}</p>`); }).join('') || `<div class="mt-2">${empty('제출한 제안이 없어요.')}</div>`}
     <div class="mt-6">${btn('cs', '', '고객센터 · 내 문의', 's')}</div>`, keep);
   menuCur = 'pro';
@@ -2278,7 +2300,7 @@ const ACT = {
   rvs: k => { rv.s = k; rv.tags = []; rv.other = ''; revModal(rv.cid); },
   rvt: t => { const i = rv.tags.indexOf(t); rv.other = $('#rv-other')?.value || rv.other; if (i >= 0) rv.tags.splice(i, 1); else if (rv.tags.length >= 3) return toast('태그는 최대 3개까지 고를 수 있어요.'); else rv.tags.push(t); revModal(rv.cid); },
   rfilt: k => { RF = k; adminView(); }, refshare: (id, el) => shareLink(el), areq: id => areqModal(id),
-  online: (id, el) => toggleOnline(el), qopen: id => !asOk() ? asModal() : feeOk() ? quoteModal(id) : feeModal(id), fvopen: () => feeModal(), fvagree: (id, el) => $('#fv-ck') && $('#fv-ck').checked ? agreeFee(el, id) : setErr('동의 항목에 체크해 주세요.'), asopen: () => asModal(), asagree: (id, el) => $('#as-ck') && $('#as-ck').checked ? agreeAs(el) : setErr('동의 항목에 체크해 주세요.'), qsend: (id, el) => qsend(el, id),
+  online: (id, el) => toggleOnline(el), qedit: id => qeditModal(id), qeditgo: (id, el) => qeditSave(el, id), qopen: id => !asOk() ? asModal() : feeOk() ? quoteModal(id) : feeModal(id), fvopen: () => feeModal(), fvagree: (id, el) => $('#fv-ck') && $('#fv-ck').checked ? agreeFee(el, id) : setErr('동의 항목에 체크해 주세요.'), asopen: () => asModal(), asagree: (id, el) => $('#as-ck') && $('#as-ck').checked ? agreeAs(el) : setErr('동의 항목에 체크해 주세요.'), qsend: (id, el) => qsend(el, id),
   done: (id, el) => doneReq(el, id), rwstep: (id, el) => rwStep(el, id),
   lquote: k => { closeM(); openQuote({ cat:KINDS[k] ? k : 'aircon' }); }, smode: id => { sellBulk = id === 'bulk'; const m = $('#merr'); if (m) m.textContent = ''; bkDraw(); },
   bkadd: id => bkAdd(ITEMS_NOW()[+id]), scat: k => { if (!MCAT[k]) return; sellCat = k; bk = []; document.querySelectorAll('[data-act="scat"]').forEach(b => { const on = b.dataset.id === k; b.setAttribute('aria-pressed', on); b.className = `rounded-full border-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-mist hover:bg-ice'}`; }); const t = $('#sl-title'); if (t) t.placeholder = MCAT[k].ph; bkDraw(); }, bkcustom: () => { const i = $('#bk-in'); bkAdd(i.value); i.value = ''; i.focus(); },
