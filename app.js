@@ -106,6 +106,8 @@ const TOSS_KEY = typeof C.TOSS_CLIENT_KEY === 'string' ? C.TOSS_CLIENT_KEY.trim(
 const tossOn = () => /^live_/.test(TOSS_KEY) || (/^test_/.test(TOSS_KEY) && !!S.user && !!C.TOSS_TEST_EMAIL && (S.user.email || '').toLowerCase() === String(C.TOSS_TEST_EMAIL).toLowerCase());
 const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
 const pad = n => String(n).padStart(2, '0');
+/* 희망일이 2일 넘게 지난 요청: 서버가 마감하기 전이라도 기사님 목록에서는 숨겨요 */
+const reqStale = r => !!(r && r.wish_date && String(r.wish_date).slice(0, 10) < (() => { const d = new Date(Date.now() - 2 * 864e5); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })());
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const T = v => new Date(v).getTime();
 const fmtT = t => new Date(t).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -377,7 +379,7 @@ async function onSession(session) {
   await loadAll();
   if (S.mode === 'pro' && !S.pro) S.mode = 'customer';
   if (prevId !== me()) subscribe();
-  if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {});
+  if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); rpc('expire_requests').then(n => { if (n) queueLoad('req'); }).catch(() => {});
   if (S.user) handleTossReturn();
   if (S.user) setTimeout(welcomeCheck, 1200);
   if (S.user) setTimeout(async () => {
@@ -1611,7 +1613,7 @@ function proView() {
     return;
   }
   const myKinds = proKinds(p);
-  const open = S.req.filter(r => r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || (!r.target_pro && myKinds.includes(kindOf(r.service)))))
+  const open = S.req.filter(r => r.status === 'open' && !reqStale(r) && r.customer_id !== me() && (r.target_pro === me() || (!r.target_pro && myKinds.includes(kindOf(r.service)))))
     .sort((a, b) => ((b.target_pro === me()) - (a.target_pro === me())) || ((p.areas || []).includes(b.gu) - (p.areas || []).includes(a.gu)) || (isNear(p.areas, b.gu) - isNear(p.areas, a.gu)) || b.id - a.id);
   const mineQ = S.quo.filter(q => q.pro_id === me()), cons = S.con.filter(c => c.provider_id === me());
   const pc = pendingCharge();
@@ -2417,7 +2419,7 @@ setInterval(() => {
   document.querySelectorAll('[data-timer]').forEach(el => { const c = S.con.find(x => x.id === +el.dataset.timer); if (c && c.status === 'pending') el.textContent = hms(remainMs(c)); });
   document.querySelectorAll('[data-bar]').forEach(el => { const c = S.con.find(x => x.id === +el.dataset.bar); if (c && c.status === 'pending') el.style.width = pctLeft(c) + '%'; });
   const due = S.con.some(c => c.status === 'pending' && !c.paused && T(c.deadline) <= Date.now());
-  if (S.user && (due ? Date.now() - hkAt > 15000 : Date.now() - hkAt > 300000)) { hkAt = Date.now(); rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); }
+  if (S.user && (due ? Date.now() - hkAt > 15000 : Date.now() - hkAt > 300000)) { hkAt = Date.now(); rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); rpc('expire_requests').then(n => { if (n) queueLoad('req'); }).catch(() => {}); }
 }, 1000);
 
 /* =====================================================================
@@ -2481,7 +2483,7 @@ function watchNew() {
   if (!S.user) { W = null; return; }
   const n = snapW(); if (!W || W.uid !== n.uid) { W = n; return; }
   const out = [], nm = c => c.title || SVC[c.service] || '거래';
-  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${svcOf(r) || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
+  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && !reqStale(r) && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${svcOf(r) || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
   S.quo.filter(q => !W.quo.has(q.id) && S.req.some(r => r.id === q.request_id && r.customer_id === me())).forEach(q => out.push(['새 견적 도착', `${won(q.price)} 견적이 도착했어요`]));
   S.con.forEach(c => {
     const was = W.con.get(c.id); if (was === c.status) return;
