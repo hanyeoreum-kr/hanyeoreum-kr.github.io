@@ -21,7 +21,7 @@
   if (step3 && !document.getElementById('qm-phone')) {
     step3.insertAdjacentHTML('beforeend', `
       <div class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
-        <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로 딱 1번</span> 알려드려요</p>
+        <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로</span> 알려드려요</p>
         <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
         <label for="qm-phone" class="mt-3 block text-sm font-bold">📱 휴대폰 번호</label>
         <input id="qm-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-2 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
