@@ -568,4 +568,19 @@
   };
   ACT.noteplx = () => { try { localStorage.setItem(PL_NOTE, '1'); } catch (_) {} const n = document.getElementById('note-plumb'); if (n) n.remove(); };
   ACT.noteplgo = () => { profModal(); toast("'배관·하수구'를 눌러 고르고 맨 아래 저장을 눌러 주세요."); setTimeout(() => { try { const b = [...document.querySelectorAll('#mm-body button, #mm-body label')].find(x => /배관·하수구/.test(x.textContent)); if (b) b.scrollIntoView({ block:'center' }); } catch (_) {} }, 150); };
+
+  /* ---------- 20) 견적 다시 알림: 첫 알림 후 24시간 지나도 계약 안 한 손님에게 카톡 1번 ----------
+     서버가 때가 된 요청만 골라서 보내요. 로그인한 사람이 사이트를 보고 있으면 15분에 한 번 확인을 부탁해요. */
+  const RM_KEY = 'hy_remind_at';
+  const remindTick = () => {
+    try {
+      if (!sb || !S.user) return;
+      const last = +(localStorage.getItem(RM_KEY) || 0);
+      if (Date.now() - last < 15 * 60e3) return;
+      localStorage.setItem(RM_KEY, String(Date.now()));
+    } catch (_) { return; }
+    sb.functions.invoke('alimtalk', { body:{ remind:true } }).catch(() => {});
+  };
+  setTimeout(remindTick, 8000);
+  setInterval(remindTick, 5 * 60e3);
 })();
