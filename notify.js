@@ -589,19 +589,20 @@
   const _qShow21 = qShow;
   qShow = function (n) { _qShow21(n); if (n === 4 && sb && S.user) setTimeout(() => sb.functions.invoke('alimtalk', { body:{ notify_pros:true } }).catch(() => {}), 1500); };
 
-  const PA = { uid:null, row:null, busy:false };
+  const PA = { uid:null, row:null, busy:false, off:false };
   const PA_LATER = 'hy_pa_later';
   async function paLoad() {
     if (!sb || !S.user || PA.busy) return;
     if (PA.uid === me()) return;
     PA.busy = true;
-    try { const { data } = await sb.from('pro_alerts').select('phone, kakao_on').eq('user_id', me()).maybeSingle(); PA.row = data || null; PA.uid = me(); }
-    catch (_) { PA.row = null; PA.uid = me(); }
+    try { const { data, error } = await sb.from('pro_alerts').select('phone, kakao_on').eq('user_id', me()).maybeSingle(); if (error) PA.off = true; PA.row = data || null; PA.uid = me(); }
+    catch (_) { PA.off = true; PA.row = null; PA.uid = me(); }
     PA.busy = false;
     if (typeof render === 'function' && S.pro) proView();
   }
   const paLater = () => { try { return Date.now() - +(localStorage.getItem(PA_LATER) || 0) < 7 * 864e5; } catch (_) { return false; } };
   const paBox = () => {
+    if (PA.off) return '';   // 서버 준비(SQL) 전에는 신청 칸을 안 보여요
     const on = PA.row && PA.row.kakao_on;
     if (on) return `<div id="pa-box" class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm"><p class="font-bold text-emerald-700">✅ 새 요청 카톡 알림 켜짐 <span class="font-normal text-sea/60">· ${esc(phMask(PA.row.phone))}</span></p>${btn('paoff', '', '끄기', 's')}</div>`;
     if (paLater()) return '';

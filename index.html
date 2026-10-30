@@ -31,6 +31,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* 첫 화면 분야 버튼: 눌러 보고 싶게 입체감 (버튼 아래 두께 + 그림자, 누르면 쑥 들어가요) */
+#cats>button{background:linear-gradient(180deg,#fff 0%,#f4f7fc 100%);border:1px solid #e3e9f2;box-shadow:0 5px 0 #d6dfeb,0 10px 18px rgba(15,23,42,.10);transform:translateY(0);transition:transform .12s ease,box-shadow .12s ease;-webkit-tap-highlight-color:transparent}
+#cats>button:active{transform:translateY(4px);box-shadow:0 1px 0 #d6dfeb,0 3px 6px rgba(15,23,42,.10)}
+@media (hover:hover){#cats>button:hover{transform:translateY(-3px);box-shadow:0 8px 0 #d6dfeb,0 16px 26px rgba(15,23,42,.14)}#cats>button:hover:active{transform:translateY(4px);box-shadow:0 1px 0 #d6dfeb,0 3px 6px rgba(15,23,42,.10)}}
+#cats>button>span.grid{box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -4px 0 rgba(15,23,42,.07),0 4px 10px rgba(15,23,42,.10)}
+#cats>button b{text-shadow:0 1px 0 #fff}
+#cats{padding-bottom:6px;row-gap:14px}
+</style>
 <style>.hidden{display:none}@media (hover:hover) and (pointer:fine){.cam-only{display:none!important}}</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
