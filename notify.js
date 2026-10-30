@@ -583,4 +583,112 @@
   };
   setTimeout(remindTick, 8000);
   setInterval(remindTick, 5 * 60e3);
+
+  /* ---------- 21) 기사님 '새 요청 카톡 알림' ----------
+     손님이 요청을 보내면 → 그 분야 + 그 동네(옆 구 포함)에서 알림을 켠 기사님 최대 5명에게 카톡 (서버가 골라요) */
+  const _qShow21 = qShow;
+  qShow = function (n) { _qShow21(n); if (n === 4 && sb && S.user) setTimeout(() => sb.functions.invoke('alimtalk', { body:{ notify_pros:true } }).catch(() => {}), 1500); };
+
+  const PA = { uid:null, row:null, busy:false };
+  const PA_LATER = 'hy_pa_later';
+  async function paLoad() {
+    if (!sb || !S.user || PA.busy) return;
+    if (PA.uid === me()) return;
+    PA.busy = true;
+    try { const { data } = await sb.from('pro_alerts').select('phone, kakao_on').eq('user_id', me()).maybeSingle(); PA.row = data || null; PA.uid = me(); }
+    catch (_) { PA.row = null; PA.uid = me(); }
+    PA.busy = false;
+    if (typeof render === 'function' && S.pro) proView();
+  }
+  const paLater = () => { try { return Date.now() - +(localStorage.getItem(PA_LATER) || 0) < 7 * 864e5; } catch (_) { return false; } };
+  const paBox = () => {
+    const on = PA.row && PA.row.kakao_on;
+    if (on) return `<div id="pa-box" class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm"><p class="font-bold text-emerald-700">✅ 새 요청 카톡 알림 켜짐 <span class="font-normal text-sea/60">· ${esc(phMask(PA.row.phone))}</span></p>${btn('paoff', '', '끄기', 's')}</div>`;
+    if (paLater()) return '';
+    return `<section id="pa-box" class="mt-4 rounded-3xl border-2 border-amber-300 bg-amber-50 p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-3"><h2 class="text-lg font-black">📲 새 견적 요청, 카톡으로 바로 받기</h2><button type="button" data-act="palater" aria-label="나중에" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
+      <p class="mt-1 text-sm leading-relaxed text-sea/80">내 분야·내 동네에 손님 요청이 들어오면 카톡으로 알려 드려요. 먼저 견적을 보내는 기사님이 성사될 가능성이 높아요.</p>
+      <p class="mt-1 text-xs text-sea/60">요청 하나에 가까운 기사님 몇 분께만 가요. 알림은 무료이고 언제든 끌 수 있어요.</p>
+      <input id="pa-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" value="${PA.row ? esc(phFmt(PA.row.phone)) : ''}" class="mt-3 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
+      <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="pa-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
+        <span>새 견적 요청 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요
+        <details class="mt-1"><summary class="cursor-pointer text-xs font-bold text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-white p-2 text-xs leading-relaxed">항목: 휴대폰 번호<br>목적: 활동 분야·지역의 새 견적 요청 알림 발송<br>보유 기간: 회원 탈퇴 또는 알림을 끌 때까지<br>발송 대행: 솔라피(SOLAPI) · 카카오<br>번호는 손님과 다른 기사님께 공개되지 않아요.</span></details></span></label>
+      <p id="pa-err" role="alert" class="mt-2 text-sm font-bold text-red-600"></p>
+      <div class="mt-2">${btn('pasave', '', '카톡 알림 받기', 'a')}</div></section>`;
+  };
+  const _proView21 = proView;
+  proView = function () {
+    _proView21();
+    try {
+      if (!S.pro || !sb) return;
+      if (PA.uid !== me()) { paLoad(); return; }
+      if (document.getElementById('pa-box')) return;
+      const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
+      const h = paBox(); if (!h) return;
+      top.insertAdjacentHTML('afterend', h);
+      const inp = document.getElementById('pa-phone');
+      if (inp) inp.addEventListener('input', () => { inp.value = phFmt(phDigits(inp.value)); });
+    } catch (_) {}
+  };
+  ACT.pasave = async (id, el) => {
+    const d = phDigits((document.getElementById('pa-phone') || {}).value), ag = document.getElementById('pa-agree'), er = document.getElementById('pa-err');
+    const say = m => { if (er) er.textContent = m; };
+    if (!phOk(d)) return say('휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)');
+    if (!(ag && ag.checked)) return say('알림 수신에 동의해 주세요.');
+    const now = new Date().toISOString();
+    const { error } = await sb.from('pro_alerts').upsert({ user_id:me(), phone:d, kakao_on:true, agreed_at:now, updated_at:now });
+    if (error) return say('저장하지 못했어요. 잠시 후 다시 해 주세요.');
+    PA.row = { phone:d, kakao_on:true };
+    const b = document.getElementById('pa-box'); if (b) b.remove(); proView();
+    toast('새 요청 카톡 알림을 켰어요.');
+  };
+  ACT.paoff = async () => {
+    const { error } = await sb.from('pro_alerts').update({ kakao_on:false, updated_at:new Date().toISOString() }).eq('user_id', me());
+    if (error) return toast('잠시 후 다시 해 주세요.');
+    PA.row = Object.assign({}, PA.row, { kakao_on:false });
+    try { localStorage.setItem(PA_LATER, String(Date.now())); } catch (_) {}
+    const b = document.getElementById('pa-box'); if (b) b.remove();
+    toast('카톡 알림을 껐어요. 언제든 다시 켤 수 있어요.');
+  };
+  ACT.palater = () => { try { localStorage.setItem(PA_LATER, String(Date.now())); } catch (_) {} const b = document.getElementById('pa-box'); if (b) b.remove(); };
+
+  /* ---------- 22) 로그인하러 갔다 와도 견적 요청서가 안 사라지게 ----------
+     로그인 안 한 손님이 '로그인하고 보내기'를 누르면 쓴 내용을 휴대폰에 잠깐 저장해 두고,
+     카카오·네이버·구글 로그인이나 가입을 마치고 돌아오면 자동으로 이어서 보내 줘요. (2시간 안에만) */
+  const QD_KEY = 'hy_quote_draft';
+  const qdGet = () => { try { const d = JSON.parse(localStorage.getItem(QD_KEY) || 'null'); return d && Date.now() - d.t < 2 * 3600e3 ? d : null; } catch (_) { return null; } };
+  const qdDel = () => { try { localStorage.removeItem(QD_KEY); } catch (_) {} };
+  if (qmEl) qmEl.addEventListener('click', e => {
+    if (!e.target.closest('#qm-next') || qstep !== 3 || S.user) return;
+    try {
+      const ag = document.getElementById('qm-agree');
+      localStorage.setItem(QD_KEY, JSON.stringify({ t:Date.now(), f:Object.assign({}, qform),
+        details:(document.getElementById('qm-details') || {}).value || '', phone:phDigits((document.getElementById('qm-phone') || {}).value),
+        agree:!!(ag && ag.checked), photos:(typeof qphotos !== 'undefined' && qphotos.length) || 0 }));
+    } catch (_) {}
+  }, true);
+  let qdBusy = false;
+  function qdResume() {
+    if (qdBusy || !S.user || !sb) return;
+    const d = qdGet(); if (!d) return;
+    if (mmOpen && mmOpen()) return;                       // 로그인 창이 닫힌 뒤에
+    qdBusy = true; qdDel();
+    const qmOpen = qmEl && !qmEl.classList.contains('hidden') && qstep === 3;
+    if (!qmOpen) {
+      const f = d.f || {};
+      openQuote({ cat:f.etc || (f.service ? kindOf(f.service) : ''), service:f.etc ? '' : f.service, district:f.district });
+      Object.assign(qform, f);
+      const r = document.querySelector(`input[name="qm-svc"][value="${f.etc ? 'etc_' + f.etc : f.service}"]`); if (r) r.checked = true;
+      const gu = document.getElementById('qm-gu'); if (gu && f.district) gu.value = f.district;
+      const dt = document.getElementById('qm-date'); if (dt && f.date) dt.value = f.date;
+      qShow(3);
+      const det = document.getElementById('qm-details'); if (det) { det.value = d.details; det.dispatchEvent(new Event('input', { bubbles:true })); }
+    }
+    const ph = document.getElementById('qm-phone'); if (ph && d.phone && !phDigits(ph.value)) ph.value = phFmt(d.phone);
+    const ag = document.getElementById('qm-agree'); if (ag && d.agree) ag.checked = true;
+    if (d.photos && !qmOpen) { toast('로그인했어요. 작성하신 요청서를 불러왔어요. 사진만 다시 올리고 보내 주세요.'); qdBusy = false; return; }
+    toast('로그인했어요. 작성하신 견적 요청을 이어서 보낼게요.');
+    setTimeout(() => { const b = document.getElementById('qm-next'); if (b && qstep === 3) b.click(); qdBusy = false; }, 900);
+  }
+  setInterval(qdResume, 1000);
 })();
