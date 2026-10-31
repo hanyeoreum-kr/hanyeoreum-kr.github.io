@@ -393,8 +393,8 @@ async function onSession(session) {
     const sent = await flushPendingDoc();
     if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
   }
-  if (S.user) { let wp = 0; try { wp = +localStorage.getItem('hy_want_pro') || 0; if (wp) localStorage.removeItem('hy_want_pro'); } catch (_) {}
-    if (wp && Date.now() - wp < 30 * 60 * 1000 && !S.pro && !S.admin) setTimeout(() => { toast('가입이 끝났어요. 이어서 기사 정보를 입력해 주세요.'); becomeProModal(); }, 1800); }
+  if (S.user) { let wp = 0, n = 0; try { wp = +localStorage.getItem('hy_want_pro') || 0; n = +localStorage.getItem('hy_want_pro_n') || 0; if (wp && (S.pro || S.admin)) { localStorage.removeItem('hy_want_pro'); localStorage.removeItem('hy_want_pro_n'); wp = 0; } } catch (_) {}
+    if (wp && n < 3 && Date.now() - wp < 7 * 24 * 3600e3 && !S.pro && !S.admin && !sessionStorageGet('hy_wp_shown')) { sessionStorageSet('hy_wp_shown', '1'); try { localStorage.setItem('hy_want_pro_n', String(n + 1)); } catch (_) {} setTimeout(() => { toast('기사 등록을 이어서 해 주세요.'); becomeProModal(); }, 1800); } }
   updateAuthUI(); showView(S.view === 'pros' || S.view === 'market' ? S.view : 'main');
   refLanding();
 }
@@ -563,7 +563,7 @@ async function asignup(el) {
   });
 }
 async function asocial(p) {
-  try { if (au.tab === 'signup' && au.type === 'pro') localStorage.setItem('hy_want_pro', String(Date.now())); else localStorage.removeItem('hy_want_pro'); } catch (_) {}   // 기사로 가입하려던 건지 기억해 둬요
+  try { if (au.tab === 'signup' && au.type === 'pro') { localStorage.setItem('hy_want_pro', String(Date.now())); localStorage.setItem('hy_want_pro_n', '0'); } } catch (_) {}   // 기사로 가입하려던 건지 기억해 둬요
   if (p === 'naver') {
     const ns = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
     sessionStorageSet('hy_ns', ns); try { localStorage.setItem('hy_ns', ns); } catch (_) {}
