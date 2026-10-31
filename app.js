@@ -393,6 +393,8 @@ async function onSession(session) {
     const sent = await flushPendingDoc();
     if (!sent && S.pro.approval !== 'APPROVED' && !sessionStorageGet('hy_bd_ask')) { sessionStorageSet('hy_bd_ask', '1'); setTimeout(() => { if (!mmOpen() && S.pro && !S.pro.biz_doc) { openM(head('사업자등록증을 올려 주세요') + '<p class="text-sm leading-relaxed text-sea/80">사업자등록증을 확인한 뒤 승인되면 견적을 낼 수 있어요.</p>' + bizDocCard(S.pro)); menuCur = 'prof'; } }, 600); }
   }
+  if (S.user) { let wp = 0; try { wp = +localStorage.getItem('hy_want_pro') || 0; if (wp) localStorage.removeItem('hy_want_pro'); } catch (_) {}
+    if (wp && Date.now() - wp < 30 * 60 * 1000 && !S.pro && !S.admin) setTimeout(() => { toast('가입이 끝났어요. 이어서 기사 정보를 입력해 주세요.'); becomeProModal(); }, 1800); }
   updateAuthUI(); showView(S.view === 'pros' || S.view === 'market' ? S.view : 'main');
   refLanding();
 }
@@ -467,7 +469,7 @@ const legalLinks = () => `<a href="${esc(TERMS_URL)}" target="_blank" rel="noope
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
   const tab = (k, t) => `<button type="button" data-act="atab" data-id="${k}" aria-pressed="${au.tab === k}" class="flex-1 rounded-full py-2.5 text-sm font-bold ${au.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`;
-  const social = SOC.length ? `<div class="mt-5"><p class="text-xs font-bold text-sea/60">3초 간편 ${login ? '로그인' : '가입'}</p><div class="mt-2 grid gap-2">${SOC.map(k => `<button type="button" data-act="asocial" data-id="${k}" class="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-[15px] font-bold hover:opacity-90 ${SOC_STYLE[k] || ''}">${SOC_ICON[k] || ''}${PROV[k] || k}로 ${login ? '로그인' : '시작하기'}</button>`).join('')}</div>${login ? '' : '<p class="mt-1 text-xs text-sea/60">간편 가입 후 기사로 활동하려면 “기사·업체 등록”에서 정보를 입력해 주세요.</p>'}</div><div class="my-4 flex items-center gap-3 text-xs text-sea/50"><i class="h-px flex-1 bg-mist"></i>또는 이메일로<i class="h-px flex-1 bg-mist"></i></div>` : '';
+  const social = SOC.length ? `<div class="mt-5"><p class="text-xs font-bold text-sea/60">3초 간편 ${login ? '로그인' : '가입'}</p><div class="mt-2 grid gap-2">${SOC.map(k => `<button type="button" data-act="asocial" data-id="${k}" class="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-[15px] font-bold hover:opacity-90 ${SOC_STYLE[k] || ''}">${SOC_ICON[k] || ''}${PROV[k] || k}로 ${login ? '로그인' : '시작하기'}</button>`).join('')}</div>${login ? '' : '<p class="mt-1 text-xs text-sea/60">' + (pro ? '간편 가입 후 바로 이어서 기사 정보(사업자등록증·활동 지역)를 입력하는 화면이 열려요.' : '간편 가입 후 기사로 활동하려면 “기사·업체 등록”에서 정보를 입력해 주세요.') + '</p>'}</div><div class="my-4 flex items-center gap-3 text-xs text-sea/50"><i class="h-px flex-1 bg-mist"></i>또는 이메일로<i class="h-px flex-1 bg-mist"></i></div>` : '';
   const common = `${lab('au-email', '이메일')}<input id="au-email" type="email" autocomplete="email" value="${v('email')}" class="${inp}">
     ${lab('au-pw', login ? '비밀번호' : '비밀번호 (8자 이상, 영문+숫자)')}<input id="au-pw" type="password" autocomplete="${login ? 'current-password' : 'new-password'}" value="${v('pw')}" class="${inp}">
     ${login ? '' : `${lab('au-pw2', '비밀번호 확인')}<input id="au-pw2" type="password" autocomplete="new-password" value="${v('pw2')}" class="${inp}">`}`;
@@ -561,6 +563,7 @@ async function asignup(el) {
   });
 }
 async function asocial(p) {
+  try { if (au.tab === 'signup' && au.type === 'pro') localStorage.setItem('hy_want_pro', String(Date.now())); else localStorage.removeItem('hy_want_pro'); } catch (_) {}   // 기사로 가입하려던 건지 기억해 둬요
   if (p === 'naver') {
     const ns = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
     sessionStorageSet('hy_ns', ns); try { localStorage.setItem('hy_ns', ns); } catch (_) {}
