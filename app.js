@@ -1602,6 +1602,24 @@ function proChat() {
   const u = (C.PRO_CHAT_URL || '').trim(); if (!/^https:\/\/open\.kakao\.com\//.test(u)) return '';
   return `<a href="${esc(u)}" target="_blank" rel="noopener" class="mt-6 flex items-center gap-4 rounded-3xl bg-[#FEE500] p-5 text-[#191919] hover:brightness-95"><span class="text-3xl" aria-hidden="true">💬</span><span class="min-w-0 flex-1"><b class="block">기사님 소통방 (카카오톡 오픈채팅)</b><span class="mt-0.5 block text-sm text-black/70">새 일감 소식 · 설비 정보 · 사이트 사용법을 함께 나눠요</span></span><span class="shrink-0 rounded-full bg-[#191919] px-4 py-2 text-sm font-bold text-white">들어가기 ›</span></a>`;
 }
+// 승인 대기 중인 기사님에게 '지금 들어오는 요청'을 미리 보여줘요 (세부 내용·사진·손님 정보는 제외, 서버 함수 pending_preview_requests)
+async function loadPvw() {
+  if (S.pvwBusy || (S.pvwAt && Date.now() - S.pvwAt < 60000)) return;
+  S.pvwBusy = true;
+  try { const d = await rpc('pending_preview_requests'); S.pvw = Array.isArray(d) ? d : []; } catch (_) { S.pvw = false; }
+  S.pvwAt = Date.now(); S.pvwBusy = false;
+  if (S.mode === 'pro' && S.pro && S.pro.approval === 'PENDING') render();
+}
+function pendingPreview(p) {
+  if (!Array.isArray(S.pvw)) return '';
+  const ks = proKinds(p), list = S.pvw.filter(r => ks.includes(kindOf(r.service)) && !reqStale(r));
+  return `<h2 class="mt-10 text-2xl font-black">지금 들어오고 있는 요청</h2>
+    <p class="mt-1 text-sm text-sub">${list.length ? `내 분야 열린 요청이 <b>${list.length}건</b> 있어요. 승인되면 바로 견적을 낼 수 있어요.` : '지금 내 분야 열린 요청은 없어요. 새 요청이 들어오면 여기에 떠요.'} 세부 내용과 사진은 승인 후에 볼 수 있어요.</p>
+    <div class="mt-4 grid md:grid-cols-2 gap-4">${list.slice(0, 8).map(r => { const k = KINDS[kindOf(r.service)] || KINDS.aircon; return `<article class="rounded-3xl bg-white p-5 shadow-card">
+      <div class="flex flex-wrap items-center gap-2"><span class="rounded-full px-3 py-1 text-sm font-bold ${k.color}">${esc(SVC[r.service] || k.name)}</span></div>
+      <p class="mt-2 font-bold">${esc(place(r.gu))}</p><p class="text-sm text-sub">희망일 ${esc(r.wish_date)} · ${ago(r.created_at)}</p>
+      <div class="mt-3"><span class="inline-block rounded-xl bg-mist px-4 py-2 text-sm font-bold text-sub">🔒 승인 후 견적 제출</span></div></article>`; }).join('')}</div>`;
+}
 function proView() {
   const p = S.pro; if (!p) { $('#pview').innerHTML = empty('기사 정보를 불러오는 중이에요.'); return; }
   if (!p.as_agreed_at && S.user && (S.user.user_metadata || {}).as_agree && !proView.asTry) { proView.asTry = true; rpc('agree_as', {}).then(() => load('pro')).then(() => render()).catch(() => {}); }
@@ -1610,8 +1628,9 @@ function proView() {
   const top = `<div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-sm font-bold text-brand">${proKinds(p).filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.pro}${p.kind === 'truck' && p.ton ? ` · ${esc(p.ton)}${p.lift ? ' 리프트' : ''}` : ''}</p><h1 class="text-2xl font-black lg:text-3xl">${esc(p.name)} 기사님</h1><p class="mt-1 text-sm text-sub">${prate({ rating:p.rating_count ? p.rating_sum / p.rating_count : 0, rating_count:p.rating_count })}</p></div>
     <div class="flex flex-wrap items-center gap-2">${notifBtn()}${btn('mypage', '', '마이페이지', 's')}${btn('profedit', '', '프로필 수정', 's')}<button type="button" role="switch" aria-checked="${on}" data-act="online" class="inline-flex items-center gap-3 rounded-full px-5 py-2.5 font-bold ${on ? 'bg-cool text-white' : 'bg-mist'}">${on ? '영업중' : '휴무'}<span class="relative h-5 w-9 rounded-full bg-white/60" aria-hidden="true"><i class="absolute top-0.5 h-4 w-4 rounded-full ${on ? 'bg-white' : 'bg-sea/50'} transition-all" style="left:${on ? '1.125rem' : '.125rem'}"></i></span></button></div></div>`;
   if (!ok) {
+    if (p.approval === 'PENDING') loadPvw();
     $('#pview').innerHTML = top + (p.approval === 'PENDING'
-      ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>${proChat()}`
+      ? `${bizDocCard(p)}<div class="mt-6 rounded-3xl bg-sun/10 p-6"><p class="font-bold text-sun text-lg">관리자 승인을 기다리고 있어요</p><p class="mt-2 text-sm leading-relaxed text-sea/80">${p.biz_doc ? '사업자등록증을 확인하고 있어요. 보통 1영업일 안에 승인돼요.' : '위에서 사업자등록증을 먼저 올려 주세요. 확인 후 승인해 드려요.'} 그동안 마이페이지에서 한 줄 소개·경력·포트폴리오를 채워 두면 고객에게 더 잘 보여요.</p><div class="mt-4 flex flex-wrap gap-2">${btn('mypage', '', '마이페이지 채우기', 'a')}${btn('inqnew', '', '고객센터 문의', 's')}</div></div>${pendingPreview(p)}${proChat()}`
       : `<div class="mt-6 rounded-3xl bg-red-50 p-6"><p class="font-bold text-red-700 text-lg">기사 등록이 승인되지 않았어요</p><p class="mt-2 text-sm text-sea/80">자세한 내용은 고객센터로 문의해 주세요.</p><div class="mt-4">${btn('inqnew', '', '고객센터 문의', 'a')}</div></div>`);
     return;
   }
