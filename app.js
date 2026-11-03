@@ -1298,6 +1298,10 @@ async function qNext() {
   if (!S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
   qform.details = $('#qm-details').value.trim();
   if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
+  if (kindOf(qform.service) === 'home' && !qform.etc && /세면대|변기|하수구|배수구|누수|동파|수전|수도꼭지/.test(qform.details || '')) {   // 배관 내용인데 생활가전으로 고른 경우
+    const d0 = qform.details, pv = /변기/.test(d0) ? 'plumb_toilet' : /하수구|배수구/.test(d0) ? 'plumb_drain' : /누수/.test(d0) ? 'plumb_leak' : /동파/.test(d0) ? 'plumb_thaw' : 'plumb_fixture';
+    if (confirm(`적어 주신 내용이 "${SVC[pv]}" 분야에 더 가까워 보여요.\n이 분야로 바꿔서 보낼까요?\n\n[확인] 바꿔서 보내기  /  [취소] 그대로 보내기`)) qform.service = pv;
+  }
   if (qsending) return; qsending = true;
   const b = $('#qm-next'); b.disabled = true; b.textContent = '보내는 중...';
   try {
@@ -2038,6 +2042,7 @@ function areqModal(id) {
     ${(r.photos || []).length ? `<div class="mt-3 flex flex-wrap gap-2">${r.photos.filter(isPhotoUrl).map(p => `<a href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="요청 사진" class="h-20 w-20 rounded-lg object-cover"></a>`).join('')}</div>` : ''}
     <p class="mt-5 text-sm font-bold">받은 견적 ${qs.length}건</p>${qs.map(q => `<div class="mt-2 flex items-center justify-between gap-2 rounded-xl border border-mist px-3 py-2 text-sm"><span>${esc(pname(q.pro_id))} <span class="text-xs text-sea/50">${ago(q.created_at)}</span></span><b>${won(q.price)} <span class="text-xs font-normal text-sea/60">${esc(QL[q.status] || '')}</span></b></div>`).join('') || '<p class="mt-1 text-sm text-sea/60">아직 견적이 없어요.</p>'}
     ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl bg-sun/10 p-3 text-sm"><b>이 요청에 견적을 낼 수 있는 기사님 ${near.length}명</b> <span class="text-xs text-sea/60">(같은 분야 · 승인됨 · 지역 무관 · 알림 발송 ${near.filter(p => p.online !== false).length}명)</span><p class="mt-1 text-xs leading-relaxed">${near.slice(0, 30).map(p => esc(p.name) + ((p.areas || []).includes(r.gu) ? '📍' : '') + (p.online === false ? '(쉬는 중)' : '')).join(', ')}${near.length > 30 ? ` 외 ${near.length - 30}명` : ''}${near.length ? '' : '같은 분야 기사님이 아직 없어요. 기사 모집이 필요해요.'}</p><p class="mt-1 text-[11px] text-sea/50">📍 = 이 지역을 활동 지역으로 고른 기사님</p></div>` : ''}
+    ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl border border-mist p-3 text-sm"><b>분야 변경</b> <span class="text-xs text-sea/60">(고객이 분야를 잘못 골랐을 때)</span><div class="mt-2 flex gap-2"><select id="rsvc" class="min-w-0 flex-1 rounded-xl border border-mist px-3 py-2">${Object.entries(SVC).map(([k, v]) => `<option value="${k}"${k === r.service ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>${btn('rsvc', r.id, '변경', 's')}</div></div>` : ''}
     <div class="mt-5"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
   menuCur = 'areq';
 }
@@ -2355,6 +2360,9 @@ const ACT = {
   ifilt: k => { AF = k; render(); }, iadm: id => inqAdmin(id),
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
+  rsvc: async (id, el) => { const v = ($('#rsvc') || {}).value, r = S.adminReq.find(x => x.id === +id);
+    if (!v || !r || v === r.service) return toast('바꿀 분야를 골라 주세요.');
+    await adminSimple(el, 'admin_set_request_service', { p_request:+id, p_service:v }, `분야를 "${SVC[v]}"(으)로 바꿨어요. 해당 분야 기사님께 새 요청으로 알려요.`, ['adminReq', 'req']); areqModal(id); },
   papprove: (id, el) => adminSimple(el, 'admin_set_approval', { p_pro:id, p_approve:true }, '기사를 승인했어요.', ['adminPros', 'prosPub', 'aud']),
   pblock: id => blockModal(id),
   pblockgo: (id, el) => busy(el, async () => { await rpc('admin_block_pro', { p_user:id, p_reason:$('#blk-why').value.trim() }); closeM(); await load('adminPros'); loadArc(true); render(); toast('차단했어요. 이 사업자등록번호로는 다시 가입할 수 없어요.'); }),
@@ -2498,14 +2506,14 @@ function phoneNote(t, b) {
 function alertUser(t, b) { toast(`🔔 ${t} · ${b}`); try { navigator.vibrate && navigator.vibrate(120); } catch (e) {} phoneNote(t, b); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && nBadge) { nBadge = 0; document.title = baseTitle; } });
 function snapW() {
-  return { uid:me(), req:new Set(S.req.map(r => r.id)), quo:new Set(S.quo.map(q => q.id)), con:new Map(S.con.map(c => [c.id, c.status])), off:new Set(S.off.map(o => o.id)),
+  return { uid:me(), req:new Set(S.req.map(r => r.id + ':' + r.service)), quo:new Set(S.quo.map(q => q.id)), con:new Map(S.con.map(c => [c.id, c.status])), off:new Set(S.off.map(o => o.id)),
     chg:new Set(S.chg.map(c => c.id)), inq:new Set(S.inq.map(i => i.id)), pp:new Set(S.adminPros.filter(p => p.approval === 'PENDING').map(p => p.id)) };
 }
 function watchNew() {
   if (!S.user) { W = null; return; }
   const n = snapW(); if (!W || W.uid !== n.uid) { W = n; return; }
   const out = [], nm = c => c.title || SVC[c.service] || '거래';
-  if (approved()) S.req.filter(r => !W.req.has(r.id) && r.status === 'open' && !reqStale(r) && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${svcOf(r) || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
+  if (approved()) S.req.filter(r => !W.req.has(r.id + ':' + r.service) && r.status === 'open' && !reqStale(r) && r.customer_id !== me() && (r.target_pro === me() || kindOf(r.service) === (S.pro.kind || 'aircon'))).forEach(r => out.push([r.target_pro === me() ? '나를 지정한 견적 요청' : '새 견적 요청', `${svcOf(r) || ''} · ${r.service === 'truck' ? `${r.gu} → ${r.to_gu}` : r.gu}`]));
   S.quo.filter(q => !W.quo.has(q.id) && S.req.some(r => r.id === q.request_id && r.customer_id === me())).forEach(q => out.push(['새 견적 도착', `${won(q.price)} 견적이 도착했어요`]));
   S.con.forEach(c => {
     const was = W.con.get(c.id); if (was === c.status) return;
