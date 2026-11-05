@@ -1237,7 +1237,7 @@ function qPlace() {
   else if (w1.parentNode !== s2) { s2.querySelector('h3').after(w1); w1.after(w2); }
 }
 function qShow(n) {
-  qstep = n; qPlace(); qErr(''); if (n === 2 || n === 3) track('qstep' + n);
+  qstep = n; if (n === 2) qform.etc = null; qPlace(); qErr(''); if (n === 2 || n === 3) track('qstep' + n);
   document.querySelectorAll('#qm [data-step]').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
   [...$('#qm-bar').children].forEach((b, i) => { b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}${qform.etc && i === 1 ? ' hidden' : ''}`; });
   $('#qm-bar').style.gridTemplateColumns = qform.etc ? 'repeat(3,minmax(0,1fr))' : '';
@@ -1272,7 +1272,7 @@ function openQuote(pre = {}, trigger) {
   if (S.mode !== 'customer') setMode('customer');
   if (qstep === 4) qReset();
   qopener = trigger || document.activeElement;
-  if (pre.service) { qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
+  if (pre.service) { qform.etc = null; qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
   if (pre.district) { qform.district = pre.district; $('#qm-gu').value = pre.district; }
   if (pre.target) { qform.target = pre.target; qform.targetName = pre.targetName || ''; }
   qCat(pre.cat || '');
