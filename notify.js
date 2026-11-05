@@ -182,6 +182,8 @@
     } catch (_) {}
   };
   /* ---------- 6) 견적 요청 2단계: 기기 종류·대수 (청소는 평수) ---------- */
+  /* 요청서 화면이 옆으로 밀리지 않게 (아이폰 날짜칸·긴 목록 대비) */
+  { const st = document.createElement('style'); st.textContent = '#qm,#qm .overflow-y-auto{overflow-x:hidden;overscroll-behavior-x:none}#qm .overflow-y-auto{touch-action:pan-y pinch-zoom}#qm input,#qm select,#qm textarea{max-width:100%;min-width:0;box-sizing:border-box}#qm input[type=date]{display:block;width:100%}'; document.head.appendChild(st); }
   const DEV = {
     aircon:{ t:'에어컨 종류와 대수', items:['벽걸이', '스탠드', '2in1 (스탠드+벽걸이)', '천장형 1way', '천장형 2way', '천장형 4way', '창문형', '실외기'] },
     heat:{ t:'보일러·온수기 종류와 대수', items:['가스보일러', '기름보일러', '전기보일러', '온수기', '라디에이터'] },
@@ -203,12 +205,12 @@
   const devKind = () => qform.service === 'truck' || !qform.service ? '' : (qform.etc || kindOf(qform.service));
   const devTotal = () => Object.values(DV.counts).reduce((a, b) => a + b, 0);
   const devLine = () => DV.kind === 'plumb' ? plLine() : DV.kind === 'clean' ? (DV.py ? `[평수] ${DV.py}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
-  function devRender() {
+  function devRender0() {
     const sec = document.querySelector('#qm [data-step="2"]'); if (!sec) return;
     const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; }
     let box = document.getElementById('qm-dev');
     if (!DEV[k] && k !== 'clean' && k !== 'plumb') { if (box) box.remove(); return; }
-    if (!box) { const dl = document.querySelector('#qm label[for="qm-date"]'); (dl || sec.lastElementChild).insertAdjacentHTML('beforebegin', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
+    if (!box) { sec.insertAdjacentHTML('beforeend', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
     const opt = true; /* 선택 사항: 몰라도 다음 단계로 넘어갈 수 있어요 */
     if (k === 'plumb') {
       box.innerHTML = Object.entries(PL).map(([g, v]) => `<p class="mt-5 text-sm font-bold">${v.t} <span class="font-normal text-sea/60">(선택${v.multi ? ' · 여러 개 가능' : ''})</span></p>
@@ -227,7 +229,19 @@
         <button type="button" data-dv="${it}" data-d="-1" aria-label="${it} 한 대 빼기" class="h-8 w-8 rounded-full bg-ice font-bold ${n ? '' : 'opacity-40'}">−</button><span class="w-8 text-center font-bold tabular-nums">${n}</span><button type="button" data-dv="${it}" data-d="1" aria-label="${it} 한 대 더하기" class="h-8 w-8 rounded-full bg-brand font-bold text-white">+</button></li>`; }).join('')}</ul>
       ${devTotal() ? `<p class="mt-2 text-right text-sm font-bold text-brand">총 ${devTotal()}대</p>` : ''}`;
   }
+  /* 선택 사항은 접어 둘 수 있어요 (기본: 펼침) */
+  let DVOPEN = true, DVLAST = '';
+  function devRender() {
+    devRender0();
+    const box = document.getElementById('qm-dev'); if (!box || !box.innerHTML.trim()) return;
+    const k = DV.kind; if (k !== DVLAST) { DVLAST = k; DVOPEN = true; }
+    const t = k === 'plumb' ? '문제 상황 알려주기' : k === 'clean' ? '청소할 곳 평수' : (DEV[k] ? DEV[k].t : '');
+    const sum = k === 'plumb' ? (PV.where.length || PV.bld || PV.hurry ? ' · 입력됨' : '') : k === 'clean' ? (DV.py ? ' · ' + DV.py : '') : (devTotal() ? ` · 총 ${devTotal()}대` : '');
+    let inner = box.innerHTML; if (k !== 'plumb') inner = inner.replace(/^\s*<p class="mt-5 text-sm font-bold">[\s\S]*?<\/p>\s*/, '');
+    box.innerHTML = `<button type="button" data-dvt="1" aria-expanded="${DVOPEN}" class="mt-5 flex w-full items-center justify-between rounded-xl bg-ice px-4 py-3 text-left"><span class="min-w-0 text-sm font-bold">${t} <span class="font-normal text-sea/60">(선택)${sum}</span></span><span aria-hidden="true" class="ml-2 shrink-0 text-xs font-bold text-sea/60">${DVOPEN ? '▲ 접기' : '▼ 펼치기'}</span></button><div class="${DVOPEN ? '' : 'hidden'}">${inner}</div>`;
+  }
   document.addEventListener('click', e => {
+    const tg = e.target.closest('#qm-dev [data-dvt]'); if (tg) { DVOPEN = !DVOPEN; devRender(); return; }
     const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-py], #qm-dev [data-pl]'); if (!b) return;
     if (b.dataset.pl) { const g = b.dataset.pl, x = b.dataset.v; if (PL[g].multi) PV[g] = PV[g].includes(x) ? PV[g].filter(y => y !== x) : [...PV[g], x]; else PV[g] = PV[g] === x ? '' : x; }
     else if (b.dataset.py) DV.py = DV.py === b.dataset.py ? '' : b.dataset.py;

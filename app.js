@@ -1229,11 +1229,19 @@ const qm = $('#qm');
 let qstep = 1, qopener = null, qphotos = [], qsending = false;
 const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' };
 function qErr(msg) { const e = $('#qm-err'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
+/* 기타 요청: 2단계를 없애고, 희망일·지역을 3단계로 옮겨요 (그 외 분야는 2단계 맨 위가 희망일) */
+function qPlace() {
+  const w1 = $('#qm-when'), w2 = $('#qm-where'); if (!w1 || !w2) return;
+  const s2 = document.querySelector('#qm [data-step="2"]'), s3 = document.querySelector('#qm [data-step="3"]'); if (!s2 || !s3) return;
+  if (qform.etc) { if (w1.parentNode !== s3) { const a = s3.querySelector('p'); a.after(w1); w1.after(w2); } }
+  else if (w1.parentNode !== s2) { s2.querySelector('h3').after(w1); w1.after(w2); }
+}
 function qShow(n) {
-  qstep = n; qErr(''); if (n === 2 || n === 3) track('qstep' + n);
+  qstep = n; qPlace(); qErr(''); if (n === 2 || n === 3) track('qstep' + n);
   document.querySelectorAll('#qm [data-step]').forEach(s => s.classList.toggle('hidden', +s.dataset.step !== n));
-  [...$('#qm-bar').children].forEach((b, i) => b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}`);
-  $('#qm-label').textContent = n < 4 ? `${n} / 3 단계${qform.targetName ? ` · 지정 기사님: ${qform.targetName}` : ''}` : '';
+  [...$('#qm-bar').children].forEach((b, i) => { b.className = `h-1.5 rounded-full ${i < n ? 'bg-cool' : 'bg-mist'}${qform.etc && i === 1 ? ' hidden' : ''}`; });
+  $('#qm-bar').style.gridTemplateColumns = qform.etc ? 'repeat(3,minmax(0,1fr))' : '';
+  $('#qm-label').textContent = n < 4 ? `${qform.etc && n === 3 ? 2 : n} / ${qform.etc ? 2 : 3} 단계${qform.targetName ? ` · 지정 기사님: ${qform.targetName}` : ''}` : '';
   const truck = (n === 2 && (document.querySelector('input[name="qm-svc"]:checked') || {}).value === 'truck') || (n === 2 && qform.service === 'truck');
   $('#qm-truck').classList.toggle('hidden', !truck); $('#qm-gu-l').textContent = truck ? '출발지' : '작업 지역';
   $('#qm-site').classList.toggle('hidden', !(n === 2 && SITE_SVCS.includes(qform.service)));
@@ -1293,7 +1301,13 @@ async function qNext() {
     if (qform.service === 'truck') { qform.to = $('#qm-to').value; qform.ton = $('#qm-ton').value; qform.lift = $('#qm-lift').checked;
       if (!qform.to) return qErr('도착지 구를 선택해 주세요.'); if (!qform.ton) return qErr('희망 차량을 선택해 주세요.'); }
   }
-  if (qstep < 3) return qShow(qstep + 1);
+  if (qstep < 3) return qShow(qstep === 1 && qform.etc ? 3 : qstep + 1);   // 기타는 2단계 건너뛰기
+  if (qform.etc) {   // 기타: 희망일·지역을 3단계에서 받아요
+    qform.district = $('#qm-gu').value; qform.date = $('#qm-date').value;
+    if (!qform.district) return qErr('작업할 구를 선택해 주세요.');
+    if (!qform.date) return qErr('작업 희망일을 입력해 주세요.');
+    if (qform.date < today()) return qErr('오늘 이후 날짜를 선택해 주세요.');
+  }
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
   if (!S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
   qform.details = $('#qm-details').value.trim();
@@ -2430,7 +2444,7 @@ $('#qm-thumbs').addEventListener('click', e => { const b = e.target.closest('[da
 })();
 $('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / ${e.target.maxLength > 0 ? e.target.maxLength : 500}`);
 $('#qm-next').addEventListener('click', qNext);
-$('#qm-back').addEventListener('click', () => qShow(qstep - 1));
+$('#qm-back').addEventListener('click', () => qShow(qstep === 3 && qform.etc ? 1 : qstep - 1));
 qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
 document.addEventListener('submit', e => {
   if (e.target.id === 'hfind' && $('#hkind')) { e.preventDefault(); hsugShow(false); const k = $('#hkind').value, g = $('#hgu').value; if (k === 'sale') return sellOpen(); return openQuote(k ? { cat:k, district:g } : { district:g }, e.submitter); }
