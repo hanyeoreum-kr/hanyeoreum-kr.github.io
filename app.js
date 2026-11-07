@@ -384,7 +384,7 @@ async function onSession(session) {
   if (S.user) setTimeout(welcomeCheck, 1200);
   if (S.user) setTimeout(async () => {
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
-    else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 계약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
+    else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 예약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
   }, 800);
   if (S.user && S.pro) load('myRefs').then(() => { if (S.mode === 'pro') render(); });
   if (S.user) claimRef();
@@ -809,7 +809,7 @@ function render() {
   const cust = S.mode === 'customer';
   const n = !S.user ? 0 : cust ? myReqs().filter(r => r.status === 'open').length + S.con.filter(c => c.client_id === me() && c.status === 'pending').length : S.con.filter(c => c.provider_id === me() && c.status !== 'completed').length;
   const need = cust && S.con.some(c => c.client_id === me() && c.status === 'pending');
-  $('#fab').innerHTML = (cust ? '내 요청 관리' : '내 견적·계약') + (n ? ` <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">${n}</span>` : '') + (need ? ' <span class="ml-1 rounded-full bg-white px-2 py-0.5 text-xs text-sea">확인 필요</span>' : '') + (cust && unreadN() ? ' <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">새 답변</span>' : '');
+  $('#fab').innerHTML = (cust ? '내 요청 관리' : '내 견적·예약') + (n ? ` <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">${n}</span>` : '') + (need ? ' <span class="ml-1 rounded-full bg-white px-2 py-0.5 text-xs text-sea">확인 필요</span>' : '') + (cust && unreadN() ? ' <span class="ml-1 rounded-full bg-sun px-2 py-0.5 text-xs">새 답변</span>' : '');
   setBadge($('#mbar-menu'), cust ? n + (S.user ? unreadN() : 0) : 0); setBadge($('#mbar-pmenu'), cust ? 0 : n);
   $('#fab').style.display = S.mode === 'admin' ? 'none' : '';
   $('#mbar').style.display = S.mode === 'admin' ? 'none' : '';
@@ -1351,7 +1351,7 @@ const pendBlock = c => `<div class="w-full rounded-2xl border border-sun/30 bg-s
 function conBlock(c) {
   if (!c) return '';
   const v = reviewOf(c.id), w = reworkOf(c.id), client = c.client_id === me(), svc = c.kind === 'service';
-  const st = c.status === 'completed' ? '거래 확정 완료' : c.status === 'pending' ? '거래 확정 대기' : '계약 체결 · ' + wdOf(c) + ' 예정';
+  const st = c.status === 'completed' ? '거래 확정 완료' : c.status === 'pending' ? '거래 확정 대기' : '예약 확정 · ' + wdOf(c) + ' 예정';
   return `<span class="text-sm font-bold w-full">${esc(client ? c.provider_name : c.client_name)} · ${won(c.price)} · ${st}</span>
     ${btn('rcpt', c.id, '작업 내역서', 's')}${btn('chatc', c.id, '채팅방', 's')}${c.warranty_no ? btn('warr', c.id, '무상 A/S 보증서', 's') : ''}
     ${!svc && c.status === 'confirmed' ? btn('cfin', c.id, '✅ 거래 완료', 'a') : ''}
@@ -1362,13 +1362,13 @@ function conBlock(c) {
     ${svc && client && v && v.mood === 'bad' && !w && c.status === 'completed' ? btn('rew', c.id, '재점검 신청') : ''}${w ? `<span class="text-sm font-bold text-cool w-full">재점검: ${RWL[w.status]}</span>` : ''}`;
 }
 function custMenu(keep) {
-  if (!S.user) { openM(head('내 요청 관리') + `<p class="leading-relaxed text-sea/80">견적 요청, 계약, 판매글은 로그인 후 볼 수 있어요.</p><div class="mt-4">${btn('auth', '', '로그인 / 회원가입', 'a')}</div>`); return; }
+  if (!S.user) { openM(head('내 요청 관리') + `<p class="leading-relaxed text-sea/80">견적 요청, 예약, 판매글은 로그인 후 볼 수 있어요.</p><div class="mt-4">${btn('auth', '', '로그인 / 회원가입', 'a')}</div>`); return; }
   const my = myReqs(), ml = S.lst.filter(l => l.seller_id === me()), buys = S.con.filter(c => c.client_id === me() && c.kind !== 'service'), pre = S.thr.filter(t => t.contract_id == null && t.u1 === me());
   const nb = notifBtn() && my.length ? `<div class="mb-3 flex items-center justify-between gap-3 rounded-2xl bg-sun/10 p-3 text-sm"><span>견적이 도착하면 바로 알려 드릴까요?</span>${notifBtn()}</div>` : '';
   openM(head('내 요청 관리') + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
     (my.length ? '<h3 class="mt-2 font-bold">견적 요청</h3>' : '') + my.map(r => {
       const qs = S.quo.filter(q => q.request_id === r.id), c = conFor('request_id', r.id);
-      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${svcOf(r)} · ${reqWhere(r)}${r.target_pro ? ' · <span class="text-sun">지정 요청</span>' : ''}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '계약 완료' : '요청 마감'}</span></div>
+      return card(`<div class="flex justify-between gap-2"><p class="font-bold">${svcOf(r)} · ${reqWhere(r)}${r.target_pro ? ' · <span class="text-sun">지정 요청</span>' : ''}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '예약 확정' : '요청 마감'}</span></div>
         <p class="text-xs text-sea/60 mt-1">${reqCode(r.id)} · 희망일 ${esc(r.wish_date)} · 사진 ${(r.photos || []).length}장</p>
         <div class="mt-3 flex flex-wrap gap-2 items-center">${r.status === 'open' ? (qs.length ? btn('cmp', r.id, `받은 견적 ${qs.length}건 비교`) : '<span class="text-sm text-sea/60">기사님 견적을 기다리는 중이에요</span>') + btn('rclose', r.id, '요청 취소', 's') : conBlock(c)}</div>`);
     }).join('') +
@@ -1389,18 +1389,18 @@ function compare(rid, keep) {
   const qs = S.quo.filter(q => q.request_id === r.id).sort(cmpSort === 'low' ? (a, b) => a.price - b.price : (a, b) => pscore(proPub(b.pro_id)) - pscore(proPub(a.pro_id)) || a.price - b.price);
   const best = qs.length > 1 && cmpSort === 'rec' && (proPub(qs[0].pro_id) || {}).rating_count > 0 ? qs[0].id : null;
   const tb = (k, t) => `<button type="button" data-act="cmpsort" data-id="${k}" aria-pressed="${cmpSort === k}" class="rounded-full px-3 py-1.5 text-xs font-bold ${cmpSort === k ? 'bg-sea text-white' : 'bg-ice'}">${t}</button>`;
-  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${svcOf(r)} · ${reqWhere(r)} · 계약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
+  openM(head('받은 견적 비교') + `<p class="text-sm text-sea/70">${svcOf(r)} · ${reqWhere(r)} · 예약하면 다른 견적은 자동 마감돼요.</p>${qs.length > 1 ? `<div class="mt-3 flex items-center gap-1.5">${tb('rec', '추천순')}${tb('low', '낮은 가격순')}<span class="ml-1 text-xs text-sea/50">추천순은 실거래 후기가 많고 평점 좋은 순</span></div>` : ''}` +
     (qs.map(q => { const p = proPub(q.pro_id) || { name:'기사', rating:0, rating_count:0 };
       return card(`${q.id === best ? '<p class="mb-2 inline-block rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">⭐ 한여름 추천 · 후기 좋은 기사님</p>' : ''}<div class="flex items-start justify-between gap-3"><div><p class="flex flex-wrap items-center gap-1.5 font-bold">${esc(p.name)} ${gbadge(p)}</p><p class="text-sm text-cool font-bold">${prate(p)}</p>${p.bio ? `<p class="mt-1 text-xs text-sea/70">${esc(p.bio)}</p>` : ''}<div class="mt-1 flex flex-wrap gap-1.5">${pcerts(p)}</div>${p.free ? '<div class="mt-1">' + FREE_CHIP + '</div>' : ''}</div><p class="font-display text-2xl">${won(q.price)}</p></div>
       <p class="mt-2 text-sm">${esc(q.msg) || '메시지 없음'}</p><p class="text-xs text-sea/60 mt-1">작업 가능일 ${esc(q.visit)}${q.edited_at ? ` · <b class="text-sun">✏️ ${fmtT(q.edited_at)} 기사님이 견적 수정</b>` : ''}</p>
-      <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pro_id, '프로필 보기', 's')}${r.status === 'open' ? btn('pick', q.id, '계약하기', 'a') : `<span class="text-sm font-bold">${QL[q.status]}</span>`}</div>`); }).join('') || `<div class="mt-3">${empty('아직 도착한 견적이 없어요.')}</div>`) + `<div class="mt-4">${btn('menu', '', '← 내 요청으로', 's')}</div>`, keep);
+      <div class="mt-3 flex flex-wrap gap-2">${btn('pq', q.pro_id, '프로필 보기', 's')}${r.status === 'open' ? btn('pick', q.id, '예약하기', 'a') : `<span class="text-sm font-bold">${QL[q.status]}</span>`}</div>`); }).join('') || `<div class="mt-3">${empty('아직 도착한 견적이 없어요.')}</div>`) + `<div class="mt-4">${btn('menu', '', '← 내 요청으로', 's')}</div>`, keep);
   menuCur = 'cmp';
 }
 async function pick(el, qid) {
   await busy(el, async () => {
     const r = await rpc('accept_quote', { p_quote:+qid });
-    if (!r.ok) return toast('기사님의 예치금이 부족해 지금은 계약할 수 없어요. 다른 견적을 고르거나 잠시 후 다시 시도해 주세요.');
-    await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render(); receipt(r.contract_id, true); toast('계약이 체결됐어요. 채팅방에서 기사님과 일정을 조율해 보세요.');
+    if (!r.ok) return toast('기사님의 예치금이 부족해 지금은 예약할 수 없어요. 다른 견적을 고르거나 잠시 후 다시 시도해 주세요.');
+    await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render(); receipt(r.contract_id, true); toast('예약이 확정됐어요. 채팅방에서 기사님과 일정을 조율해 보세요.');
   });
 }
 function receipt(cid, fresh) {
@@ -1476,8 +1476,8 @@ async function chatModal(tid, keep) {
   const readTag = !hasRead || !lastM ? '' : otherRead && T(otherRead) >= T(lastM.created_at) ? ' · <b>읽음</b>' : ' · 안 읽음';
   const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
-  else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 계약하기'));
-  else acts.push(qa('qask', tid, '📝 계약 등록 요청'));
+  else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 예약하기'));
+  else acts.push(qa('qask', tid, '📝 예약 등록 요청'));
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
     <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
@@ -1520,13 +1520,13 @@ function directModal(tid) {
   const t = S.thr.find(x => x.id === +tid), p = proPub(t.u2) || { fields:[], areas:[] }, codes = (KINDS[p.kind] || KINDS.aircon).svcs.filter(c => c !== 'freezer_sale');
   const guess = codes[0];
   const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, x) => `<label for="${f}" class="block mt-4 text-sm font-bold">${x}</label>`;
-  openM(head('합의 내용으로 계약하기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님과 채팅으로 합의한 내용을 계약으로 등록해요.</p>
-    <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 계약 채팅방이 열려요.</p>
+  openM(head('합의 내용으로 예약하기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님과 채팅으로 합의한 내용을 예약으로 등록해요.</p>
+    <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 예약 채팅방이 열려요.</p>
     ${lab('dc-svc', '서비스')}<select id="dc-svc" class="${inp}">${codes.map(c => `<option value="${c}"${c === guess ? ' selected' : ''}>${SVC[c]}</option>`).join('')}</select>
     ${lab('dc-gu', '작업 지역')}<select id="dc-gu" class="${inp}">${guOpts(GG_ALL, (p.areas || [])[0])}</select>
     ${lab('dc-date', '작업 날짜')}<input id="dc-date" type="date" min="${today()}" class="${inp}">
     ${lab('dc-price', '합의 금액(원)')}<input id="dc-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">${errBox()}
-    <div class="mt-4 flex gap-3">${btn('chat', t.id, '취소', 's')}${wbtn('dsend', t.id, '계약 등록')}</div>`);
+    <div class="mt-4 flex gap-3">${btn('chat', t.id, '취소', 's')}${wbtn('dsend', t.id, '예약 등록')}</div>`);
 }
 async function dsend(el, tid) {
   const t = S.thr.find(x => x.id === +tid), date = $('#dc-date').value, price = +$('#dc-price').value;
@@ -1534,8 +1534,8 @@ async function dsend(el, tid) {
   if (!(price >= 1000)) return setErr('합의 금액을 입력해 주세요.');
   await busy(el, async () => {
     const r = await rpc('direct_contract', { p_pro:t.u2, p_service:$('#dc-svc').value, p_gu:$('#dc-gu').value, p_date:date, p_price:price });
-    if (!r.ok) return setErr('기사님의 예치금이 부족해 지금은 계약할 수 없어요.');
-    await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render(); receipt(r.contract_id, true); toast('계약이 등록됐어요.');
+    if (!r.ok) return setErr('기사님의 예치금이 부족해 지금은 예약할 수 없어요.');
+    await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render(); receipt(r.contract_id, true); toast('예약이 등록됐어요.');
   });
 }
 
@@ -1662,8 +1662,8 @@ function proView() {
       <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
     <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 3,500원 + 최종 결제 금액의 등급 %(🐣10 · 🦅7 · 👑5%)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
-    ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 계약하지 못한 견적이 있어요. 충전하면 고객이 바로 계약할 수 있어요.</p>' : ''}
-    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 계약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
+    ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 예약하지 못한 견적이 있어요. 충전하면 고객이 바로 예약할 수 있어요.</p>' : ''}
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 예약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
     ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">3,500원 + 최종 금액의 등급 %(🐣10 · 🦅7 · 👑5%). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청 → 내 활동 지역 → 📍근처 지역 순서로 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
@@ -1710,16 +1710,16 @@ async function qsend(el, rid) {
   await busy(el, async () => {
     const { error } = await sb.from('quotes').insert({ request_id:+rid, price, visit, msg });
     if (error) throw (error.code === '23505' ? new Error('이미 견적을 제출한 요청이에요.') : /row-level/.test(error.message) ? new Error('견적을 낼 수 없어요. 예치금·영업 상태·요청 마감 여부를 확인해 주세요.') : error);
-    await load('quo'); closeM(); render(); toast('견적을 제출했어요. 고객이 계약하면 채팅방이 열려요.');
+    await load('quo'); closeM(); render(); toast('견적을 제출했어요. 고객이 예약하면 채팅방이 열려요.');
   });
 }
-/* 견적 수정: 고객이 계약하기 전(요청이 열려 있고 내 견적이 '제출됨')까지 가능 */
+/* 견적 수정: 고객이 예약하기 전(요청이 열려 있고 내 견적이 '제출됨')까지 가능 */
 const qEditable = q => !!q && q.pro_id === me() && q.status === 'submitted' && ((S.req.find(x => x.id === q.request_id) || {}).status === 'open');
 function qeditModal(qid) {
-  const q = S.quo.find(x => x.id === +qid); if (!qEditable(q)) return toast('이미 고객이 계약했거나 마감된 요청이라 수정할 수 없어요.');
+  const q = S.quo.find(x => x.id === +qid); if (!qEditable(q)) return toast('이미 고객이 예약했거나 마감된 요청이라 수정할 수 없어요.');
   const r = S.req.find(x => x.id === q.request_id);
   openM(head('견적 수정') + `<p class="text-sm"><b>${svcOf(r)}</b> · ${reqWhere(r)} · 희망일 ${esc(r.wish_date)}</p>
-    <p class="mt-3 rounded-xl bg-sun/10 p-3 text-sm leading-relaxed">고객이 계약하기 전까지 고칠 수 있어요. 고치면 고객 화면에 <b>'기사님이 견적 수정'</b> 표시가 붙어요.</p>
+    <p class="mt-3 rounded-xl bg-sun/10 p-3 text-sm leading-relaxed">고객이 예약하기 전까지 고칠 수 있어요. 고치면 고객 화면에 <b>'기사님이 견적 수정'</b> 표시가 붙어요.</p>
     <label for="qp" class="block mt-4 text-sm font-bold">견적 금액(원) <span class="font-normal text-sea/60">지금 ${won(q.price)}</span></label><input id="qp" type="number" min="1000" step="1000" inputmode="numeric" value="${+q.price}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
     <label for="qd" class="block mt-4 text-sm font-bold">작업 가능일</label><input id="qd" type="date" min="${today()}" value="${esc(q.visit >= today() ? q.visit : today())}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
     <label for="qmsg" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="qmsg" maxlength="100" value="${esc(q.msg || '')}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
@@ -1829,16 +1829,16 @@ function proMenu(keep) {
   if (!S.pro) return;
   const qs = S.quo.filter(q => q.pro_id === me()), offs = S.off.filter(o => o.buyer_id === me()), cs = S.con.filter(c => c.provider_id === me() || (c.client_id === me() && c.kind === 'sale'));
   const pre = S.thr.filter(t => t.contract_id == null && t.u2 === me());
-  openM(head('내 견적·계약 관리') + `<p class="font-bold">${esc(S.pro.name)}</p>
+  openM(head('내 견적·예약 관리') + `<p class="font-bold">${esc(S.pro.name)}</p>
     ${pre.length ? '<h3 class="mt-4 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(t.u1_name)} 고객님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : ''}
-    <h3 class="mt-4 font-bold">진행 중인 계약 · 정산</h3>${cs.length ? cs.map(c => { const w = reworkOf(c.id), v = reviewOf(c.id), prov = c.provider_id === me();
+    <h3 class="mt-4 font-bold">진행 중인 예약 · 정산</h3>${cs.length ? cs.map(c => { const w = reworkOf(c.id), v = reviewOf(c.id), prov = c.provider_id === me();
       return card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p>
         <p class="text-xs text-sea/60">${conCode(c.id)} · ${esc(prov ? c.client_name : c.provider_name)} · ${c.status === 'completed' ? '완료' : c.status === 'pending' ? '고객 확인 대기' : wdOf(c) + ' 예정 ' + esc(c.work_date || '')}${c.fee_payer === me() ? ` · 수수료 ${+c.fee_ver === 2 && !c.fee_charged ? '예상 ' : ''}${won(c.fee)}${c.fee_charged ? ' 차감 완료' : ' (확정 시 차감)'}` : ''}</p>
         ${v ? `<p class="mt-1 text-sm">받은 후기: ${SL[v.mood]} ${'★'.repeat(v.stars)}${(v.tags || []).length ? ' · ' + v.tags.map(esc).join(', ') : ''}${v.body ? ' — ' + esc(v.body) : ''}</p>` : ''}
         ${c.status === 'pending' ? `<div class="mt-2 rounded-xl bg-sun/10 p-3 text-sm"><p class="font-bold text-sun">${c.paused ? '신고 접수 · 자동 확정 일시 정지' : '고객 확인 대기 중'}</p><p class="mt-1 text-xs text-sea/70">자동 확정까지</p><p class="font-display text-2xl tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</p><div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white"><i class="block h-full bg-sun" data-bar="${c.id}" style="width:${pctLeft(c)}%"></i></div></div>` : ''}
         ${c.warranty_no ? `<p class="mt-1 text-xs text-sea/60">무상 A/S 보증번호 ${esc(c.warranty_no)}</p>` : ''}
         <div class="mt-2 flex flex-wrap gap-2">${btn('rcpt', c.id, '내역서', 's')}${btn('chatc', c.id, '채팅방', 's')}${c.kind === 'service' && prov && c.status === 'confirmed' ? btn('done', c.id, '작업 완료 요청') : ''}${c.status !== 'completed' ? btn('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료', 'a') : ''}
-        ${w && w.status !== 'resolved' && prov ? btn('rwstep', c.id, `재점검: ${w.status === 'requested' ? '방문 일정 확정' : '재점검 완료'}`, 'a') : ''}${w && w.status === 'resolved' ? '<span class="text-sm font-bold text-cool">재점검 해결 완료</span>' : ''}</div>`); }).join('') : `<div class="mt-2">${empty('아직 계약이 없어요.')}</div>`}
+        ${w && w.status !== 'resolved' && prov ? btn('rwstep', c.id, `재점검: ${w.status === 'requested' ? '방문 일정 확정' : '재점검 완료'}`, 'a') : ''}${w && w.status === 'resolved' ? '<span class="text-sm font-bold text-cool">재점검 해결 완료</span>' : ''}</div>`); }).join('') : `<div class="mt-2">${empty('아직 예약이 없어요.')}</div>`}
     <h3 class="mt-6 font-bold">제출한 견적</h3>${qs.length ? qs.slice(0, 30).map(q => { const r = S.req.find(x => x.id === q.request_id); return card(`<p class="font-bold">${r ? svcOf(r) + ' · ' + esc(r.gu) : reqCode(q.request_id)} · ${won(q.price)}</p><p class="text-xs text-sea/60">${QL[q.status]} · ${fmtT(q.created_at)}${q.edited_at ? ' · 수정함' : ''}</p>${qEditable(q) ? `<div class="mt-2">${btn('qedit', q.id, '✏️ 견적 수정', 's')}</div>` : ''}`); }).join('') : `<div class="mt-2">${empty('제출한 견적이 없어요.')}</div>`}
     <h3 class="mt-6 font-bold">내 매입·구매 제안</h3>${offs.map(o => { const l = S.lst.find(x => x.id === o.listing_id); return card(`<p class="font-bold">${l ? esc(l.title) : '판매글'} · ${won(o.price)}</p><p class="text-xs text-sea/60">${QL[o.status]}</p>`); }).join('') || `<div class="mt-2">${empty('제출한 제안이 없어요.')}</div>`}
     <div class="mt-6">${btn('cs', '', '고객센터 · 내 문의', 's')}</div>`, keep);
@@ -1918,7 +1918,7 @@ function inqForm(reset) {
   if (needC && !cons.some(c => String(c.id) === String(iq.cid))) iq.cid = cons[0] ? String(cons[0].id) : '';
   const catB = k => `<button type="button" data-act="iqcat" data-id="${k}" aria-pressed="${iq.cat === k}" class="rounded-2xl border-2 px-3 py-4 text-sm font-bold ${iq.cat === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}"><span aria-hidden="true">${CAT_ICON[k]}</span> ${CAT[k]}</button>`;
   openM(head('1:1 문의하기') + `<fieldset><legend class="text-sm font-bold">문의 유형</legend><div class="mt-2 grid grid-cols-2 gap-3">${Object.keys(CAT).map(catB).join('')}</div></fieldset>
-    ${needC ? `${lab('iq-cid', '관련 계약')}${cons.length ? `<select id="iq-cid" class="${inp}">${cons.map(c => `<option value="${c.id}"${String(iq.cid) === String(c.id) ? ' selected' : ''}>${esc(conLabel(c))}</option>`).join('')}</select>` : `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm text-sea/80">${iq.cat === 'AS_REINSPECT' ? '작업 완료 후 14일 이내의 계약이 없어요. 기간이 지났다면 “기타”로 문의해 주세요.' : '문의할 수 있는 계약이 없어요. 계약과 무관한 내용은 “기타”로 남겨 주세요.'}</p>`}` : ''}
+    ${needC ? `${lab('iq-cid', '관련 예약')}${cons.length ? `<select id="iq-cid" class="${inp}">${cons.map(c => `<option value="${c.id}"${String(iq.cid) === String(c.id) ? ' selected' : ''}>${esc(conLabel(c))}</option>`).join('')}</select>` : `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-sm text-sea/80">${iq.cat === 'AS_REINSPECT' ? '작업 완료 후 14일 이내의 예약이 없어요. 기간이 지났다면 “기타”로 문의해 주세요.' : '문의할 수 있는 예약이 없어요. 예약과 무관한 내용은 “기타”로 남겨 주세요.'}</p>`}` : ''}
     ${iq.cat === 'PRO_ISSUE' ? `${lab('iq-issue', '어떤 문제가 있었나요?')}<select id="iq-issue" class="${inp}">${Object.entries(ISSUE).map(([k, t]) => `<option value="${k}"${iq.issue === k ? ' selected' : ''}>${t}</option>`).join('')}</select>` : ''}
     ${lab('iq-title', '제목 (5~100자)')}<input id="iq-title" maxlength="100" value="${esc(iq.title)}" class="${inp}">
     ${lab('iq-body', '내용 (10~2,000자)')}<textarea id="iq-body" rows="5" maxlength="2000" class="${inp} resize-none" placeholder="상황을 구체적으로 적어 주세요. 날짜와 시간, 금액이 있으면 함께 알려 주세요.">${esc(iq.body)}</textarea>
@@ -1927,7 +1927,7 @@ function inqForm(reset) {
 }
 async function inqSend(el) {
   saveIq(); const needC = iq.cat !== 'ETC', title = iq.title.trim(), body = iq.body.trim(), files = [...($('#iq-f').files || [])];
-  if (needC && !iq.cid) return setErr('관련 계약을 선택해 주세요.');
+  if (needC && !iq.cid) return setErr('관련 예약을 선택해 주세요.');
   if (title.length < 5) return setErr('제목은 5자 이상 입력해 주세요.');
   if (body.length < 10) return setErr('내용은 10자 이상 입력해 주세요.');
   if (files.length > 5) return setErr('사진은 최대 5장까지 올릴 수 있어요.');
@@ -1956,7 +1956,7 @@ async function inqDetail(id, keep) {
     : `<div class="ml-8 rounded-2xl rounded-tr-sm bg-mist p-4"><p class="text-xs text-sea/60">${m.kind === 'FOLLOWUP' ? '추가 문의' : '내 문의'} · ${fmtT(m.created_at)}</p><p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">${esc(m.body)}</p>${(m.photos || []).length ? `<div class="mt-2 flex flex-wrap gap-2">${m.photos.filter(isPhotoUrl).map(p => `<a href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="첨부 사진" class="h-16 w-16 rounded-lg object-cover"></a>`).join('')}</div>` : ''}</div>`).join('');
   const canFu = i.status === 'ANSWERED' && Date.now() - T(i.t_ans) <= FOLLOW;
   openM(head(inqCode(i.id)) + `<div class="flex flex-wrap items-center gap-2"><span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT_ICON[i.cat]} ${CAT[i.cat]}${i.issue ? ' · ' + ISSUE[i.issue] : ''}</span>${stBadge(i.status)}</div>
-    <p class="mt-2 font-bold">${esc(i.title)}</p>${i.contract_id ? `<p class="text-xs text-sea/60">관련 계약 ${conCode(i.contract_id)}</p>` : ''}
+    <p class="mt-2 font-bold">${esc(i.title)}</p>${i.contract_id ? `<p class="text-xs text-sea/60">관련 예약 ${conCode(i.contract_id)}</p>` : ''}
     <div class="mt-4">${bar}</div><div class="mt-4 space-y-3">${mh}</div>
     ${canFu ? `<label for="fu-body" class="block mt-4 text-sm font-bold">추가 문의 <span class="font-normal text-sea/60">(답변 후 7일 이내)</span></label><textarea id="fu-body" rows="3" maxlength="2000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none"></textarea>${errBox()}<div class="mt-2">${btn('inqfu', i.id, '추가 문의 보내기', 'a')}</div>` : ''}
     ${i.status === 'CLOSED' ? '<p class="mt-4 rounded-xl bg-ice p-3 text-sm">종결된 문의예요. 이어서 궁금한 점은 새 문의로 접수해 주세요.</p>' : ''}
@@ -2015,7 +2015,7 @@ let RF = 'wait';
 const HR = 3600e3, T0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return +d; };
 const reqQs = id => S.adminQuo.filter(q => q.request_id === id);
 const reqState = r => { const n = reqQs(r.id).length; return r.status === 'matched' ? 'done' : r.status !== 'open' ? 'closed' : n ? 'got' : 'wait'; };
-const RST = { wait:['견적 대기', 'bg-sun text-white'], got:['견적 받음', 'bg-cool text-white'], done:['계약 성사', 'bg-sea text-white'], closed:['마감·취소', 'bg-mist text-sea/70'] };
+const RST = { wait:['견적 대기', 'bg-sun text-white'], got:['견적 받음', 'bg-cool text-white'], done:['예약 확정', 'bg-sea text-white'], closed:['마감·취소', 'bg-mist text-sea/70'] };
 const custOf = r => S.custNm[r.customer_id] || {};
 function reqBoard() {
   const R = S.adminReq, t0 = T0(), wk = Date.now() - 7 * 24 * HR;
@@ -2038,9 +2038,9 @@ function reqBoard() {
       <span class="row-span-2 flex flex-col items-end gap-1 sm:row-span-1"><span class="rounded-full px-2.5 py-0.5 text-xs font-bold ${st[1]}">${st[0]}${n ? ' ' + n : ''}</span>${isLate ? '<span class="text-[11px] font-bold text-red-600">2시간+ 무응답</span>' : ''}</span></button>`; };
   const fchip = (k, t) => `<button type="button" data-act="rfilt" data-id="${k}" aria-pressed="${RF === k}" class="${chipCls(RF === k)}">${t} ${cnt(k)}</button>`;
   return `<section class="mt-8 rounded-3xl border-2 border-cool/30 bg-white p-5 sm:p-6"><div class="flex flex-wrap items-baseline justify-between gap-2"><h2 class="text-xl font-bold">고객 견적 요청 한눈에 보기</h2><span class="text-xs text-sea/50">줄을 누르면 상세 내용 · 받은 견적이 보여요</span></div>
-    <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">${mini('오늘 들어온 요청', today + '건')}${mini('최근 7일 요청', week.length + '건')}${mini('견적 0건 · 2시간 넘음', late.length + '건', late.length > 0)}${mini('7일 계약 성사율', rate + '%')}</div>
+    <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">${mini('오늘 들어온 요청', today + '건')}${mini('최근 7일 요청', week.length + '건')}${mini('견적 0건 · 2시간 넘음', late.length + '건', late.length > 0)}${mini('7일 예약 확정률', rate + '%')}</div>
     <div class="mt-3 grid gap-2 text-sm sm:grid-cols-2"><p><b class="mr-1 text-xs text-sea/60">많이 찾는 지역(7일)</b> ${top(byGu, place)}</p><p><b class="mr-1 text-xs text-sea/60">많이 찾는 서비스(7일)</b> ${top(bySvc, k => SVC[k] || k)}</p></div>
-    <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="요청 상태 필터">${fchip('wait', '견적 대기')}${fchip('got', '견적 받음')}${fchip('done', '계약 성사')}${fchip('closed', '마감·취소')}${fchip('ALL', '전체')}</div>
+    <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="요청 상태 필터">${fchip('wait', '견적 대기')}${fchip('got', '견적 받음')}${fchip('done', '예약 확정')}${fchip('closed', '마감·취소')}${fchip('ALL', '전체')}</div>
     <div class="mt-3 hidden grid-cols-[92px_1.4fr_1fr_100px_90px_96px] gap-3 border-b-2 border-mist px-2 pb-2 text-xs font-bold text-sea/60 sm:grid"><span>번호·접수</span><span>서비스</span><span>지역</span><span>희망일</span><span>고객</span><span class="text-right">상태</span></div>
     <div class="max-h-[520px] overflow-y-auto">${list.map(row).join('') || `<div class="mt-3">${empty(RF === 'wait' ? '견적을 기다리는 요청이 없어요. 👍' : '해당하는 요청이 없어요.')}</div>`}</div></section>`;
 }
@@ -2225,7 +2225,7 @@ function adminView() {
   const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
-    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">${memStat()}${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('확정 대기 계약', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">${memStat()}${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('거래 확정 대기', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
     ${backupCard()}${reqBoard()}${delCard()}${arcCard()}${visitCard()}
 
     <div class="mt-8 grid lg:grid-cols-2 gap-6">
@@ -2249,8 +2249,8 @@ function adminView() {
         <div class="mt-3 max-h-56 overflow-y-auto">${S.inc.slice(0, 30).map(l => `<div class="flex justify-between gap-3 border-b border-dashed border-white/20 py-2 text-sm"><span>${fmtT(l.created_at)} · ${esc(l.text)} · ${esc(proName(l.pro_id))}</span><b>+${won(l.amount)}</b></div>`).join('') || '<p class="mt-2 text-sm text-white/70">아직 수수료 수입이 없어요.</p>'}</div></section>
     </div>
 
-    <h2 class="mt-10 text-2xl font-bold">최근 계약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 계약이 없어요.')}</div>`}</div>
+    <h2 class="mt-10 text-2xl font-bold">최근 예약</h2>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
@@ -2264,8 +2264,8 @@ async function inqAdmin(id, keep) {
   const c = i.contract_id ? S.con.find(x => x.id === i.contract_id) : null;
   openM(head(inqCode(i.id)) + `<div class="flex flex-wrap items-center gap-2">${stBadge(i.status)}<span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT[i.cat]}${i.issue ? ' · ' + ISSUE[i.issue] : ''}</span>${i.priority === 'HIGH' ? '<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">긴급</span>' : ''}</div>
     <p class="mt-2 font-bold">${esc(i.title)}</p><p class="text-xs text-sea/60">${who ? esc(who.name) + ' · ' + esc(who.email) : ''} (${esc(i.by_role)}) · ${fmtT(i.created_at)} 접수${i.assignee ? ' · 담당 ' + esc(i.assignee) : ''}</p>
-    ${c ? `<p class="text-xs text-sea/60">계약 ${conCode(c.id)} · ${conTitle(c)} · ${esc(c.provider_name)} ↔ ${esc(c.client_name)} · ${won(c.price)}</p>` : ''}
-    ${i.live && i.status !== 'CLOSED' ? '<p class="mt-2 rounded-xl bg-sun/10 p-3 text-xs font-bold text-sun">이 신고는 계약의 자동 확정 타이머를 멈추고 있어요. 종결하면 남은 시간부터 다시 시작돼요.</p>' : ''}
+    ${c ? `<p class="text-xs text-sea/60">예약 ${conCode(c.id)} · ${conTitle(c)} · ${esc(c.provider_name)} ↔ ${esc(c.client_name)} · ${won(c.price)}</p>` : ''}
+    ${i.live && i.status !== 'CLOSED' ? '<p class="mt-2 rounded-xl bg-sun/10 p-3 text-xs font-bold text-sun">이 신고는 예약의 자동 확정 타이머를 멈추고 있어요. 종결하면 남은 시간부터 다시 시작돼요.</p>' : ''}
     <div class="mt-4 space-y-3">${msgs.map(m => `<div class="rounded-2xl p-4 ${m.kind === 'ANSWER' ? 'bg-sea text-white mr-8' : m.kind === 'INTERNAL_NOTE' ? 'border-2 border-dashed border-sun/50 bg-sun/5' : 'bg-mist ml-8'}"><p class="text-xs ${m.kind === 'ANSWER' ? 'text-white/70' : 'text-sea/60'}">${{ QUESTION:'문의', FOLLOWUP:'추가 문의', ANSWER:'답변', INTERNAL_NOTE:'내부 메모 (고객에게 안 보임)' }[m.kind]} · ${fmtT(m.created_at)}</p><p class="mt-1 whitespace-pre-wrap text-sm leading-relaxed">${esc(m.body)}</p>${(m.photos || []).length ? `<div class="mt-2 flex flex-wrap gap-2">${m.photos.filter(isPhotoUrl).map(p => `<a href="${esc(p)}" target="_blank" rel="noopener"><img src="${esc(p)}" alt="첨부 사진" class="h-16 w-16 rounded-lg object-cover"></a>`).join('')}</div>` : ''}</div>`).join('')}</div>
     ${i.status === 'CLOSED' ? '' : `<label for="ia-body" class="block mt-5 text-sm font-bold">${i.status === 'ANSWERED' ? '추가 답변 / 내부 메모' : '최종 답변 / 내부 메모'}</label><textarea id="ia-body" rows="4" maxlength="2000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none" placeholder="${i.status === 'ANSWERED' ? '“추가 답변 등록”은 고객에게 알림이 가고, 내부 메모는 보이지 않아요.' : '“최종 답변 등록”을 누르면 고객 고객센터 알림에 바로 표시돼요.'}"></textarea>${errBox()}
     <div class="mt-2 flex flex-wrap gap-2">${btn('inote', i.id, '내부 메모 저장', 's')}${btn('ianswer', i.id, i.status === 'ANSWERED' ? '추가 답변 등록' : '최종 답변 등록', 'a')}${i.status === 'ANSWERED' ? btn('iclose', i.id, '종결', 's') : ''}${i.status === 'RECEIVED' ? btn('iassign', i.id, '처리 시작', 's') : ''}</div>`}
@@ -2335,7 +2335,7 @@ const ACT = {
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
   csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(), qcam: () => $('#chat-cam').click(),
   qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
-  qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 계약하기”를 눌러 주세요.'; i.focus(); },
+  qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 예약하기”를 눌러 주세요.'; i.focus(); },
   qdirect: id => directModal(id), dsend: (id, el) => dsend(el, id),
   cfin: (id, el) => confirmDeal(el, id),
   cfinok: (id, el) => { const v = +String(($('#fin-amt') || {}).value || '').replace(/[^0-9]/g, ''); if (!v) return setErr('최종 결제 금액을 숫자로 적어 주세요.'); if (v > 100000000) return setErr('금액을 다시 확인해 주세요.'); confirmDeal(el, id, v); }, creport: id => rpModal(id, '분쟁', 'menu'), qreport: id => rpModal(id, '', 'chat'), rpsend: (id, el) => rpsend(el, id),
@@ -2531,7 +2531,7 @@ function watchNew() {
   S.quo.filter(q => !W.quo.has(q.id) && S.req.some(r => r.id === q.request_id && r.customer_id === me())).forEach(q => out.push(['새 견적 도착', `${won(q.price)} 견적이 도착했어요`]));
   S.con.forEach(c => {
     const was = W.con.get(c.id); if (was === c.status) return;
-    if (was === undefined) { if (c.provider_id === me()) out.push(['계약 성사', `${nm(c)} 계약이 맺어졌어요`]); }
+    if (was === undefined) { if (c.provider_id === me()) out.push(['예약 확정', `${nm(c)} 예약이 확정됐어요`]); }
     else if (c.status === 'pending' && c.client_id === me()) out.push(['완료 확인 요청', `${nm(c)} 작업 완료를 확인해 주세요`]);
     else if (c.status === 'completed' && c.provider_id === me()) out.push(['거래 확정', `${nm(c)} 거래가 확정됐어요`]);
   });
