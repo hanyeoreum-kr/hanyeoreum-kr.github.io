@@ -39,6 +39,12 @@
 #cats>button>span.grid{box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -4px 0 rgba(15,23,42,.07),0 4px 10px rgba(15,23,42,.10)}
 #cats>button b{text-shadow:0 1px 0 #fff}
 #cats{padding-bottom:6px;row-gap:14px}
+/* 기사 작업 가능 분야 선택: 홈 분야 버튼처럼 입체감, 선택하면 쑥 눌린 모양 */
+.kp{position:relative;background:linear-gradient(180deg,#fff 0%,#f4f7fc 100%);border:1px solid #e3e9f2;box-shadow:0 4px 0 #d6dfeb,0 8px 14px rgba(15,23,42,.10);transform:translateY(0);transition:transform .12s ease,box-shadow .12s ease;-webkit-tap-highlight-color:transparent}
+.kp:active{transform:translateY(3px);box-shadow:0 1px 0 #d6dfeb,0 2px 5px rgba(15,23,42,.10)}
+.kp[aria-pressed=true]{border-color:#2563EB;background:linear-gradient(180deg,#f7faff 0%,#e4eeff 100%);box-shadow:0 1px 0 #1d4ed8,0 0 0 2px #bfd4fe;transform:translateY(3px)}
+.kp .ki{box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(15,23,42,.07),0 3px 8px rgba(15,23,42,.10)}
+.kp b{text-shadow:0 1px 0 #fff}
 </style>
 <style>.hidden{display:none}@media (hover:hover) and (pointer:fine){.cam-only{display:none!important}}</style>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -467,7 +473,7 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=81"></script>
-<script src="notify.js?v=34"></script>
+<script src="app.js?v=83"></script>
+<script src="notify.js?v=36"></script>
 </body>
 </html>

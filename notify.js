@@ -173,7 +173,7 @@
   };
   /* ---------- 6) 견적 요청 2단계: 기기 종류·대수 (청소는 평수) ---------- */
   /* 요청서 화면이 옆으로 밀리지 않게 (아이폰 날짜칸·긴 목록 대비) */
-  { const st = document.createElement('style'); st.textContent = '#qm,#qm .overflow-y-auto{overflow-x:hidden;overscroll-behavior-x:none}#qm .overflow-y-auto{touch-action:pan-y pinch-zoom}#qm input,#qm select,#qm textarea{max-width:100%;min-width:0;box-sizing:border-box}#qm input[type=date]{display:block;width:100%}#qm .overflow-y-auto{overflow-anchor:none}'; document.head.appendChild(st); }
+  { const st = document.createElement('style'); st.textContent = '#qm,#qm .overflow-y-auto{overflow-x:hidden;overscroll-behavior-x:none}#qm .overflow-y-auto{touch-action:pan-y pinch-zoom}#qm input,#qm select,#qm textarea{max-width:100%;min-width:0;box-sizing:border-box}#qm input[type=date]{display:block;width:100%}#qm .overflow-y-auto{overflow-anchor:none}#mm,#mm-body{overflow-x:hidden;overscroll-behavior-x:none}#mm-body{touch-action:pan-y pinch-zoom}#mm input,#mm select,#mm textarea{max-width:100%;min-width:0;box-sizing:border-box}#mm input[type=date]{display:block;width:100%;min-height:3.25rem;-webkit-appearance:none;appearance:none}'; document.head.appendChild(st); }
   const DEV = {
     aircon:{ t:'에어컨 종류와 대수', items:['벽걸이', '스탠드', '2in1 (스탠드+벽걸이)', '천장형 1way', '천장형 2way', '천장형 4way', '창문형', '실외기'] },
     heat:{ t:'보일러·온수기 종류와 대수', items:['가스보일러', '기름보일러', '전기보일러', '온수기', '라디에이터'] },

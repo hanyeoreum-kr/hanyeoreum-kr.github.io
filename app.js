@@ -431,11 +431,13 @@ let au = { tab:'login', type:'customer', v:{}, areas:new Set(), certs:new Set(),
 const proKinds = p => { const ks = Array.isArray(p && p.kinds) && p.kinds.length ? p.kinds : [(p && p.kind) || 'aircon']; return [...new Set(ks)]; };
 const kindsOrdered = st => Object.keys(KINDS).filter(k => st.kinds && st.kinds.has(k));
 const subChips = (st, pfx, v) => `<div class="mt-3 flex flex-wrap gap-1.5">${v.subs.map(x => `<button type="button" data-act="${pfx}sub" data-id="${x}" aria-pressed="${st.subs.has(x)}" class="${chipCls(st.subs.has(x))}">${x}</button>`).join('')}</div>`;
-const specHTML = (st, pfx) => `<p class="mt-4 text-sm font-bold">작업 가능 분야 <span class="text-sun">(필수 · 여러 개 선택 가능)</span></p><p class="mt-1 text-xs text-sea/60">가능한 분야를 모두 고르면 그 분야의 견적 요청이 전부 알림으로 와요.</p><div class="mt-2 grid gap-2">${Object.entries(KINDS).map(([k, v]) => { const on = st.kinds.has(k); return `<div class="rounded-2xl border ${on ? 'border-brand bg-brand-50' : 'border-mist'} p-3.5">
-  <button type="button" data-act="${pfx}kind" data-id="${k}" aria-pressed="${on}" class="flex w-full items-center gap-3 text-left"><span class="grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 ${on ? 'border-brand bg-brand text-white' : 'border-slate-300'}">${on ? '<svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3.5" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' : ''}</span><b class="text-sm">${v.pro}</b></button>
-  ${!on ? '' : k === 'truck' ? `<div class="mt-3 grid gap-2"><label for="${pfx}-ton" class="sr-only">차량 톤수</label><select id="${pfx}-ton" class="w-full rounded-xl border border-mist bg-white px-3 py-3 font-medium"><option value="">차량 톤수 선택</option>${TONS.map(t => `<option${st.ton === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
-    <label class="flex items-center gap-2 text-sm font-bold"><input id="${pfx}-lift" type="checkbox" class="h-5 w-5 accent-brand"${st.lift ? ' checked' : ''}>리프트(파워게이트) 보유</label>${subChips(st, pfx, v)}</div>`
-    : subChips(st, pfx, v)}</div>`; }).join('')}</div>`;
+const CHK = '<svg viewBox="0 0 24 24" class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+/* 분야 이름·순서는 홈 첫 화면(HCATS)과 똑같이 */
+const kindLab = k => { try { const h = HCATS.find(x => x[0] === k); return h ? h[1] : KINDS[k].name; } catch (_) { return KINDS[k].name; } };
+const kindList = () => { let o = []; try { o = HCATS.map(x => x[0]); } catch (_) {} const ks = Object.keys(KINDS); return [...o.filter(k => KINDS[k]), ...ks.filter(k => !o.includes(k))]; };
+const specHTML = (st, pfx) => `<p class="mt-4 text-sm font-bold">작업 가능 분야 <span class="text-sun">(필수 · 여러 개 선택 가능)</span></p><p class="mt-1 text-xs text-sea/60">가능한 분야를 모두 고르면 그 분야의 견적 요청이 전부 알림으로 와요.</p>
+<div class="mt-3 grid grid-cols-4 gap-x-2 gap-y-4 pb-1 text-center" role="group" aria-label="작업 가능 분야">${kindList().map(k => { const v = KINDS[k], on = st.kinds.has(k); return `<button type="button" data-act="${pfx}kind" data-id="${k}" aria-pressed="${on}" class="kp flex min-w-0 flex-col items-center gap-1.5 rounded-2xl px-1 pb-2 pt-2.5"><span class="ki grid h-11 w-11 place-items-center rounded-xl ${v.color}"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${v.icon}</svg></span>${on ? `<span class="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-brand text-white">${CHK}</span>` : ''}<b class="w-full break-keep text-[11px] font-black leading-tight sm:text-xs">${kindLab(k)}</b></button>`; }).join('')}</div>
+${kindsOrdered(st).map(k => { const v = KINDS[k]; return `<div class="mt-4 rounded-2xl bg-ice p-3.5"><p class="text-sm font-bold">${kindLab(k)} 세부 작업 <span class="text-xs font-medium text-sea/60">(1개 이상)</span></p>${k === 'truck' ? `<div class="mt-3 grid gap-2"><label for="${pfx}-ton" class="sr-only">차량 톤수</label><select id="${pfx}-ton" class="w-full rounded-xl border border-mist bg-white px-3 py-3 font-medium"><option value="">차량 톤수 선택</option>${TONS.map(t => `<option${st.ton === t ? ' selected' : ''}>${t}</option>`).join('')}</select><label class="flex items-center gap-2 text-sm font-bold"><input id="${pfx}-lift" type="checkbox" class="h-5 w-5 accent-brand"${st.lift ? ' checked' : ''}>리프트(파워게이트) 보유</label></div>` : ''}${subChips(st, pfx, v)}</div>`; }).join('')}`;
 function specRead(st, pfx) { const t = $('#' + pfx + '-ton'), l = $('#' + pfx + '-lift'); if (t) st.ton = t.value; if (l) st.lift = l.checked; }
 function specErr(st) { const ks = kindsOrdered(st); if (!ks.length) return '작업 가능 분야를 1개 이상 선택해 주세요.'; if (ks.includes('truck') && !st.ton) return '차량 톤수를 선택해 주세요.'; const miss = ks.find(k => k !== 'truck' && !KINDS[k].subs.some(x => st.subs.has(x))); return miss ? `${KINDS[miss].name} 분야의 세부 작업을 1개 이상 골라 주세요.` : ''; }
 function specKind(st, pfx, k) { specRead(st, pfx); if (st.kinds.has(k)) { st.kinds.delete(k); (KINDS[k] ? KINDS[k].subs : []).forEach(x => { if (!kindsOrdered(st).some(o => KINDS[o].subs.includes(x))) st.subs.delete(x); }); } else st.kinds.add(k); st.kind = kindsOrdered(st)[0] || ''; const box = $('#' + pfx + '-spec'); if (box) box.innerHTML = specHTML(st, pfx); }
@@ -1463,6 +1465,19 @@ function onNewMessage(m) {
   else if (m.sender_id && m.sender_id !== me()) { const t = S.thr.find(x => x.id === m.thread_id); if (t) { const who = t.u1 === me() ? t.u2_name : t.u1_name, txt = m.kind === 'photo' ? '사진' : String(m.body).slice(0, 30); toast(`💬 ${who}: ${txt}`); phoneNote('새 메시지', `${who}: ${txt}`); } }
   if (!S.thr.some(t => t.id === m.thread_id)) queueLoad('thr');
 }
+/* 채팅에서 금액·날짜·합의 얘기가 나오면 '예약하기를 눌러야 진행돼요' 안내 (예약이 아직 없을 때만) */
+const AGREE_RE = /\d[\d,]*\s*(?:만\s*원|천\s*원|만|원)|\d{1,2}\s*월\s*\d{1,2}\s*일|\d{1,2}\s*일(?=\s*(?:에|로|오전|오후|까지|부터|가능))|내일|모레|다음\s*주|이번\s*주|[월화수목금토일]요일|오전|오후|\d{1,2}\s*시|합의|확정|예약|결정|진행\s*(?:할게|하겠|해\s*주|해주)|하겠습니다/;
+const OFF_RE = /입금|계좌|송금|현금|무통장/;
+function agreeHint(tid, c, imCust) {
+  if (c) return { html:'', on:false };
+  const txt = (S.msgs[tid] || []).filter(m => m.kind !== 'sys' && m.body).slice(-30).map(m => m.body).join('\n');
+  const on = AGREE_RE.test(txt) || OFF_RE.test(txt), off = OFF_RE.test(txt);
+  const body = imCust
+    ? '<b>합의가 되셨나요?</b> 일정과 금액이 정해지면 아래 <b>[📝 합의 내용으로 예약하기]</b>를 눌러 주세요. <b>눌러야 예약이 확정</b>되고 작업 내역서·재점검 보증이 적용돼요.'
+    : '<b>일정과 금액이 정해졌나요?</b> 아래 <b>[📝 예약 등록 요청]</b>을 보내 주세요. 고객님이 <b>[합의 내용으로 예약하기]</b>를 눌러야 <b>예약이 확정</b>돼요. 예약 등록 없이 진행하면 후기와 보증이 남지 않아요.';
+  return { on, html:`<div id="agree-hint" class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm ${on ? '' : 'hidden'}" role="status">${body}${off ? '<br>한여름 밖에서 따로 거래하면 후기와 재점검 보증을 받을 수 없어요.' : ''}</div>` };
+}
+const qaHot = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-brand bg-brand-50 px-3.5 py-2 text-xs sm:text-sm font-bold text-brand ring-2 ring-brand/20 hover:bg-brand-100">${t}</button>`;
 const qa = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-mist bg-white px-3.5 py-2 text-xs sm:text-sm font-bold hover:bg-ice">${t}</button>`;
 async function chatModal(tid, keep) {
   tid = +tid;
@@ -1476,17 +1491,19 @@ async function chatModal(tid, keep) {
   const readTag = !hasRead || !lastM ? '' : otherRead && T(otherRead) >= T(lastM.created_at) ? ' · <b>읽음</b>' : ' · 안 읽음';
   const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
-  else if (imCust) acts.push(qa('qdirect', tid, '📝 합의 내용으로 예약하기'));
-  else acts.push(qa('qask', tid, '📝 예약 등록 요청'));
+  const hint = agreeHint(tid, c, imCust), qx = hint.on ? qaHot : qa;
+  if (!c) acts.push(imCust ? qx('qdirect', tid, '📝 합의 내용으로 예약하기') : qx('qask', tid, '📝 예약 등록 요청'));
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
     <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
       : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
+    ${hint.html}
     <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"><input id="chat-cam" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true"></div>
     <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
   chatCur = tid; markRead(t);
   const b = $('#chatbox'); b.scrollTop = b.scrollHeight;
   const i1 = $('#chat-in'); i1.value = draft; if (keep ? focused : innerWidth >= 768) i1.focus();
+  if (!c) i1.addEventListener('input', () => { const v = i1.value, hb = $('#agree-hint'); if (!hb || !(AGREE_RE.test(v) || OFF_RE.test(v))) return; hb.classList.remove('hidden'); const bt = document.querySelector('#mm-body [data-act="qdirect"], #mm-body [data-act="qask"]'); if (bt) bt.classList.add('ring-2', 'ring-brand/20', 'border-brand', 'bg-brand-50', 'text-brand'); });
 }
 /* 채팅 읽음 표시: 내가 채팅방을 보고 있으면 '읽은 시각'을 서버에 남겨요 → 상대 화면에 '읽음'으로 보여요 */
 let markBusy = 0;
