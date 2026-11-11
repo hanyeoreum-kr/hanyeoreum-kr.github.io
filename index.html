@@ -100,7 +100,7 @@ if (window.tailwind) tailwind.config = {
       <a href="#" data-act="home" data-nav="main" class="dnav hover:text-sea">홈</a>
       <a href="#quote" class="dnav hover:text-sea">견적요청</a>
       <a href="#pros" data-act="pros" data-nav="pros" class="dnav hover:text-sea">기사님 찾기</a>
-      <a href="#market" data-act="mkt" data-nav="market" class="dnav hover:text-sea">중고마켓</a>
+      <a href="#" data-act="qcat" data-id="interior" class="dnav hover:text-sea">인테리어</a>
       <a href="#pro" class="text-[#8B5A2B] hover:opacity-80">기사 등록</a>
       <a href="#" data-act="cs" class="hover:text-sea">고객센터</a>
     </nav>
@@ -460,7 +460,7 @@ if (window.tailwind) tailwind.config = {
   <div id="mbar-c" class="grid grid-cols-4">
     <button type="button" data-act="home" data-tab="main" class="tab relative flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] font-bold text-slate-400"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>홈</span></button>
     <a id="mbar-quote" href="#quote" data-tab="quote" class="tab relative flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] font-bold text-sun"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>견적요청</span></a>
-    <button type="button" data-act="mkt" data-tab="market" class="tab relative flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] font-bold text-slate-400"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v3a3 3 0 01-6 0 3 3 0 01-4 0 3 3 0 01-6 0z"/><path d="M6 14v6h12v-6"/></svg><span>중고마켓</span></button>
+    <button type="button" data-act="qcat" data-id="interior" class="tab relative flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] font-bold text-slate-400"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="14" height="6" rx="1.5"/><path d="M17.5 6H20v5.5h-8V14"/><rect x="10.5" y="14" width="3" height="7" rx="1"/></svg><span>인테리어</span></button>
     <button type="button" id="mbar-menu" data-act="menu" class="tab relative flex flex-col items-center gap-0.5 pt-2 pb-1 text-[11px] font-bold text-slate-400"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg><span id="mbar-menu-t">MY</span></button>
   </div>
   <div id="mbar-p" class="hidden grid-flow-col auto-cols-fr">
@@ -475,7 +475,7 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=85"></script>
+<script src="app.js?v=86"></script>
 <script src="notify.js?v=37"></script>
 </body>
 </html>
