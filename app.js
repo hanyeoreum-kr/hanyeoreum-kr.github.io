@@ -468,7 +468,7 @@ const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격
   <p class="mt-1 text-xs text-sea/60">프로필에 배지로 표시돼요. 자격증 사본은 관리자 승인 때 확인을 요청할 수 있어요.</p>`;
 const freeToggle = (on, act) => `<div class="mt-4"><button type="button" data-act="${act}" aria-pressed="${on}" class="${chipCls(on)}">🚚 무료 출장 견적 가능</button></div>`;
 const areaBtn = (set, act, g) => `<button type="button" data-act="${act}" data-id="${g}" aria-pressed="${set.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${set.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`;
-const areaGrid = (set, act) => `<div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${GG_ALL.map(g => areaBtn(set, act, g)).join('')}</div></div>`;
+const areaGrid = (set, act) => `<div class="mt-2 flex gap-2"><button type="button" data-act="areaall" data-id="${act}:on" class="rounded-full bg-sea px-3.5 py-1.5 text-xs font-bold text-white">전체 선택</button><button type="button" data-act="areaall" data-id="${act}:off" class="rounded-full bg-ice px-3.5 py-1.5 text-xs font-bold hover:bg-mist">전체 해제</button></div><div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${GG_ALL.map(g => areaBtn(set, act, g)).join('')}</div></div>`;
 const legalLinks = () => `<a href="${esc(TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a> 및 <a href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보처리방침</a>`;
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
@@ -2359,6 +2359,7 @@ const ACT = {
   auth: () => S.user ? logout() : authModal('login'),
   atab: k => { saveAuth(); au.tab = k; renderAuth(); }, autype: k => { saveAuth(); au.type = k; renderAuth(); },
   pekind: k => specKind(pe, 'pe', k), pesub: (x, el) => specSub(pe, 'pe', x, el), aukind: k => specKind(au, 'au', k), ausub: (x, el) => specSub(au, 'au', x, el), bpkind: k => specKind(bp, 'bp', k), bpsub: (x, el) => specSub(bp, 'bp', x, el),
+  areaall: v => { const [act, m] = String(v).split(':'), set = act === 'aarea' ? au.areas : act === 'pearea' ? pe.areas : act === 'barea' ? bp.areas : null; if (!set) return; const on = m === 'on'; [...GU, ...GG_ALL].forEach(g => { if (set.has(g) !== on) toggleIn(set, g, act); }); },
   aarea: g => toggleIn(au.areas, g, 'aarea'), acert: c => toggleIn(au.certs, c, 'acert'), acertadd: () => addCert('acert', au.certs),
   afree: () => { au.free = !au.free; const b = document.querySelector('[data-act="afree"]'); b.setAttribute('aria-pressed', au.free); b.className = chipCls(au.free); },
   alogin: (id, el) => alogin(el), asignup: (id, el) => asignup(el), asocial: p => asocial(p),
