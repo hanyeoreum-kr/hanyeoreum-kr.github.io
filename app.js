@@ -792,7 +792,7 @@ function navMenu() {
   openM(head('전체 메뉴') + `<div class="-mx-2 divide-y divide-mist">
     <div class="py-1">${it('data-act="qopen0"', '⚡ 무료 견적 요청', 'text-brand')}${it('data-act="pros"', '기사님 찾기', 'text-cyan-600')}${it('data-act="mkt"', '중고마켓', 'text-emerald-600')}${it('data-act="gopro"', '기사님 등록', 'text-sun')}</div>
     <div class="py-1">${it('data-act="navgo" data-id="#process"', '이용 방법')}${it('data-act="guarantee"', '14일 재점검 안심 보장')}${it('data-act="cs"', '고객센터')}</div>
-    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${canNote() && Notification.permission === 'default' && S.user ? it('data-act="notifon"', '🔔 알림 켜기') : ''}${S.user ? `<button type="button" data-act="mktgo" class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>` : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
+    <div class="py-1">${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${S.user ? it('data-act="nset"', '🔔 알림 설정') : ''}${S.user ? `<button type="button" data-act="mktgo" class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>` : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
     ${S.user ? `<p class="mt-3 px-2 text-xs text-sea/50">${esc((S.profile && S.profile.name) || S.user.email || '')}님으로 로그인 중</p>` : ''}`);
   if (S.user) mktPaint();
 }
@@ -1478,6 +1478,44 @@ function agreeHint(tid, c, imCust) {
   return { on, html:`<div id="agree-hint" class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm ${on ? '' : 'hidden'}" role="status">${body}${off ? '<br>한여름 밖에서 따로 거래하면 후기와 재점검 보증을 받을 수 없어요.' : ''}</div>` };
 }
 const qaHot = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-brand bg-brand-50 px-3.5 py-2 text-xs sm:text-sm font-bold text-brand ring-2 ring-brand/20 hover:bg-brand-100">${t}</button>`;
+/* ---- 예약 안내: 손님이 작업 장소를 보내면 채팅에 카드로 남고, 기사님이 [확인했어요]를 눌러요 ---- */
+const CARD_TAG = '[예약안내]', ACK_TAG = '[예약안내확인]';
+const isCardMsg = m => m.kind !== 'sys' && typeof m.body === 'string' && m.body.startsWith(CARD_TAG);
+const isAckMsg = m => m.kind !== 'sys' && m.body === ACK_TAG;
+function cardInfo(tid) {
+  let card = null, ack = null;
+  for (const m of (S.msgs[tid] || [])) { if (isCardMsg(m)) { card = m; ack = null; } else if (isAckMsg(m) && card && m.sender_id !== card.sender_id) ack = m; }
+  return { card, ack };
+}
+const cardField = (body, k) => { const m = String(body).match(new RegExp('^' + k + ': ?(.*)$', 'm')); return m ? m[1].trim() : ''; };
+function cardHtml(m, tid, imCust, ci) {
+  const latest = !!ci.card && ci.card.id === m.id, mine = m.sender_id === me(), f = k => esc(cardField(m.body, k) || '-');
+  const state = !latest ? '' : ci.ack ? '<p class="mt-2 text-xs font-bold text-emerald-700">✅ 기사님이 확인했어요</p>' : imCust ? '<p class="mt-2 text-xs text-sea/60">기사님이 확인하면 여기에 표시돼요.</p>' : `<div class="mt-3">${btn('cack', tid, '✅ 예약 안내 확인했어요', 'a', 'w-full')}</div>`;
+  return `<div class="flex ${mine ? 'justify-end' : ''}"><div class="w-full max-w-[92%] rounded-2xl border-2 border-brand bg-white p-3 text-sm"><p class="font-bold text-brand">📍 예약 안내</p><dl class="mt-2 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-1"><dt class="text-sea/60">작업일</dt><dd class="font-bold">${f('작업일')}</dd><dt class="text-sea/60">시간대</dt><dd class="font-bold">${f('시간대')}</dd><dt class="text-sea/60">작업 장소</dt><dd class="break-words font-bold">${f('장소')}</dd><dt class="text-sea/60">메모</dt><dd class="break-words">${f('메모')}</dd></dl>${state}<p class="mt-1 text-[10px] opacity-60">${fmtT(m.created_at)}</p></div></div>`;
+}
+const ackHtml = m => `<p class="text-center text-xs font-bold text-emerald-700">✅ 예약 안내를 확인했어요 · ${fmtT(m.created_at)}</p>`;
+function addrModal(tid) {
+  const t = S.thr.find(x => x.id === +tid); if (!t) return;
+  const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null;
+  const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, x) => `<label for="${f}" class="block mt-4 text-sm font-bold">${x}</label>`;
+  openM(head('📍 작업 장소 보내기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님이 찾아갈 수 있게 알려 주세요. 이 내용은 <b>이 채팅방의 기사님께만</b> 보여요.</p>
+    ${c && c.work_date ? `<p class="mt-2 rounded-xl bg-cool/10 p-3 text-sm">작업일 <b>${esc(c.work_date)}</b></p>` : ''}
+    ${lab('ad-addr', '작업 장소 (상세 주소)')}<input id="ad-addr" maxlength="120" autocomplete="street-address" placeholder="예: 서울 강남구 ○○로 12, 101동 1203호" class="${inp}">
+    ${lab('ad-time', '방문 가능 시간대')}<select id="ad-time" class="${inp}"><option>시간은 채팅으로 협의</option><option>오전 (9~12시)</option><option>오후 (12~18시)</option><option>저녁 (18시 이후)</option><option>종일 가능</option></select>
+    ${lab('ad-memo', '메모 (선택)')}<textarea id="ad-memo" rows="2" maxlength="200" placeholder="주차, 출입 방법, 반려동물 등" class="${inp}"></textarea>
+    <p class="mt-2 text-xs text-sea/60">공동현관·도어락 비밀번호는 여기에 적지 말고, 필요하면 채팅으로 기사님께 직접 알려 주세요.</p>${errBox()}
+    <div class="mt-4 flex gap-3">${btn('chat', t.id, '취소', 's')}${wbtn('addrsend', t.id, '기사님께 보내기')}</div>`);
+}
+async function addrSend(el, tid) {
+  const t = S.thr.find(x => x.id === +tid), c = t && t.contract_id ? S.con.find(x => x.id === t.contract_id) : null;
+  const addr = ($('#ad-addr').value || '').trim().replace(/\s+/g, ' '), time = $('#ad-time').value, memo = ($('#ad-memo').value || '').trim().replace(/\s+/g, ' ');
+  if (addr.length < 6) return setErr('작업 장소를 상세 주소까지 적어 주세요.');
+  const body = `${CARD_TAG}\n작업일: ${c && c.work_date ? c.work_date : '채팅으로 협의'}\n시간대: ${time}\n장소: ${addr}\n메모: ${memo || '-'}`;
+  await busy(el, async () => { const { error } = await sb.from('messages').insert({ thread_id:+tid, body }); if (error) throw error; await loadMsgs(+tid); chatModal(+tid); toast('작업 장소를 보냈어요.'); });
+}
+async function cackSend(el, tid) {
+  await busy(el, async () => { const { error } = await sb.from('messages').insert({ thread_id:+tid, body:ACK_TAG }); if (error) throw error; await loadMsgs(+tid); chatModal(+tid, true); toast('확인했다고 알려 드렸어요.'); });
+}
 const qa = (act, id, t) => `<button type="button" data-act="${act}" data-id="${id}" class="rounded-full border-2 border-mist bg-white px-3.5 py-2 text-xs sm:text-sm font-bold hover:bg-ice">${t}</button>`;
 async function chatModal(tid, keep) {
   tid = +tid;
@@ -1492,12 +1530,15 @@ async function chatModal(tid, keep) {
   const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
   const hint = agreeHint(tid, c, imCust), qx = hint.on ? qaHot : qa;
+  const ci = cardInfo(tid), live = !!c && c.status !== 'completed';
+  if (live) { if (imCust) acts.unshift(ci.card ? qa('addr', tid, '📍 작업 장소 다시 보내기') : qaHot('addr', tid, '📍 작업 장소 보내기')); else if (ci.card && !ci.ack) acts.unshift(qaHot('cack', tid, '✅ 예약 안내 확인했어요')); }
+  const ban = !live ? '' : imCust ? (ci.card ? '' : '<div class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm" role="status">📍 기사님이 찾아갈 수 있게 <b>작업 장소</b>를 보내 주세요. 아래 <b>[📍 작업 장소 보내기]</b>를 누르면 돼요.</div>') : ci.card ? (ci.ack ? '' : '<div class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm" role="status">손님이 보낸 <b>예약 안내</b>를 확인하고 <b>[✅ 예약 안내 확인했어요]</b>를 눌러 주세요.</div>') : '<div class="mt-2 rounded-2xl bg-ice p-3 text-xs text-sea/70" role="status">손님이 작업 장소를 보내면 여기에 나와요.</div>';
   if (!c) acts.push(imCust ? qx('qdirect', tid, '📝 합의 내용으로 예약하기') : qx('qask', tid, '📝 예약 등록 요청'));
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
-    <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => m.kind === 'sys'
+    <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => isCardMsg(m) ? cardHtml(m, tid, imCust, ci) : isAckMsg(m) ? ackHtml(m) : m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
       : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
-    ${hint.html}
+    ${ban}${hint.html}
     <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"><input id="chat-cam" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true"></div>
     <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
   chatCur = tid; markRead(t);
@@ -2354,6 +2395,7 @@ const ACT = {
   qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
   qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 예약하기”를 눌러 주세요.'; i.focus(); },
   qdirect: id => directModal(id), dsend: (id, el) => dsend(el, id),
+  addr: id => addrModal(id), addrsend: (id, el) => addrSend(el, id), cack: (id, el) => cackSend(el, id),
   cfin: (id, el) => confirmDeal(el, id),
   cfinok: (id, el) => { const v = +String(($('#fin-amt') || {}).value || '').replace(/[^0-9]/g, ''); if (!v) return setErr('최종 결제 금액을 숫자로 적어 주세요.'); if (v > 100000000) return setErr('금액을 다시 확인해 주세요.'); confirmDeal(el, id, v); }, creport: id => rpModal(id, '분쟁', 'menu'), qreport: id => rpModal(id, '', 'chat'), rpsend: (id, el) => rpsend(el, id),
   rev: id => revModal(id), rvsend: (id, el) => rvsend(el, id), rew: id => rewModal(id), rwsend: (id, el) => rwsend(el, id),

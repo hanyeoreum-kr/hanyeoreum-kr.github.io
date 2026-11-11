@@ -660,6 +660,56 @@
     toast('카톡 알림을 껐어요. 언제든 다시 켤 수 있어요.');
   };
   ACT.palater = () => { try { localStorage.setItem(PA_LATER, String(Date.now())); } catch (_) {} const b = document.getElementById('pa-box'); if (b) b.remove(); };
+  /* ---------- 23) 알림 설정 화면 (☰ 메뉴 → 🔔 알림 설정) ---------- */
+  const nsRow = (title, desc, right) => `<div class="mt-3 flex items-start justify-between gap-3 rounded-2xl border border-mist p-4"><div class="min-w-0"><p class="font-bold">${title}</p><p class="mt-1 text-xs leading-relaxed text-sea/60">${desc}</p></div><div class="shrink-0">${right}</div></div>`;
+  const nsPill = (txt, on) => `<span class="rounded-full px-2.5 py-1 text-xs font-bold ${on ? 'bg-emerald-50 text-emerald-700' : 'bg-ice text-sea/60'}">${txt}</span>`;
+  async function nsetModal() {
+    if (!S.user) return;
+    if (S.pro && sb && PA.uid !== me()) { try { await paLoad(); } catch (_) {} }
+    const perm = ('Notification' in window && window.isSecureContext) ? Notification.permission : 'unsupported';
+    const push = perm === 'granted' ? nsPill('켜짐', true) : perm === 'default' ? btn('nspush', '', '켜기', 'a') : nsPill(perm === 'denied' ? '차단됨' : '사용 불가', false);
+    const pushDesc = perm === 'granted' ? '앱을 닫아 두어도 새 소식이 휴대폰으로 와요. 끄려면 휴대폰 설정 → 알림에서 한여름을 꺼 주세요.'
+      : perm === 'denied' ? '차단돼 있어요. 휴대폰 설정 → 알림(앱/사이트 알림)에서 한여름을 허용으로 바꿔 주세요.'
+      : perm === 'unsupported' ? '이 화면에서는 켤 수 없어요. 아이폰은 Safari에서 [홈 화면에 추가]한 앱에서만 켤 수 있어요.'
+      : '예약·채팅·견적 소식이 오면 앱을 닫아 두어도 휴대폰으로 알려 드려요.';
+    let kakao = '';
+    if (S.pro) {
+      const on = PA.row && PA.row.kakao_on;
+      if (PA.off) kakao = nsRow('📲 새 요청 카톡 알림', '곧 사용할 수 있어요.', nsPill('준비 중', false));
+      else if (on) kakao = nsRow('📲 새 요청 카톡 알림', `내 분야·내 동네에 새 견적 요청이 오면 카톡으로 알려 드려요. (번호 ${esc(phMask(PA.row.phone))})`, btn('nspaoff', '', '끄기', 's'));
+      else kakao = `<div class="mt-3 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4"><p class="font-bold">📲 새 요청 카톡 알림 ${nsPill('꺼짐', false)}</p>
+        <p class="mt-1 text-sm leading-relaxed text-sea/80">내 분야·내 동네에 손님 요청이 들어오면 카톡으로 알려 드려요. 먼저 견적을 보내는 기사님이 성사될 가능성이 높아요.</p>
+        <input id="ns-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" value="${PA.row ? esc(phFmt(PA.row.phone)) : ''}" class="mt-3 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
+        <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="ns-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand"><span>새 견적 요청 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <span class="block text-xs text-sea/60">번호는 손님과 다른 기사님께 공개되지 않고, 언제든 끌 수 있어요. 발송 대행: 솔라피(SOLAPI)·카카오</span></span></label>
+        <p id="ns-err" role="alert" class="mt-2 text-sm font-bold text-red-600"></p><div class="mt-2">${btn('nspaon', '', '카톡 알림 받기', 'a')}</div></div>`;
+    }
+    const mkt = `<button type="button" data-act="mktgo" class="mt-3 flex w-full items-center justify-between rounded-2xl border border-mist px-4 py-4 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>`;
+    const info = S.pro ? '' : '<p class="mt-3 rounded-xl bg-ice p-3 text-xs leading-relaxed text-sea/70">견적이 도착하면 견적을 요청할 때 입력한 번호로 카톡이 가요.</p>';
+    openM(head('🔔 알림 설정') + '<p class="text-sm text-sea/70">받고 싶은 알림을 골라 주세요. 예약·채팅 소식은 앱 알림으로 와요.</p>' + nsRow('📱 앱 알림', pushDesc, push) + kakao + mkt + info);
+    try { if (typeof mktPaint === 'function') mktPaint(); } catch (_) {}
+    const inp = document.getElementById('ns-phone'); if (inp) inp.addEventListener('input', () => { inp.value = phFmt(phDigits(inp.value)); });
+  }
+  ACT.nset = () => { nsetModal(); };
+  ACT.nspush = () => { Promise.resolve().then(() => notifOn()).catch(() => {}).then(() => setTimeout(nsetModal, 700)); };
+  ACT.nspaon = async () => {
+    const d = phDigits((document.getElementById('ns-phone') || {}).value), ag = document.getElementById('ns-agree'), er = document.getElementById('ns-err');
+    const say = m => { if (er) er.textContent = m; };
+    if (!phOk(d)) return say('휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)');
+    if (!(ag && ag.checked)) return say('알림 수신에 동의해 주세요.');
+    const now = new Date().toISOString();
+    const { error } = await sb.from('pro_alerts').upsert({ user_id:me(), phone:d, kakao_on:true, agreed_at:now, updated_at:now });
+    if (error) return say('저장하지 못했어요. 잠시 후 다시 해 주세요.');
+    PA.row = { phone:d, kakao_on:true };
+    const b = document.getElementById('pa-box'); if (b) b.remove();
+    toast('새 요청 카톡 알림을 켰어요.'); nsetModal();
+  };
+  ACT.nspaoff = async () => {
+    const { error } = await sb.from('pro_alerts').update({ kakao_on:false, updated_at:new Date().toISOString() }).eq('user_id', me());
+    if (error) return toast('잠시 후 다시 해 주세요.');
+    PA.row = Object.assign({}, PA.row, { kakao_on:false });
+    toast('카톡 알림을 껐어요. 언제든 다시 켤 수 있어요.'); nsetModal();
+  };
+
 
   /* ---------- 22) 로그인하러 갔다 와도 견적 요청서가 안 사라지게 ----------
      로그인 안 한 손님이 '로그인하고 보내기'를 누르면 쓴 내용을 휴대폰에 잠깐 저장해 두고,
