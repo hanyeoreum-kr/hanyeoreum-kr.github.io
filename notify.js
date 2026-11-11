@@ -577,6 +577,28 @@
   ACT.noteplx = () => { try { localStorage.setItem(PL_NOTE, '1'); } catch (_) {} const n = document.getElementById('note-plumb'); if (n) n.remove(); };
   ACT.noteplgo = () => { profModal(); toast("'배관·하수구'를 눌러 고르고 맨 아래 저장을 눌러 주세요."); setTimeout(() => { try { const b = [...document.querySelectorAll('#mm-body button, #mm-body label')].find(x => /배관·하수구/.test(x.textContent)); if (b) b.scrollIntoView({ block:'center' }); } catch (_) {} }, 150); };
 
+  /* ---------- 19-2) 기사님 공지: 인테리어 분야 새로 열림 ---------- */
+  const IN_NOTE = 'hy_note_interior_v1';
+  const _proView192 = proView;
+  proView = function () {
+    _proView192();
+    try {
+      if (!KINDS.interior || !S.pro || document.getElementById('note-interior')) return;
+      let seen = false; try { seen = localStorage.getItem(IN_NOTE) === '1'; } catch (_) {}
+      const has = proKinds(S.pro).includes('interior');
+      if (has && seen) return;
+      const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
+      top.insertAdjacentHTML('afterend', `<section id="note-interior" class="mt-6 rounded-3xl border-2 border-pink-300 bg-pink-50 p-4 sm:p-5">
+        <div class="flex items-start justify-between gap-3"><p class="text-xs font-black tracking-wide text-pink-700">📢 한여름 공지 · NEW</p><button type="button" data-act="noteinx" aria-label="공지 닫기" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
+        <h2 class="mt-1 text-lg font-black lg:text-xl">🎨 '인테리어' 분야가 새로 열렸어요</h2>
+        <p class="mt-1 text-sm leading-relaxed text-sea/80">도배·장판, 타일·욕실, 도장·페인트, 목공·가구·붙박이, 조명·전기, 샷시·창호, 철거·폐기물, <b>종합 리모델링</b>, 기타 인테리어 요청을 받을 수 있어요. 작업 사진이 있는 프로필이 선택을 많이 받아요.</p>
+        <p class="mt-2 text-xs text-sea/60">수수료는 다른 분야와 똑같아요. 기존 분야는 그대로 두고 추가만 하면 돼요.</p>
+        <div class="mt-3">${has ? '<p class="text-sm font-bold text-pink-700">✅ 이미 내 분야에 들어 있어요. 새 요청이 오면 바로 보여 드려요.</p>' : btn('noteingo', '', '내 분야에 인테리어 추가하기', 'a')}</div></section>`);
+    } catch (_) {}
+  };
+  ACT.noteinx = () => { try { localStorage.setItem(IN_NOTE, '1'); } catch (_) {} const n = document.getElementById('note-interior'); if (n) n.remove(); };
+  ACT.noteingo = () => { profModal(); toast("'인테리어'를 눌러 고르고 맨 아래 저장을 눌러 주세요."); setTimeout(() => { try { const b = [...document.querySelectorAll('#mm-body button, #mm-body label')].find(x => /인테리어/.test(x.textContent)); if (b) b.scrollIntoView({ block:'center' }); } catch (_) {} }, 150); };
+
   /* ---------- 20) 견적 다시 알림: 첫 알림 후 24시간 지나도 계약 안 한 손님에게 카톡 1번 ----------
      서버가 때가 된 요청만 골라서 보내요. 로그인한 사람이 사이트를 보고 있으면 15분에 한 번 확인을 부탁해요. */
   const RM_KEY = 'hy_remind_at';
