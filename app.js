@@ -2308,7 +2308,7 @@ function adminView() {
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">최근 예약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : ''}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
@@ -2432,6 +2432,8 @@ const ACT = {
   refresh: () => { loadVisits(true); loadDels(true); return loadAll().then(() => toast('새로 불러왔어요.')); },
   ifilt: k => { AF = k; render(); }, iadm: id => inqAdmin(id),
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
+  creopen: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:false }, '예약 확정 상태로 되돌렸어요. 수수료 기록도 취소했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
+  creopenr: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:true }, '예약 확정 상태로 되돌리고 수수료를 예치금으로 환불했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
   rsvc: async (id, el) => { const v = ($('#rsvc') || {}).value, r = S.adminReq.find(x => x.id === +id);
     if (!v || !r || v === r.service) return toast('바꿀 분야를 골라 주세요.');
