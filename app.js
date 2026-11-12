@@ -470,6 +470,21 @@ const freeToggle = (on, act) => `<div class="mt-4"><button type="button" data-ac
 const areaBtn = (set, act, g) => `<button type="button" data-act="${act}" data-id="${g}" aria-pressed="${set.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${set.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`;
 const areaGrid = (set, act) => `<div class="mt-2 flex gap-2"><button type="button" data-act="areaall" data-id="${act}:on" class="rounded-full bg-sea px-3.5 py-1.5 text-xs font-bold text-white">전체 선택</button><button type="button" data-act="areaall" data-id="${act}:off" class="rounded-full bg-ice px-3.5 py-1.5 text-xs font-bold hover:bg-mist">전체 해제</button></div><div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${GG_ALL.map(g => areaBtn(set, act, g)).join('')}</div></div>`;
 const legalLinks = () => `<a href="${esc(TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a> 및 <a href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보처리방침</a>`;
+/* 기사 가입 진행률 바 (숨고처럼) */
+function authProg() {
+  const bar = $('#au-prog-bar'); if (!bar) return;
+  try {
+    const val = id => { const el = $('#' + id); return el ? el.value : ''; }, cs = [...document.querySelectorAll('.au-c')];
+    specRead(au, 'au');
+    const items = [
+      ['상호명', !!val('au-name').trim()], ['이메일', emailOk(val('au-email').trim().toLowerCase())], ['비밀번호', pwOk(val('au-pw')) && val('au-pw') === val('au-pw2')],
+      ['전문 분야', !specErr(au)], ['활동 지역', au.areas.size > 0], ['사업자번호', bizOk(val('au-biz'))], ['사업자등록증', !!auDoc], ['약관 동의', cs.length > 0 && cs.every(c => c.checked)]
+    ], done = items.filter(x => x[1]).length, pct = Math.round(done / items.length * 100), left = items.filter(x => !x[1]).map(x => x[0]);
+    bar.style.width = pct + '%'; $('#au-prog-n').textContent = pct + '%';
+    $('#au-prog-left').textContent = left.length ? '남은 항목: ' + left.join(' · ') : '모든 항목을 채웠어요! 아래 가입하기를 눌러 주세요 🎉';
+  } catch (_) {}
+}
+['input', 'change', 'click'].forEach(t => document.addEventListener(t, () => { if ($('#au-prog')) setTimeout(authProg, 0); }));
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
   const tab = (k, t) => `<button type="button" data-act="atab" data-id="${k}" aria-pressed="${au.tab === k}" class="flex-1 rounded-full py-2.5 text-sm font-bold ${au.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`;
@@ -480,6 +495,7 @@ function renderAuth() {
   openM(head('로그인 / 회원가입') + `<div class="flex gap-2">${tab('login', '로그인')}${tab('signup', '회원가입')}</div>` + (login
     ? `${social}${common}${errBox()}${btn('alogin', '', '로그인', 'a', 'mt-2 w-full')}<button type="button" data-act="pwreset" class="mt-3 text-sm font-bold text-cool underline">비밀번호를 잊으셨나요?</button>`
     : `<fieldset class="mt-5"><legend class="text-sm font-bold">회원 유형</legend><div class="mt-2 grid grid-cols-2 gap-3">${[['customer', '일반 회원'], ['pro', '기사·업체 회원']].map(([k, t]) => `<button type="button" data-act="autype" data-id="${k}" aria-pressed="${au.type === k}" class="rounded-2xl border-2 px-3 py-4 text-sm font-bold ${au.type === k ? 'border-cool bg-mist' : 'border-mist hover:bg-ice'}">${t}</button>`).join('')}</div></fieldset>
+      ${pro ? '<div id="au-prog" class="sticky top-0 z-10 mt-4 bg-white/95 py-2 backdrop-blur" role="status"><div class="flex items-center justify-between text-xs font-bold"><span>가입 진행률</span><span id="au-prog-n" class="text-cool">0%</span></div><div class="mt-1 h-2 overflow-hidden rounded-full bg-mist"><div id="au-prog-bar" class="h-full rounded-full bg-cool transition-all duration-300" style="width:0%"></div></div><p id="au-prog-left" class="mt-1 text-[11px] text-sea/60"></p></div>' : ''}
       ${social}${lab('au-name', pro ? '상호명 / 기사명' : '이름 (닉네임)')}<input id="au-name" maxlength="30" value="${v('name')}" class="${inp}">
       ${pro ? `<div id="au-spec">${specHTML(au, 'au')}</div>
         ${credBlock(au.certs, 'acert')}${freeToggle(au.free, 'afree')}
@@ -493,17 +509,17 @@ function renderAuth() {
         <p class="mt-1 text-xs text-sea/60">관리자만 볼 수 있는 비공개 보관함에 저장되고, 확인 후 승인되면 견적을 낼 수 있어요. 주민번호 뒷자리가 보이면 가린 뒤 올려 주세요.</p>` : ''}
       ${common}
       <div class="mt-4 rounded-2xl border border-mist p-3 text-sm space-y-2">
-        <label class="flex items-start gap-2 font-bold"><input id="au-agree" type="checkbox" data-act="agreeall" class="mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>아래 필수 항목에 모두 동의해요</span></label>
+        <label class="flex flex-row-reverse items-start justify-between gap-3 text-[15px] font-bold"><input id="au-agree" type="checkbox" data-act="agreeall" class="mt-1 h-5 w-5"${au.agree ? ' checked' : ''}><span>약관 전체 동의 <span class="text-xs font-normal text-sea/60">(선택 포함)</span></span></label>
         <div class="border-t border-mist pt-2 space-y-1.5 text-sea/80">
-          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] 만 14세 이상이며 <a href="${esc(TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a>에 동의</span></label>
-          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] <a href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보 수집·이용</a>에 동의</span></label>
-          <label class="flex items-start gap-2"><input type="checkbox" class="au-c mt-1 h-4 w-4"${au.agree ? ' checked' : ''}><span>[필수] 개인정보 제3자 제공에 동의 <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">제공받는 자: 견적 요청 시 승인된 기사 회원, 계약·장터 거래 시 거래 상대방 회원<br>목적: 견적 작성, 작업·거래 진행, 일정 조율, 14일 재점검<br>항목: 견적 요청 내용(지역·희망일·요청사항·사진), 이름(닉네임)·상호, 거래 내용, 채팅 내용 (전화번호·이메일은 제공하지 않음)<br>기간: 거래 종료(재점검 기간 포함) 시까지<br>동의를 거부할 수 있으나, 거부하면 중개 서비스를 이용할 수 없어요.</span></details></span></label>
+          <label class="flex flex-row-reverse items-start justify-between gap-3"><input type="checkbox" class="au-c mt-1 h-5 w-5 shrink-0"${au.agree ? ' checked' : ''}><span>[필수] 만 14세 이상이며 <a href="${esc(TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a>에 동의</span></label>
+          <label class="flex flex-row-reverse items-start justify-between gap-3"><input type="checkbox" class="au-c mt-1 h-5 w-5 shrink-0"${au.agree ? ' checked' : ''}><span>[필수] <a href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보 수집·이용</a>에 동의</span></label>
+          <label class="flex flex-row-reverse items-start justify-between gap-3"><input type="checkbox" class="au-c mt-1 h-5 w-5 shrink-0"${au.agree ? ' checked' : ''}><span>[필수] 개인정보 제3자 제공에 동의 <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">제공받는 자: 견적 요청 시 승인된 기사 회원, 계약·장터 거래 시 거래 상대방 회원<br>목적: 견적 작성, 작업·거래 진행, 일정 조율, 14일 재점검<br>항목: 견적 요청 내용(지역·희망일·요청사항·사진), 이름(닉네임)·상호, 거래 내용, 채팅 내용 (전화번호·이메일은 제공하지 않음)<br>기간: 거래 종료(재점검 기간 포함) 시까지<br>동의를 거부할 수 있으나, 거부하면 중개 서비스를 이용할 수 없어요.</span></details></span></label>
+          <label class="flex flex-row-reverse items-start justify-between gap-3"><input id="au-mkt" type="checkbox" class="mt-1 h-5 w-5 shrink-0"${au.mkt ? ' checked' : ''}><span>[선택] 이벤트·혜택 알림 받기 (앱 알림·이메일) <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">목적: 할인·이벤트·새 서비스 등 광고성 정보 안내<br>항목: 이메일 주소, 앱 알림 수신 정보, 동의 일시<br>기간: 동의 철회 또는 회원 탈퇴 시까지 (2년마다 수신 여부를 다시 확인해요)<br>동의하지 않아도 가입과 서비스 이용에 제한이 없어요. ☰ 메뉴에서 언제든 끌 수 있어요.</span></details></span></label>
         </div>
       </div>
-      <label class="mt-2 flex items-start gap-2 rounded-2xl border border-mist p-3 text-sm text-sea/80"><input id="au-mkt" type="checkbox" class="mt-1 h-4 w-4"${au.mkt ? ' checked' : ''}><span>[선택] 이벤트·혜택 알림 받기 (앱 알림·이메일) <details class="inline"><summary class="inline cursor-pointer text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-ice p-2 text-xs leading-relaxed">목적: 할인·이벤트·새 서비스 등 광고성 정보 안내<br>항목: 이메일 주소, 앱 알림 수신 정보, 동의 일시<br>기간: 동의 철회 또는 회원 탈퇴 시까지 (2년마다 수신 여부를 다시 확인해요)<br>동의하지 않아도 가입과 서비스 이용에 제한이 없어요. ☰ 메뉴에서 언제든 끌 수 있어요.</span></details></span></label>
       ${au.type === 'pro' ? asBox('au-as') : ''}
       ${errBox()}${btn('asignup', '', '가입하기', 'a', 'mt-2 w-full')}`));
-  menuCur = 'auth';
+  menuCur = 'auth'; authProg();
 }
 /* 재점검·보완 보장: 설비 14일 / 청소 3일 */
 const isCleanSvc = sv => /^clean/.test(sv || '');
@@ -2370,7 +2386,7 @@ const ACT = {
   madd: id => moneyAdd(id),
   phdel: (id, el) => busy(el, async () => { const { error } = await sb.from('pro_photos').delete().eq('id', me()); if (error) throw error; delete S.proPh[me()]; phRedraw(); render(); toast('프로필 사진을 지웠어요.'); }),
   bpsend: (id, el) => bpSend(el), bdsend: (id, el) => bdSend(el), bdview: () => S.pro && S.pro.biz_doc && openBizDoc(S.pro.biz_doc),
-  agreeall: (id, el) => document.querySelectorAll('.au-c').forEach(c => c.checked = el.checked),
+  agreeall: (id, el) => { document.querySelectorAll('.au-c').forEach(c => c.checked = el.checked); const mk = $('#au-mkt'); if (mk) mk.checked = el.checked; },
   pdoc: id => { const p = S.adminPros.find(x => x.id === id); if (p && p.biz_doc) openBizDoc(p.biz_doc); },
   tosspay: (id, el) => tossPay(el), paymeth: k => { payMethod = k; walletModal(true); },
   modesw: () => setMode(S.mode === 'pro' ? 'customer' : 'pro'),
@@ -2479,7 +2495,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && /^au-(email|pw|pw2)$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); document.querySelector(au.tab === 'login' ? '[data-act="alogin"]' : '[data-act="asignup"]')?.click(); }
 });
 document.addEventListener('change', e => {
-  if (e.target.classList.contains('au-c')) { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked); }
+  if (e.target.classList.contains('au-c') || e.target.id === 'au-mkt') { const all = $('#au-agree'); if (all) all.checked = [...document.querySelectorAll('.au-c')].every(c => c.checked) && !!($('#au-mkt') || {}).checked; }
   if (e.target.name === 'ch-amt' && tossW && TOSS_WIDGET) tossW.setAmount({ currency:'KRW', value:+e.target.value }).catch(() => {});
   if (e.target.id === 'hgu') { hguSet(e.target.value); heroFind(); }
   if (e.target.dataset && e.target.dataset.grade && S.admin) { const el = e.target; el.disabled = true; rpc('admin_set_grade', { p_pro:el.dataset.grade, p_grade:el.value || null }).then(async g => { await Promise.all(['adminPros', 'prosPub', 'aud'].map(load)); render(); toast(`등급을 ${GRADES[g] ? GRADES[g].e + ' ' + GRADES[g].n : g}(으)로 바꿨어요.`); }).catch(err => { el.disabled = false; toast(errMsg(err)); }); }
