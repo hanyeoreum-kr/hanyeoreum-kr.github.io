@@ -8,7 +8,7 @@
 <meta name="supported-color-schemes" content="light">
 <style>:root{color-scheme:only light}html{color-scheme:only light}</style>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" href="favicon-han.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -99,7 +99,7 @@ if (window.tailwind) tailwind.config = {
 <header class="sticky top-0 z-30 border-b border-mist bg-white/90 backdrop-blur">
   <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:px-5 lg:h-[72px] lg:px-8">
     <a href="#" data-act="home" class="flex shrink-0 items-center gap-1.5" aria-label="한여름 홈">
-      <img src="icon-192.png" alt="" width="32" height="32" class="h-8 w-8 rounded-[10px]">
+      <img src="logo-han.png" alt="" width="32" height="32" class="h-8 w-8 rounded-[10px]">
       <span class="font-logo text-[22px] leading-none tracking-tight text-[#0C2D48] max-[370px]:hidden">한여름<span class="text-[#1AA7C7]">.</span></span></a>
     <nav id="nav" class="hidden items-center gap-8 text-[15px] font-bold text-slate-500 lg:flex" aria-label="주 메뉴">
       <a href="#" data-act="home" data-nav="main" class="dnav hover:text-sea">홈</a>
@@ -454,7 +454,7 @@ if (window.tailwind) tailwind.config = {
 
 <!-- 홈 화면에 추가(앱 설치) 안내 -->
 <div id="inst" style="display:none" class="md:hidden fixed left-3 right-3 z-30 rounded-2xl bg-sea text-white shadow-2xl p-3.5 flex items-center gap-3" role="dialog" aria-label="앱 설치 안내">
-  <img src="icon-192.png" alt="" class="h-11 w-11 rounded-xl shrink-0">
+  <img src="logo-han.png" alt="" class="h-11 w-11 rounded-xl shrink-0">
   <div class="min-w-0 flex-1 text-sm leading-snug"><b>한여름을 앱처럼 쓰세요</b><br><span id="inst-sub" class="text-white/75 text-xs">홈 화면에 추가하면 바로 열려요</span></div>
   <button type="button" data-act="install" class="shrink-0 rounded-xl bg-sun px-3.5 py-2.5 text-sm font-bold">추가</button>
   <button type="button" data-act="instclose" aria-label="닫기" class="shrink-0 px-1 text-xl text-white/60">×</button>
@@ -480,7 +480,7 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=92"></script>
+<script src="app.js?v=93"></script>
 <script src="notify.js?v=38"></script>
 </body>
 </html>
