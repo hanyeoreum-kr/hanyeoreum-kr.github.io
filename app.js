@@ -1695,7 +1695,8 @@ const stat = (k, v) => `<div class="rounded-2xl bg-white border border-mist p-4"
 const pendingCharge = () => S.chg.find(c => c.pro_id === me() && c.status === 'requested');
 function proChat() {
   const u = (C.PRO_CHAT_URL || '').trim(); if (!/^https:\/\/open\.kakao\.com\//.test(u)) return '';
-  return `<a href="${esc(u)}" target="_blank" rel="noopener" class="mt-6 flex items-center gap-4 rounded-3xl bg-[#FEE500] p-5 text-[#191919] hover:brightness-95"><span class="text-3xl" aria-hidden="true">💬</span><span class="min-w-0 flex-1"><b class="block">기사님 소통방 (카카오톡 오픈채팅)</b><span class="mt-0.5 block text-sm text-black/70">새 일감 소식 · 설비 정보 · 사이트 사용법을 함께 나눠요</span></span><span class="shrink-0 rounded-full bg-[#191919] px-4 py-2 text-sm font-bold text-white">들어가기 ›</span></a>`;
+  // 화면 옆(PC: 오른쪽 가운데 / 모바일: 오른쪽 아래)에 떠 있어서 어느 화면에서든 바로 눌러 카톡방에 들어올 수 있어요
+  return `<a href="${esc(u)}" target="_blank" rel="noopener" aria-label="기사님 소통방 카카오톡 오픈채팅 들어가기" class="fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#FEE500] py-3 pl-4 pr-5 text-[#191919] shadow-xl ring-2 ring-white hover:brightness-95 md:right-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:flex-col md:gap-1 md:rounded-l-2xl md:rounded-r-none md:py-4 md:pl-4 md:pr-3 md:ring-0"><span class="text-2xl" aria-hidden="true">💬</span><span class="text-left md:text-center"><b class="block text-sm leading-tight">기사님 소통방</b><span class="block text-xs font-bold text-black/70">카톡방 입장 ›</span></span></a>`;
 }
 // 승인 대기 중인 기사님에게 '지금 들어오는 요청'을 미리 보여줘요 (세부 내용·사진·손님 정보는 제외, 서버 함수 pending_preview_requests)
 async function loadPvw() {
