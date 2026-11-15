@@ -524,7 +524,7 @@ function renderAuth() {
 /* 재점검·보완 보장: 설비 14일 / 청소 3일 */
 const isCleanSvc = sv => /^clean/.test(sv || '');
 const wDays = c => isCleanSvc(c && c.service) ? 3 : 14;
-const AS_TXT = '[필수] <b>재점검·보완 보장</b>에 동의해요 · 거래 확정 후 <b>설비 작업 14일</b> 안에 같은 증상이 재발하거나, <b>청소 3일</b> 안에 미흡한 부분이 확인되면 우선 방문해 무상으로 재점검·보완해요 (고객 과실·소모품·작업 외 부위 제외, <a href="terms.html#c5" target="_blank" rel="noopener" class="underline">약관 제5장</a>)';
+const AS_TXT = '[필수] <b>재점검·보완 보장</b>에 동의해요 · 거래 확정 후 <b>설비 작업 14일</b> 안에 같은 증상이 재발하거나, <b>청소 3일</b> 안에 작업 중 생긴 <b>명백한 하자</b>(파손·누수 등 객관적으로 확인되는 문제)가 있으면 우선 방문해 무상으로 재점검해요 (청소 정도에 대한 개인 기준·만족도 차이, 고객 과실·소모품·작업 외 부위 제외, <a href="terms.html#c5" target="_blank" rel="noopener" class="underline">약관 제5장</a>)';
 const asBox = id => `<label class="mt-4 flex items-start gap-2 rounded-2xl border-2 border-sun/40 bg-sun/5 p-3 text-sm leading-relaxed"><input id="${id}" type="checkbox" class="mt-1 h-4 w-4 shrink-0"><span>${AS_TXT}</span></label>`;
 const asOk = () => !!(S.pro && S.pro.as_agreed_at);
 async function agreeAs(el) {
@@ -545,7 +545,7 @@ async function agreeFee(el, qid) {
 function asModal() {
   openM(head('재점검·보완 보장 동의') + `<p class="text-sm leading-relaxed text-sea/80">한여름 고객에게는 거래 확정 후 <b>보증서</b>가 발급돼요. 견적을 내기 전에 아래 내용에 한 번만 동의해 주세요.</p>
     <ul class="mt-3 space-y-2 text-sm leading-relaxed"><li class="rounded-2xl bg-ice p-3"><b>에어컨·보일러·냉장냉동·주방설비</b><br>거래 확정 후 <b>14일</b> 안에 작업한 부위에서 <b>같은 증상</b>이 재발하면 우선 방문해 무상 재점검, 작업 하자면 무상 보수</li>
-    <li class="rounded-2xl bg-ice p-3"><b>입주·이사·거주·상가 청소</b><br>거래 확정 후 <b>3일</b> 안에 작업 범위 중 <b>미흡한 부분</b>이 확인되면 재방문 보완 청소</li>
+    <li class="rounded-2xl bg-ice p-3"><b>입주·이사·거주·상가 청소</b><br>거래 확정 후 <b>3일</b> 안에 작업 중 생긴 <b>명백한 하자</b>(파손·누수 등)가 확인될 때만 재점검 (청소 정도에 대한 만족도 차이는 제외)</li>
     <li class="rounded-2xl bg-ice p-3"><b>제외</b><br>고객 과실, 소모품, 천재지변, 작업하지 않은 부위, 다른 업체가 손댄 경우, 청소 후 새로 생긴 오염(짐 반입·생활 오염)</li></ul>
     <p class="mt-3 text-xs text-sea/60">정당한 사유 없이 이행하지 않으면 약관 제28조에 따라 견적 제한 등의 조치가 있을 수 있어요.</p>
     ${asBox('as-ck')}${errBox()}<div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('asagree', '', '동의하고 시작하기')}</div>`);
@@ -1430,7 +1430,7 @@ function receipt(cid, fresh) {
   openM(head('한여름 안심 작업 내역서') + `<div class="rounded-2xl bg-ice p-5"><p class="font-display text-xl text-cool">${conCode(c.id)}</p>
     <dl class="mt-3 text-sm">${row('발급일', fmtD(c.created_at))}${row(svc ? '서비스' : '품목', conTitle(c))}${row('지역', esc(place(c.gu)))}${row(provLabel, esc(c.provider_name))}${row(cliLabel, esc(c.client_name))}${c.work_date ? row(wdOf(c) + ' 예정일', esc(c.work_date)) : ''}${row('견적 금액', won(c.price))}${c.final_price != null ? row('최종 결제 금액', won(c.final_price)) : ''}
     ${c.fee_payer === me() || S.admin ? row('수수료 (기사·업체 예치금에서 차감)', `${+c.fee_ver === 2 && !c.fee_charged ? '예상 ' : ''}${won(c.fee)} · ${esc(c.fee_label)}${c.fee_charged ? ' · 차감 완료' : +c.fee_ver === 2 ? ' · 거래 확정 때 최종 금액으로 다시 계산해 차감' : ' · 거래 확정 시 차감'}`) : ''}${row('상태', c.status === 'completed' ? '거래 확정 (' + esc(c.method || '') + ')' : c.status === 'pending' ? '확정 대기' : '진행 중')}</dl></div>
-    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">💬 전화번호를 공개하지 않고 한여름 채팅으로 연락해요.${svc ? (isCleanSvc(c.service) ? '<br>거래 확정 후 <b>3일 이내</b> 미흡한 부분이 있으면 담당 기사님의 재방문 보완 청소를 신청할 수 있어요.' : '<br>작업 후 <b>14일 이내</b> 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 신청할 수 있어요.') : ''}</p>
+    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">💬 전화번호를 공개하지 않고 한여름 채팅으로 연락해요.${svc ? (isCleanSvc(c.service) ? '<br>거래 확정 후 <b>3일 이내</b> 작업 중 생긴 명백한 하자(파손·누수 등)가 있으면 담당 기사님의 재점검을 신청할 수 있어요.' : '<br>작업 후 <b>14일 이내</b> 같은 증상이 생기면 담당 기사님의 우선 방문 재점검을 신청할 수 있어요.') : ''}</p>
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${wbtn('chatc', c.id, fresh ? '채팅방 열기' : '채팅방', 'p')}</div>`);
 }
 function warrModal(cid, fresh) {
@@ -1440,7 +1440,7 @@ function warrModal(cid, fresh) {
     <span class="absolute right-4 top-4 grid h-20 w-20 -rotate-12 place-items-center rounded-full border-2 border-sun text-center font-display text-sm leading-tight text-sun" aria-hidden="true">한여름<br>안심보증</span>
     <p class="font-display text-xl text-cool pr-24">${esc(c.warranty_no)}</p>
     <dl class="mt-3 text-sm">${row('발급일', fmtD(c.done_at))}${row('서비스', SVC[c.service])}${row('지역', esc(place(c.gu)))}${row('담당 기사', esc(c.provider_name))}${row('작업 금액', won(c.final_price != null ? c.final_price : c.price))}${row('확정 방식', esc(c.method))}${row('보증 기간', `${fmtD(c.done_at)} ~ ${fmtD(c.warranty_until)} (${wDays(c)}일)`)}${row('작업 내역서', conCode(c.id))}</dl></div>
-    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">${isCleanSvc(c.service) ? '보증 기간 안에 <b>청소가 미흡한 부분</b>이 확인되면 담당 기사님이 <b>재방문해 무상으로 보완 청소</b>해요.' : '보증 기간 안에 <b>같은 증상</b>이 다시 생기면 담당 기사님이 <b>우선 방문해 무상으로 재점검</b>해요.'} <span class="font-bold text-cool">남은 기간 ${left}일</span><br><span class="text-xs text-sea/60">보증 범위는 작업 내역서에 적힌 작업과 같은 증상에 한해요.</span></p>
+    <p class="mt-4 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">${isCleanSvc(c.service) ? '보증 기간 안에 작업 중 생긴 <b>명백한 하자</b>(파손·누수 등)가 확인되면 담당 기사님이 <b>재방문해 무상으로 재점검</b>해요. 청소 정도에 대한 만족도 차이는 해당되지 않아요.' : '보증 기간 안에 <b>같은 증상</b>이 다시 생기면 담당 기사님이 <b>우선 방문해 무상으로 재점검</b>해요.'} <span class="font-bold text-cool">남은 기간 ${left}일</span><br><span class="text-xs text-sea/60">보증 범위는 작업 내역서에 적힌 작업과 같은 증상에 한해요.</span></p>
     ${w ? `<p class="mt-3 text-sm font-bold text-cool">재점검: ${RWL[w.status]}</p>` : ''}
     <div class="mt-4 flex flex-wrap gap-3"><button type="button" data-mclose class="${B.s}">닫기</button>${client && fresh && !v ? btn('rev', c.id, '후기 남기기', 's') : ''}${client && !w && left > 0 ? btn('rew', c.id, '무상 재점검 신청', 'a') : ''}</div>`);
 }
@@ -1655,7 +1655,7 @@ async function rmSubmit() {
 function rewModal(cid) {
   const c = S.con.find(x => x.id === +cid); if (!c) return;
   const left = Math.max(0, Math.ceil((T(c.warranty_until) - Date.now()) / 864e5));
-  openM(head(isCleanSvc(c.service) ? '보완 청소를 도와드릴게요' : '재점검을 도와드릴게요') + `<p class="leading-relaxed">${isCleanSvc(c.service) ? `거래 확정 후 <b>3일 이내</b> 청소가 미흡한 부분이 있으면 담당 기사님(${esc(c.provider_name)})이 <b>재방문해 보완 청소</b>하도록 한여름이 연결해 드려요.` : `작업 후 <b>14일 이내</b> 같은 증상이 있으면 담당 기사님(${esc(c.provider_name)})이 <b>우선 방문해 재점검</b>하도록 한여름이 연결해 드려요.`} <span class="text-cool font-bold">남은 기간 ${left}일</span></p>
+  openM(head('재점검을 도와드릴게요') + `<p class="leading-relaxed">${isCleanSvc(c.service) ? `거래 확정 후 <b>3일 이내</b> 작업 중 생긴 <b>명백한 하자</b>(파손·누수 등 객관적으로 확인되는 문제)가 있을 때만 담당 기사님(${esc(c.provider_name)})이 <b>재방문해 재점검</b>하도록 한여름이 연결해 드려요. 청소 정도에 대한 만족도 차이는 해당되지 않아요.` : `작업 후 <b>14일 이내</b> 같은 증상이 있으면 담당 기사님(${esc(c.provider_name)})이 <b>우선 방문해 재점검</b>하도록 한여름이 연결해 드려요.`} <span class="text-cool font-bold">남은 기간 ${left}일</span></p>
     <label for="rw-sym" class="block mt-4 text-sm font-bold">어떤 문제가 있나요?</label>
     <textarea id="rw-sym" rows="3" maxlength="300" placeholder="예) 작업 후 실외기에서 소음이 나요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3 resize-none"></textarea>${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">괜찮아요</button>${wbtn('rwsend', c.id, '우선 방문 재점검 신청')}</div>`);
@@ -1742,7 +1742,7 @@ function proView() {
     <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 3,500원 + 최종 결제 금액의 등급 %(🐣10 · 🦅7 · 👑5%)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 예약하지 못한 견적이 있어요. 충전하면 고객이 바로 예약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 예약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일 보완. 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">3,500원 + 최종 금액의 등급 %(🐣10 · 🦅7 · 👑5%). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
+    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일(명백한 하자 한정). 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">3,500원 + 최종 금액의 등급 %(🐣10 · 🦅7 · 👑5%). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청 → 내 활동 지역 → 📍근처 지역 순서로 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
     ${myKinds.length ? `<h2 class="mt-10 text-2xl font-black">중고마켓 · 매입 제안</h2><p class="mt-1 text-sm text-sub">에어컨·보일러·냉장고·주방설비 중고를 업체와 소비자가 함께 사고팔아요. 매입 제안은 무료이고 매입 수수료도 0원이에요. 내 분야 물건이 먼저 보여요.</p>
@@ -2328,7 +2328,7 @@ function adminView() {
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">최근 예약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : ''}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : `<div class="mt-2 flex flex-wrap gap-2">${btn('cdone', c.id, '✅ 거래 완료 처리', 'a')}${c.listing_id ? btn('crelist', c.id, '🔄 다시 판매중으로', 's') : ''}</div>`}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
@@ -2401,7 +2401,7 @@ const ACT = {
   noti: () => { if (needLogin('알림은 로그인 후 볼 수 있어요.')) return; csModal('ntf'); },
   guarantee: () => openM(head('재점검·보완 안심 보장제') + `<ul class="space-y-3 text-sm leading-relaxed">
     <li class="rounded-2xl bg-ice p-4"><b>설비 작업 · 14일 재점검</b><br><span class="text-sub">에어컨·보일러·냉장냉동·주방설비 작업은 거래가 확정된 뒤 14일 안에 같은 부위에서 같은 증상이 다시 생기면, 담당 기사님의 재점검 방문을 연결해요.</span></li>
-    <li class="rounded-2xl bg-ice p-4"><b>청소 · 3일 보완</b><br><span class="text-sub">입주·이사·거주·상가 청소는 거래가 확정된 뒤 3일 안에 작업 범위 중 미흡한 부분이 있으면, 담당 기사님의 재방문 보완 청소를 연결해요.</span></li>
+    <li class="rounded-2xl bg-ice p-4"><b>청소 · 3일 재점검 (명백한 하자 한정)</b><br><span class="text-sub">청소는 깨끗함의 기준이 사람마다 달라서, 거래가 확정된 뒤 3일 안에 작업 중 생긴 명백한 하자(파손·누수 등 객관적으로 확인되는 문제)가 있을 때만 담당 기사님의 재점검 방문을 연결해요. 청소 정도에 대한 만족도 차이는 해당되지 않아요.</span></li>
     <li class="rounded-2xl bg-ice p-4"><b>어떻게 신청하나요?</b><br><span class="text-sub">내 요청(MY) → 완료된 거래 → [무상 A/S 보증서 → 재점검 신청]을 누르고 증상과 사진을 올려 주세요.</span></li>
     <li class="rounded-2xl bg-ice p-4"><b>제외되는 경우</b><br><span class="text-sub">고객 과실, 천재지변, 소모품 교체, 작업과 관계없는 부위의 고장, 청소 후 새로 생긴 오염(짐 반입·생활 오염)은 제외돼요. 자세한 기준은 이용약관을 따라요.</span></li></ul>
     <div class="mt-4"><button type="button" data-mclose class="${B.s} w-full">확인</button></div>`),
@@ -2455,6 +2455,8 @@ const ACT = {
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   creopen: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:false }, '예약 확정 상태로 되돌렸어요. 수수료 기록도 취소했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
   creopenr: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:true }, '예약 확정 상태로 되돌리고 수수료를 예치금으로 환불했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
+  cdone: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_complete_contract', { p_contract:+id }, '거래를 완료 처리했어요. 수수료가 기사님 예치금에서 차감돼요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'lst', 'aud']); },
+  crelist: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_relist_contract', { p_contract:+id }, '예약을 취소하고 판매글을 다시 판매 중으로 바꿨어요.', ['con', 'lst', 'aud']); },
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
   rsvc: async (id, el) => { const v = ($('#rsvc') || {}).value, r = S.adminReq.find(x => x.id === +id);
     if (!v || !r || v === r.service) return toast('바꿀 분야를 골라 주세요.');
