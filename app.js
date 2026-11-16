@@ -468,7 +468,7 @@ const credBlock = (set, act) => `<p class="mt-4 text-sm font-bold">전문 자격
   <p class="mt-1 text-xs text-sea/60">프로필에 배지로 표시돼요. 자격증 사본은 관리자 승인 때 확인을 요청할 수 있어요.</p>`;
 const freeToggle = (on, act) => `<div class="mt-4"><button type="button" data-act="${act}" aria-pressed="${on}" class="${chipCls(on)}">🚚 무료 출장 견적 가능</button></div>`;
 const areaBtn = (set, act, g) => `<button type="button" data-act="${act}" data-id="${g}" aria-pressed="${set.has(g)}" class="rounded-lg px-1 py-1.5 text-xs font-bold ${set.has(g) ? 'bg-cool text-white' : 'bg-white hover:bg-mist'}">${g}</button>`;
-const areaGrid = (set, act) => `<div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${[...GG_NEAR, ...[...set].filter(g => !GU.includes(g) && !GG_NEAR.includes(g))].map(g => areaBtn(set, act, g)).join('')}</div></div>`;
+const areaGrid = (set, act) => `<div class="mt-2 max-h-48 overflow-y-auto rounded-xl bg-ice p-2"><div class="sticky top-0 z-[1] -mx-2 -mt-2 mb-1 flex gap-2 bg-ice px-2 py-2"><button type="button" data-act="areaall" data-id="${act}:on" class="rounded-lg bg-cool px-3 py-1.5 text-xs font-bold text-white">서울·경기 전체 선택</button><button type="button" data-act="areaall" data-id="${act}:off" class="rounded-lg bg-white px-3 py-1.5 text-xs font-bold hover:bg-mist">전체 해제</button></div><p class="px-1 pb-1 text-[11px] font-bold text-sub">서울</p><div class="grid grid-cols-4 gap-1.5">${GU.map(g => areaBtn(set, act, g)).join('')}</div><p class="px-1 pb-1 pt-3 text-[11px] font-bold text-sub">경기</p><div class="grid grid-cols-4 gap-1.5">${[...GG_NEAR, ...[...set].filter(g => !GU.includes(g) && !GG_NEAR.includes(g))].map(g => areaBtn(set, act, g)).join('')}</div></div>`;
 const legalLinks = () => `<a href="${esc(TERMS_URL)}" target="_blank" rel="noopener" class="underline">이용약관</a> 및 <a href="${esc(PRIVACY_URL)}" target="_blank" rel="noopener" class="underline">개인정보처리방침</a>`;
 /* 기사 가입 진행률 바 (숨고처럼) */
 function authProg() {
@@ -484,7 +484,9 @@ function authProg() {
     $('#au-prog-left').textContent = left.length ? '남은 항목: ' + left.join(' · ') : '모든 항목을 채웠어요! 아래 가입하기를 눌러 주세요 🎉';
   } catch (_) {}
 }
-['input', 'change', 'click'].forEach(t => document.addEventListener(t, () => { if ($('#au-prog')) setTimeout(authProg, 0); }));
+['input', 'change', 'click', 'keyup', 'touchend'].forEach(t => document.addEventListener(t, () => { if ($('#au-prog')) { setTimeout(authProg, 0); setTimeout(authProg, 250); } }));
+/* 가입 진행률: 이벤트가 놓쳐도(자동완성·파일 선택 등) 0.5초마다 다시 계산해 100%까지 채워요 */
+setInterval(() => { if ($('#au-prog')) authProg(); }, 500);
 function renderAuth() {
   const login = au.tab === 'login', pro = au.type === 'pro', v = k => esc(au.v[k] || ''), inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`;
   const tab = (k, t) => `<button type="button" data-act="atab" data-id="${k}" aria-pressed="${au.tab === k}" class="flex-1 rounded-full py-2.5 text-sm font-bold ${au.tab === k ? 'bg-sea text-white' : 'bg-ice hover:bg-mist'}">${t}</button>`;
