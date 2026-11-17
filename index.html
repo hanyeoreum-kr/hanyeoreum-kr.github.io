@@ -142,21 +142,21 @@ if (window.tailwind) tailwind.config = {
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
-    <form id="hfind" class="mt-5 rounded-3xl bg-white p-4 text-sea shadow-2xl lg:mt-0 lg:p-6" aria-label="동네와 필요한 서비스로 견적 요청">
+    <form id="hfind" class="mt-4 rounded-2xl bg-white p-3 text-sea shadow-2xl lg:mt-0 lg:rounded-3xl lg:p-6" aria-label="동네와 필요한 서비스로 견적 요청">
       <p class="hidden text-lg font-black lg:block">어디에서, 무엇이 필요하세요?</p>
-      <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-1 lg:mt-4">
+      <div class="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-0 lg:mt-4 lg:rounded-2xl lg:py-1">
         <span aria-hidden="true">📍</span><label for="hgu" class="sr-only">우리 동네</label>
-        <select id="hgu" class="min-w-0 flex-1 bg-transparent py-2.5 text-lg font-black outline-none"></select>
+        <select id="hgu" class="min-w-0 flex-1 bg-transparent py-2 text-base font-black outline-none lg:py-2.5 lg:text-lg"></select>
         <span id="hgu-n" class="hidden shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"></span>
       </div>
-      <div class="relative mt-2.5 flex gap-2">
+      <div class="relative mt-2 flex gap-2 lg:mt-2.5">
         <label for="hkind" class="sr-only">필요한 분야</label>
         <div id="hsug" role="listbox" aria-label="추천 서비스" class="absolute inset-x-0 top-full z-30 mt-2 hidden max-h-80 overflow-y-auto rounded-2xl border border-mist bg-white p-1.5 text-sea shadow-2xl"></div>
-        <select id="hkind" aria-label="필요한 분야" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-3.5 text-[15px] font-bold outline-none focus:ring-2 focus:ring-brand/30"><option value="">🔧 필요한 분야 선택</option></select>
+        <select id="hkind" aria-label="필요한 분야" class="min-w-0 flex-1 rounded-xl bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none focus:ring-2 focus:ring-brand/30 lg:rounded-2xl lg:py-3.5 lg:text-[15px]"><option value="">🔧 필요한 분야 선택</option></select>
         <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" tabindex="-1" aria-hidden="true" class="hidden min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
-        <button type="submit" class="shrink-0 whitespace-nowrap rounded-2xl bg-sun px-4 font-black text-white hover:brightness-95 lg:px-6">무료 견적</button>
+        <button type="submit" class="shrink-0 whitespace-nowrap rounded-xl bg-sun px-3.5 text-sm font-black text-white hover:brightness-95 lg:rounded-2xl lg:px-6 lg:text-base">무료 견적</button>
       </div>
-      <p class="mt-2.5 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">🌙 24시간 언제든 요청하세요 · 밤에 올려 두고 아침에 도착한 견적을 확인하세요</p>
+      <p class="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-bold leading-snug text-amber-800 lg:mt-2.5 lg:rounded-xl lg:px-3 lg:py-2 lg:text-xs">🌙 24시간 언제든 요청하세요 · 밤에 올려 두고 아침에 도착한 견적을 확인하세요</p>
       <p class="mt-2 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
     </form>
   </div>
@@ -483,7 +483,7 @@ if (window.tailwind) tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
-<script src="app.js?v=101"></script>
+<script src="app.js?v=102"></script>
 <script src="notify.js?v=38"></script>
 </body>
 </html>
