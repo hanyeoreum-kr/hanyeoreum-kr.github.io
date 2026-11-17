@@ -2773,7 +2773,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   <p class="mt-3">&copy; ${new Date().getFullYear()} 한여름. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
   netState(); setTimeout(instShow, 4000);
-  if (!standalone()) $('#hero-inst').classList.remove('hidden');
+  if (!standalone() && !isHyApp()) { const hi = $('#hero-inst'); hi.textContent = isIOS() ? '📲 앱스토어에서 한여름 앱 받기' : '📲 홈 화면에 한여름 앱 추가하기'; hi.classList.remove('hidden'); }
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
   try { const q0 = new URLSearchParams(location.search), rp = q0.get('pro'); if (rp && UUID_RE.test(rp)) { if (!refGet() || refGet().pro !== rp) refSet(rp); refFromUrl = true; q0.delete('pro'); history.replaceState(null, '', location.pathname + (q0.toString() ? '?' + q0 : '') + location.hash); } } catch (_) {}
   try { const q = new URLSearchParams(location.search), go = q.get('go'), gcat = q.get('cat');
