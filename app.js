@@ -239,6 +239,7 @@ async function load(key) {
   if (key === 'settings') { const a = (data || []).find(x => x.key === 'auto_hours'); if (a) S.autoH = +a.value || 24; const v = (data || []).find(x => x.key === 'fee_v2_from'); if (v) S.v2From = Date.parse(v.value) || S.v2From; return; }
   if (key === 'pro') { S.pro = data || null; return; }
   if (key === 'profile') { S.profile = data || null; return; }
+  if (key === 'con') { S.con = (data || []).filter(c => c.status !== 'cancelled' || S.admin); return; }   // 취소된 예약은 관리자만 봐요
   if (key === 'myRev') { S.myRev = data || []; return; }
   if (key === 'adminReq') { S.adminReq = (data || []).filter(r => !r.admin_hidden); const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
     for (let i = 0; i < ids.length; i += 200) { const { data:ps } = await sb.from('profiles').select('id, name, email').in('id', ids.slice(i, i + 200)); (ps || []).forEach(p => S.custNm[p.id] = p); } return; }
@@ -2331,7 +2332,7 @@ function adminView() {
   const proName = id => (S.adminPros.find(p => p.id === id) || {}).name || '기사';
   const list = AF === 'ALL' ? S.inq : S.inq.filter(i => i.status === AF), cnt = s => S.inq.filter(i => i.status === s).length;
   const fchip = (k, t, n) => `<button type="button" data-act="ifilt" data-id="${k}" aria-pressed="${AF === k}" class="${chipCls(AF === k)}">${t} ${n}</button>`;
-  const cst = c => c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
+  const cst = c => c.status === 'cancelled' ? '취소됨' : c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
     <div class="flex flex-wrap items-end justify-between gap-3"><div><h1 class="font-display text-3xl sm:text-4xl">관리자 대시보드</h1><p class="mt-1 text-sm text-sea/70">한여름 운영 · ${esc(S.user.email)}</p></div><div class="flex flex-wrap gap-2">${notifBtn()}${btn('refresh', '', '새로고침', 's')}</div></div>
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">${memStat()}${stat('견적 대기 요청', S.adminReq.filter(r => reqState(r) === 'wait').length + '건')}${stat('처리 대기 민원', open + '건')}${stat('응답 기한 초과', over + '건')}${stat('거래 확정 대기', wait + '건')}${stat('승인 대기 기사', pend.length + '명')}${stat('충전 확인 대기', chg.length + '건')}${stat('오늘 수수료', won(fee))}</div>
@@ -2359,7 +2360,7 @@ function adminView() {
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">최근 예약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : `<div class="mt-2 flex flex-wrap gap-2">${btn('cdone', c.id, '✅ 거래 완료 처리', 'a')}${c.listing_id ? btn('crelist', c.id, '🔄 다시 판매중으로', 's') : ''}${c.request_id ? btn('unbook', c.request_id, '↩ 예약 취소 · 견적 다시 받기', 's') : ''}</div>`}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status === 'cancelled' ? '' : c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : `<div class="mt-2 flex flex-wrap gap-2">${btn('cdone', c.id, '✅ 거래 완료 처리', 'a')}${c.listing_id ? btn('crelist', c.id, '🔄 다시 판매중으로', 's') : ''}${c.request_id ? btn('unbook', c.request_id, '↩ 예약 취소 · 견적 다시 받기', 's') : ''}</div>`}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
