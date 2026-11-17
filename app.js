@@ -240,7 +240,7 @@ async function load(key) {
   if (key === 'pro') { S.pro = data || null; return; }
   if (key === 'profile') { S.profile = data || null; return; }
   if (key === 'myRev') { S.myRev = data || []; return; }
-  if (key === 'adminReq') { S.adminReq = data || []; const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
+  if (key === 'adminReq') { S.adminReq = (data || []).filter(r => !r.admin_hidden); const ids = [...new Set(S.adminReq.map(r => r.customer_id).filter(x => x && !S.custNm[x]))];
     for (let i = 0; i < ids.length; i += 200) { const { data:ps } = await sb.from('profiles').select('id, name, email').in('id', ids.slice(i, i + 200)); (ps || []).forEach(p => S.custNm[p.id] = p); } return; }
   if (key === 'prosPub') { S.prosPub = data || []; try { const ks = await rpc('pros_kinds_public'); const m = new Map((ks || []).map(x => [x.id, x.kinds])); S.prosPub.forEach(p => { if (!(p.kinds || []).length && m.get(p.id)) p.kinds = m.get(p.id); }); } catch (_) {}
     try { const gs = await rpc('pros_grades_public'); const gm = new Map((gs || []).map(x => [x.id, x])); S.prosPub.forEach(p => { const g = gm.get(p.id); if (g) { p.grade = g.grade; if (p.done == null) p.done = g.done; } }); } catch (_) {} return; }
@@ -1764,7 +1764,7 @@ function proView() {
   const pc = pendingCharge();
   $('#pview').innerHTML = top + (on ? '' : '<p class="mt-4 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">휴무 중에는 새 견적·매입 제안을 낼 수 없고, 기사찾기에 휴무로 표시돼요.</p>') + `
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-br from-brand to-brand-800 p-6 text-white shadow-lg shadow-brand/30">
-      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
+      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${holdNote()}${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
     <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 3,500원 + 최종 결제 금액의 등급 %(🐣10 · 🦅7 · 👑5%)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 예약하지 못한 견적이 있어요. 충전하면 고객이 바로 예약할 수 있어요.</p>' : ''}
@@ -1849,7 +1849,7 @@ function lowModal(need) {
 function walletModal(keep) {
   if (!S.pro) return;
   const p = S.pro, pc = pendingCharge(), list = S.led.filter(l => l.pro_id === me()).slice(0, 20), bank = BANK;
-  openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p></div>
+  openM(head('선충전 예치금') + `<div class="rounded-2xl bg-sea p-5 text-white"><p class="text-sm text-white/70">현재 예치금</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${holdNote()}</div>
     <p class="mt-3 text-sm text-sea/75 leading-relaxed">거래가 확정되면 수수료가 이 예치금에서 자동으로 차감돼요. 견적 제출과 매입 제안은 무료예요.</p>
     <h3 class="mt-5 font-bold">충전하기</h3>
     ${/^test_/.test(TOSS_KEY) && !tossOn() && S.admin ? `<p class="mt-2 rounded-xl bg-sun/10 p-3 text-xs leading-relaxed">토스 테스트 결제 모드예요. 결제창은 테스트 계정(<b>${esc(C.TOSS_TEST_EMAIL || '설정 안 됨')}</b>)에서만 보여요.<br>지금 로그인한 이메일: <b>${esc((S.user && S.user.email) || '이메일 없음 (간편 로그인)')}</b></p>` : ''}
@@ -2121,6 +2121,8 @@ const HR = 3600e3, T0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); re
 const reqQs = id => S.adminQuo.filter(q => q.request_id === id);
 const reqState = r => { const n = reqQs(r.id).length; return r.status === 'matched' ? 'done' : r.status !== 'open' ? 'closed' : n ? 'got' : 'wait'; };
 const RST = { wait:['견적 대기', 'bg-sun text-white'], got:['견적 받음', 'bg-cool text-white'], done:['예약 확정', 'bg-sea text-white'], closed:['마감·취소', 'bg-mist text-sea/70'] };
+const feeHold = () => S.pro ? S.con.filter(c => c.provider_id === me() && c.kind === 'service' && ['confirmed', 'pending'].includes(c.status) && !c.fee_charged && !c.fee_waived).reduce((a, c) => a + (+c.fee || 0), 0) : 0;   // 예약됐지만 아직 차감 전인 수수료(대략값 · 정확한 확인은 서버가 해요)
+const holdNote = () => { const h = feeHold(); return h > 0 ? `<p class="mt-1 text-xs text-white/70">예약 보류 ${won(h)} · 사용 가능 ${won(Math.max(0, (S.pro.balance || 0) - h))}</p>` : ''; };
 const custOf = r => S.custNm[r.customer_id] || {};
 function reqBoard() {
   const R = S.adminReq, t0 = T0(), wk = Date.now() - 7 * 24 * HR;
@@ -2162,6 +2164,8 @@ function areqModal(id) {
     <p class="mt-5 text-sm font-bold">받은 견적 ${qs.length}건</p>${qs.map(q => `<div class="mt-2 flex items-center justify-between gap-2 rounded-xl border border-mist px-3 py-2 text-sm"><span>${esc(pname(q.pro_id))} <span class="text-xs text-sea/50">${ago(q.created_at)}</span></span><b>${won(q.price)} <span class="text-xs font-normal text-sea/60">${esc(QL[q.status] || '')}</span></b></div>`).join('') || '<p class="mt-1 text-sm text-sea/60">아직 견적이 없어요.</p>'}
     ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl bg-sun/10 p-3 text-sm"><b>이 요청에 견적을 낼 수 있는 기사님 ${near.length}명</b> <span class="text-xs text-sea/60">(같은 분야 · 승인됨 · 지역 무관 · 알림 발송 ${near.filter(p => p.online !== false).length}명)</span><p class="mt-1 text-xs leading-relaxed">${near.slice(0, 30).map(p => esc(p.name) + ((p.areas || []).includes(r.gu) ? '📍' : '') + (p.online === false ? '(쉬는 중)' : '')).join(', ')}${near.length > 30 ? ` 외 ${near.length - 30}명` : ''}${near.length ? '' : '같은 분야 기사님이 아직 없어요. 기사 모집이 필요해요.'}</p><p class="mt-1 text-[11px] text-sea/50">📍 = 이 지역을 활동 지역으로 고른 기사님</p></div>` : ''}
     ${reqState(r) === 'wait' ? `<div class="mt-4 rounded-xl border border-mist p-3 text-sm"><b>분야 변경</b> <span class="text-xs text-sea/60">(고객이 분야를 잘못 골랐을 때)</span><div class="mt-2 flex gap-2"><select id="rsvc" class="min-w-0 flex-1 rounded-xl border border-mist px-3 py-2">${Object.entries(SVC).map(([k, v]) => `<option value="${k}"${k === r.service ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>${btn('rsvc', r.id, '변경', 's')}</div></div>` : ''}
+    ${reqState(r) === 'done' ? `<div class="mt-4 rounded-xl border border-mist p-3 text-sm"><b>예약 취소</b> <span class="text-xs text-sea/60">(예약 확정을 풀고 견적을 다시 받아요)</span><div class="mt-2">${btn('unbook', r.id, '↩ 예약 취소 · 견적 다시 받기', 's')}</div></div>` : ''}
+    ${reqState(r) !== 'done' ? `<div class="mt-4 rounded-xl border border-mist p-3 text-sm"><b>마감 취소</b> <span class="text-xs text-sea/60">(그 자리에서 취소 처리하고 목록에서 숨겨요)</span><div class="mt-2">${btn('reqcancel', r.id, '🗑 취소 처리하고 숨기기', 's')}</div></div>` : ''}
     <div class="mt-5"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
   menuCur = 'areq';
 }
@@ -2355,7 +2359,7 @@ function adminView() {
     </div>
 
     <h2 class="mt-10 text-2xl font-bold">최근 예약</h2>
-    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : `<div class="mt-2 flex flex-wrap gap-2">${btn('cdone', c.id, '✅ 거래 완료 처리', 'a')}${c.listing_id ? btn('crelist', c.id, '🔄 다시 판매중으로', 's') : ''}</div>`}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
+    <div class="mt-1">${S.con.slice(0, 40).map(c => card(`<div class="flex flex-wrap items-center justify-between gap-2"><p class="font-bold">${conCode(c.id)} · ${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p><span class="text-sm">${cst(c)}</span></div><p class="text-xs text-sea/60">${esc(c.provider_name)} ↔ ${esc(c.client_name)} · 수수료 ${won(c.fee)}${c.fee_waived ? ' 면제(기사님 손님)' : c.fee_charged ? ' 차감' : ''}${c.warranty_no ? ' · 보증 ' + esc(c.warranty_no) : ''}</p>${c.status !== 'confirmed' ? `<div class="mt-2 flex flex-wrap gap-2">${btn('creopen', c.id, '↩ 예약 상태로 되돌리기', 's')}${c.fee_charged ? btn('creopenr', c.id, '↩ 되돌리기 + 예치금 환불', 's') : ''}</div>` : `<div class="mt-2 flex flex-wrap gap-2">${btn('cdone', c.id, '✅ 거래 완료 처리', 'a')}${c.listing_id ? btn('crelist', c.id, '🔄 다시 판매중으로', 's') : ''}${c.request_id ? btn('unbook', c.request_id, '↩ 예약 취소 · 견적 다시 받기', 's') : ''}</div>`}`)).join('') || `<div class="mt-3">${empty('아직 예약이 없어요.')}</div>`}</div>
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section><h2 class="text-2xl font-bold">예치금 거래 로그</h2>${S.led.slice(0, 15).map(l => card(`<div class="flex items-start justify-between gap-3"><div><p class="text-sm font-bold">${esc(l.text)}</p><p class="text-xs text-sea/60">${esc(proName(l.pro_id))} · ${fmtT(l.created_at)}</p></div><p class="font-bold ${l.amount < 0 ? 'text-sun' : 'text-cool'}">${l.amount < 0 ? '−' : '+'}${won(Math.abs(l.amount))}</p></div>`)).join('') || `<div class="mt-3">${empty('아직 거래가 없어요.')}</div>`}</section>
@@ -2484,6 +2488,8 @@ const ACT = {
   creopen: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:false }, '예약 확정 상태로 되돌렸어요. 수수료 기록도 취소했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
   creopenr: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:true }, '예약 확정 상태로 되돌리고 수수료를 예치금으로 환불했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
   cdone: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_complete_contract', { p_contract:+id }, '거래를 완료 처리했어요. 수수료가 기사님 예치금에서 차감돼요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'lst', 'aud']); },
+  unbook: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_unbook_request', { p_request:+id }, '예약을 취소하고 견적을 다시 받는 상태로 되돌렸어요.', ['con', 'req', 'adminReq', 'quo', 'adminQuo', 'aud']); },
+  reqcancel: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_cancel_request', { p_request:+id }, '취소 처리하고 목록에서 숨겼어요.', ['req', 'adminReq', 'quo', 'adminQuo', 'aud']); },
   crelist: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_relist_contract', { p_contract:+id }, '예약을 취소하고 판매글을 다시 판매 중으로 바꿨어요.', ['con', 'lst', 'aud']); },
   aauto: (h, el) => adminSimple(el, 'admin_set_auto_hours', { p_hours:+h }, `다음 작업 완료 요청부터 ${h}시간 뒤 자동 확정돼요.`, ['settings', 'aud']),
   rsvc: async (id, el) => { const v = ($('#rsvc') || {}).value, r = S.adminReq.find(x => x.id === +id);
