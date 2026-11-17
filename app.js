@@ -197,6 +197,8 @@ const S = {
   msgs:{}, inqMsgs:{}
 };
 const me = () => S.user && S.user.id;
+const isGuest = () => !!(S.user && S.user.is_anonymous);   // 가입 없이 견적을 보낸 임시 손님
+const sleepMs = ms => new Promise(r => setTimeout(r, ms));
 const isPro = () => !!S.pro;
 const approved = () => S.pro && S.pro.approval === 'APPROVED';
 const proPub = id => S.prosPub.find(p => p.id === id) || (S.pro && S.pro.id === id ? S.pro : null) || S.adminPros.find(p => p.id === id);
@@ -359,7 +361,7 @@ const refCard = () => { const n = (S.myRefs || []).length; return `<section clas
   <p class="mt-2 text-xs text-sea/60">이미 한여름에 가입했던 손님이나, 한여름에서 소개받은 손님은 내 손님으로 등록되지 않아요.</p></section>`; };
 /* 가입 직후 1번만: "어떤 작업이 필요하세요?" → 분야를 누르면 바로 견적 요청서 */
 function welcomeCheck() {
-  const u = S.user; if (!u || S.admin || S.pro || mmOpen() || !qm.classList.contains('hidden')) return;
+  const u = S.user; if (!u || u.is_anonymous || S.admin || S.pro || mmOpen() || !qm.classList.contains('hidden')) return;
   const key = 'hy_welcome_' + u.id; if (lsGet(key)) return;
   if (!u.created_at || Date.now() - T(u.created_at) > 3 * 864e5) return;
   if (S.req.some(r => r.customer_id === me())) return;
@@ -402,7 +404,7 @@ async function onSession(session) {
 }
 function updateAuthUI() {
   const u = S.user, nm = S.profile ? S.profile.name : (u ? (u.email || '').split('@')[0] : '');
-  $('#hdr-auth').textContent = u ? '로그아웃' : '로그인'; $('#hdr-auth').classList.toggle('hidden', !!u);
+  $('#hdr-auth').textContent = isGuest() ? '가입하기' : u ? '로그아웃' : '로그인'; $('#hdr-auth').classList.toggle('hidden', !!u && !isGuest());
   $('#hdr-search').classList.toggle('hidden', S.mode !== 'customer');
   $('#hdr-user').style.display = u ? '' : 'none'; $('#hdr-user').textContent = u ? nm + '님' : '';
   const sw = $('#modesw'), on = S.mode === 'pro';
@@ -575,6 +577,15 @@ async function asignup(el) {
     if (pro) { const be = await bizCheck(bizDigits(v.biz)); if (be) return setErr(be); data.as_agree = true; data.biz_no = bizDigits(v.biz); }
     if (pro) Object.assign(data, { kind:kindsOrdered(au)[0], kinds:kindsOrdered(au), fields:specFields(au), ton:au.kinds.has('truck') ? au.ton : null, lift:au.kinds.has('truck') && au.lift, areas:[...au.areas], certs:[...au.certs], free:au.free });
     if (pro && auDoc) await pendDoc.save(email, auDoc);   // 로그인되는 순간 자동으로 올려요
+    if (isGuest() && pro) { try { await sb.auth.signOut(); } catch (_) {} await sleepMs(300); }   // 기사 가입은 손님 계정과 따로 만들어요
+    if (isGuest()) {   // 손님 계정을 정식 회원으로 바꿔요 (보낸 요청은 그대로 이어져요)
+      const { error:ge } = await sb.auth.updateUser({ email, password:pw, data });
+      if (ge) return setErr(/registered|exists|already/i.test(ge.message) ? '이미 가입된 이메일이에요. 로그인해 주세요. (지금 보낸 요청은 새 로그인 계정으로 옮겨지지 않아요)' : errMsg(ge));
+      try { await sb.from('profiles').update({ name }).eq('id', me()); } catch (_) {}
+      track('signup'); au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
+      openM(head('거의 다 됐어요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 확인 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나고, 보내 둔 견적 요청이 그대로 이어져요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.</p>` + `<button type="button" data-mclose class="mt-5 w-full rounded-xl bg-brand py-3 font-bold text-white">확인</button>`);
+      return;
+    }
     let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
     if (error && pro && !['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(data.kind) && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
     if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
@@ -619,6 +630,14 @@ async function resetConfirm(el) {
   if (!pwOk(p1)) return setErr('비밀번호는 8자 이상, 영문과 숫자를 모두 넣어 주세요.');
   if (p1 !== p2) return setErr('두 비밀번호가 달라요.');
   await busy(el, async () => { const { error } = await sb.auth.updateUser({ password:p1 }); if (error) throw error; closeM(); toast('비밀번호를 바꿨어요.'); });
+}
+async function guestJoin(k) {   // 손님 → 정식 회원 (카카오 또는 이메일)
+  if (k === 'kakao') {
+    try { const { error } = await sb.auth.linkIdentity({ provider:'kakao', options:{ redirectTo:C.SITE_URL || location.href.split('#')[0] } }); if (error) throw error; return; }
+    catch (_) { toast('카카오 연결이 아직 준비되지 않았어요. 이메일로 가입해 주세요.'); }
+  }
+  if (!qm.classList.contains('hidden')) closeQuote();
+  authModal('signup', 'customer');
 }
 async function logout() { await sb.auth.signOut(); S.mode = 'customer'; toast('로그아웃했어요.'); }
 
@@ -812,7 +831,7 @@ function navMenu() {
   openM(head('전체 메뉴') + `<div class="-mx-2 divide-y divide-mist">
     <div class="py-1">${it('data-act="qopen0"', '⚡ 무료 견적 요청', 'text-brand')}${it('data-act="pros"', '기사님 찾기', 'text-cyan-600')}${it('data-act="mkt"', '중고마켓', 'text-emerald-600')}${it('data-act="gopro"', '기사님 등록', 'text-sun')}</div>
     <div class="py-1">${it('data-act="navgo" data-id="#process"', '이용 방법')}${it('data-act="guarantee"', '14일 재점검 안심 보장')}${it('data-act="cs"', '고객센터')}</div>
-    <div class="py-1">${it('data-act="mkt"', '🛒 중고장터')}${standalone() ? '' : it('data-act="install"', '홈 화면에 앱 추가')}${S.user ? it('data-act="nset"', '🔔 알림 설정') : ''}${S.user ? `<button type="button" data-act="mktgo" class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>` : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
+    <div class="py-1">${it('data-act="mkt"', '🛒 중고장터')}${standalone() || isHyApp() ? '' : it('data-act="install"', isIOS() ? '📱 앱스토어에서 앱 받기' : '홈 화면에 앱 추가')}${S.user ? it('data-act="nset"', '🔔 알림 설정') : ''}${S.user ? `<button type="button" data-act="mktgo" class="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>` : ''}${S.user ? it('data-act="auth"', '로그아웃', 'text-sea/60') + it('data-act="delacct"', '회원 탈퇴', 'text-sm text-sea/45') : it('data-act="auth"', '로그인 / 회원가입')}</div></div>
     ${S.user ? `<p class="mt-3 px-2 text-xs text-sea/50">${esc((S.profile && S.profile.name) || S.user.email || '')}님으로 로그인 중</p>` : ''}`);
   if (S.user) mktPaint();
 }
@@ -1275,7 +1294,7 @@ function qShow(n) {
     d.maxLength = room; if (d.value.length > room) d.value = d.value.slice(0, room); $('#qm-count').textContent = `${d.value.length} / ${room}`;
   }
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
-  $('#qm-next').textContent = n === 3 ? (S.user ? '견적 요청 보내기' : '로그인하고 보내기') : n === 4 ? '닫기' : '다음';
+  $('#qm-next').textContent = n === 3 ? '견적 요청 보내기' : n === 4 ? '닫기' : '다음';
   $('#qm-next').disabled = false;
   qm.querySelector('.overflow-y-auto').scrollTop = 0;
 }
@@ -1332,7 +1351,13 @@ async function qNext() {
     if (qform.date < today()) return qErr('오늘 이후 날짜를 선택해 주세요.');
   }
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
-  if (!S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
+  if (!S.user) {   // 가입 없이 보내기: 임시 손님 계정을 만들고, 안 되면 예전처럼 로그인 창을 보여줘요
+    track('qguest'); const b0 = $('#qm-next'); b0.disabled = true; b0.textContent = '준비하는 중...';
+    let ok = false; try { const { data, error } = await sb.auth.signInAnonymously(); ok = !error && !!(data && data.session); } catch (_) {}
+    for (let i = 0; ok && i < 40 && !S.user; i++) await sleepMs(100);
+    b0.disabled = false; b0.textContent = '견적 요청 보내기';
+    if (!ok || !S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
+  }
   qform.details = $('#qm-details').value.trim();
   if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
   if (kindOf(qform.service) === 'home' && !qform.etc && /세면대|변기|하수구|배수구|누수|동파|수전|수도꼭지/.test(qform.details || '')) {   // 배관 내용인데 생활가전으로 고른 경우
@@ -1351,7 +1376,7 @@ async function qNext() {
     if (error) throw error;
     const rows = [['요청 번호', reqCode(data.id)], ['서비스', qform.etc ? KINDS[qform.etc].name + ' · 기타' : SVC[qform.service]], ...(qform.site ? [['현장', qform.site]] : []), truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
-    await load('req'); render(); qShow(4);
+    await load('req'); render(); qShow(4); const gb = $('#qm-guest'); if (gb) gb.classList.toggle('hidden', !isGuest());
   } catch (e) { qErr(errMsg(e) || '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); b.disabled = false; b.textContent = '견적 요청 보내기'; }
   finally { qsending = false; }
 }
@@ -2375,7 +2400,8 @@ const ACT = {
   home: () => { closeM(); if (S.mode !== 'customer') setMode('customer'); else showView('main'); },
   back: () => { closeM(); showView('main'); },
   mkt: openMarket, pros: openPros, cs: () => csModal(), cstab: t => csModal(t),
-  auth: () => S.user ? logout() : authModal('login'),
+  auth: () => isGuest() ? guestJoin() : S.user ? logout() : authModal('login'),
+  guestjoin: k => guestJoin(k),
   atab: k => { saveAuth(); au.tab = k; renderAuth(); }, autype: k => { saveAuth(); au.type = k; renderAuth(); },
   pekind: k => specKind(pe, 'pe', k), pesub: (x, el) => specSub(pe, 'pe', x, el), aukind: k => specKind(au, 'au', k), ausub: (x, el) => specSub(au, 'au', x, el), bpkind: k => specKind(bp, 'bp', k), bpsub: (x, el) => specSub(bp, 'bp', x, el),
   areaall: v => { const [act, m] = String(v).split(':'), set = act === 'aarea' ? au.areas : act === 'pearea' ? pe.areas : act === 'barea' ? bp.areas : null; if (!set) return; const on = m === 'on'; [...GU, ...GG_ALL].forEach(g => { const want = on ? (GU.includes(g) || GG_NEAR.includes(g)) : false; if (set.has(g) !== want) toggleIn(set, g, act); }); },
@@ -2437,7 +2463,7 @@ const ACT = {
   deldone2: (id, el) => { if (!confirmBox(el)) return; busy(el, async () => { await rpc('admin_delete_account', { p_user:id, p_refunded:true }); loadDels(true); await load('adminPros'); render(); toast('예치금 환불 기록 후 탈퇴 처리했어요.'); }); },
   navmenu: () => navMenu(), ptop: () => { closeM(); window.scrollTo({ top:0, behavior:'smooth' }); },
   navgo: id => { closeM(); if (S.mode !== 'customer' || S.view !== 'main') setMode('customer'); setTimeout(() => document.querySelector(id)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80); },
-  notifon: () => notifOn(), install: () => installApp(), instclose: () => instHide(3),
+  notifon: () => notifOn(), install: () => installApp(), iosweb: () => { closeM(); iosCoach(); }, instclose: () => instHide(3),
   wallet: () => walletModal(), chargego: (id, el) => chargeGo(el),
   mypage: () => mypageModal(), profedit: profModal, pesave: (id, el) => peSave(el),
   pecert: c => toggleIn(pe.certs, c, 'pecert'), pecertadd: () => addCert('pecert', pe.certs), pearea: g => toggleIn(pe.areas, g, 'pearea'),
@@ -2637,14 +2663,17 @@ const PWA = { prompt: null };
 const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const inApp = () => /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|; wv\)/i.test(navigator.userAgent);
 const isAndroid = () => /android/i.test(navigator.userAgent);
+const isHyApp = () => isIOS() && !/Safari|CriOS|FxiOS|EdgiOS|KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);   // 아이폰 한여름 앱 안(웹뷰)
+const IOS_APP_URL = () => ((C && C.IOS_APP_URL) || '').trim() || 'https://apps.apple.com/kr/app/id6834314201';
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 function instPlace() { const bar = $('#mbar'), h = bar && bar.style.display !== 'none' ? bar.offsetHeight : 0; $('#inst').style.bottom = (h + 12) + 'px'; }
 function instShow() {
-  if (standalone() || innerWidth >= 768) return;
+  if (standalone() || isHyApp() || innerWidth >= 768) return;
   const until = +lsGet('hy_inst_hide2') || 0; if (Date.now() < until) return;
-  $('#inst-sub').textContent = PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : inApp() ? '크롬·사파리로 열면 추가할 수 있어요' : isIOS() ? '공유 버튼 → 홈 화면에 추가' : '메뉴 → 홈 화면에 추가';
+  $('#inst-sub').textContent = PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : inApp() ? '크롬·사파리로 열면 추가할 수 있어요' : isIOS() ? '앱스토어에서 한여름 앱을 받을 수 있어요' : '메뉴 → 홈 화면에 추가';
+  const ib = document.querySelector('#inst [data-act="install"]'); if (ib) ib.textContent = isIOS() ? '받기' : '추가';
   instPlace(); $('#inst').style.display = '';
 }
 function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide2', Date.now() + days * 864e5); }
@@ -2664,6 +2693,8 @@ function iosCoach() {
   document.body.append(el);
 }
 async function installApp() {
+  if (isHyApp()) { instHide(365); return; }
+  if (isIOS()) { instHide(3); track('appstore'); location.href = IOS_APP_URL(); return; }   // 아이폰: 앱스토어 한여름 앱 페이지로 바로 이동
   if (PWA.prompt) { PWA.prompt.prompt(); const r = await PWA.prompt.userChoice.catch(() => ({})); PWA.prompt = null; instHide(r.outcome === 'accepted' ? 365 : 7); return; }
   instHide(3);
   if (inApp()) {
@@ -2764,6 +2795,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     if (nsBad && session) { nsBad = false; sb.auth.signOut(); setTimeout(() => toast('로그인 확인에 실패했어요. 로그인 버튼을 눌러 다시 시도해 주세요.'), 300); return; }
     if (ev === 'PASSWORD_RECOVERY') setTimeout(newPwModal, 400);
     if (ev === 'TOKEN_REFRESHED') return;
+    if (ev === 'USER_UPDATED' && session && session.user) { S.user = session.user; setTimeout(render, 0); }
     const id = session && session.user ? session.user.id : null;
     if (ev === 'INITIAL_SESSION' || id !== (me() || null)) setTimeout(() => onSession(session), 0);
   });
