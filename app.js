@@ -388,8 +388,9 @@ async function onSession(session) {
   if (S.user) handleTossReturn();
   if (S.user) setTimeout(welcomeCheck, 1200);
   if (S.user) setTimeout(async () => {
+    if (hyApns()) hyAsk('token');
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
-    else if (canNote() && Notification.permission === 'default' && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 예약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
+    else if (((canNote() && Notification.permission === 'default') || (hyApns() && !window.__hyTok)) && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 예약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
   }, 800);
   if (S.user && S.pro) load('myRefs').then(() => { if (S.mode === 'pro') render(); });
   if (S.user) claimRef();
@@ -2604,7 +2605,19 @@ function track(kind, path) {
    ===================================================================== */
 let W = null, nBadge = 0; const baseTitle = document.title;
 const canNote = () => 'Notification' in window && window.isSecureContext;
-const notifBtn = () => canNote() && Notification.permission === 'default' ? `<button type="button" data-act="notifon" class="rounded-xl border-2 border-sun/60 bg-sun/10 font-bold px-4 py-2.5 text-sm text-sea">🔔 알림 켜기</button>` : '';
+const notifBtn = () => (canNote() && Notification.permission === 'default') || (hyApns() && !window.__hyTok) ? `<button type="button" data-act="notifon" class="rounded-xl border-2 border-sun/60 bg-sun/10 font-bold px-4 py-2.5 text-sm text-sea">🔔 알림 켜기</button>` : '';
+/* 아이폰 한여름 앱(앱스토어) 푸시: 앱이 알려 주는 기기 번호를 서버에 저장해요 */
+function hyApns() { try { return isHyApp() && !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.hy); } catch (e) { return false; } }
+function hyAsk(cmd) { try { window.webkit.messageHandlers.hy.postMessage({ cmd }); } catch (e) {} }
+async function apnsSave(tok) {
+  try { if (!tok || !S.user || !sb) return false; const { error } = await sb.rpc('register_apns_token', { p_token:tok, p_env:'production' }); if (error) { console.warn('apns save', error.message); return false; } return true; } catch (e) { return false; }
+}
+window.addEventListener('hyapns', async e => {
+  const d = e.detail || {};
+  if (d.status === 'denied') { if (d.ask) toast('알림이 꺼져 있어요. 아이폰 설정 → 알림 → 한여름에서 허용해 주세요.'); return; }
+  if (d.status === 'error') { if (d.ask) toast('알림 등록에 실패했어요. 잠시 뒤 다시 시도해 주세요.'); return; }
+  if (d.token) { window.__hyTok = d.token; const ok = await apnsSave(d.token); if (d.ask) toast(ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림은 켜졌지만 저장에 실패했어요. 로그인 상태를 확인해 주세요.'); try { render(); } catch (_) {} }
+});
 /* 앱을 닫아도 오는 푸시 알림 (Web Push). 공개키는 config.js 의 VAPID_PUBLIC_KEY 가 있으면 그것을 써요 */
 const VAPID_PUB = C.VAPID_PUBLIC_KEY || 'BOz7NrzRKbibpXKeN5D6Z9qcIXMRESo5n3ALslPgtyg04mCkJ22-QKHLsmulLMqGMH5Q1qfJtvYNbSKUTPLPYYs';
 const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };
@@ -2621,6 +2634,7 @@ async function pushSubscribe() {
   } catch (e) { console.warn('push', e); return false; }
 }
 async function notifOn() {
+  if (hyApns()) return hyAsk('ask');   // 아이폰 한여름 앱: 앱의 알림 허용 창을 띄워요
   if (isIOS() && !standalone()) { toast('아이폰은 홈 화면에 추가한 한여름 앱에서만 알림을 켤 수 있어요.'); return installApp(); }
   if (!canNote()) return toast('이 브라우저는 알림을 지원하지 않아요.');
   const r = await Notification.requestPermission().catch(() => 'denied');
