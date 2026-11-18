@@ -1426,7 +1426,7 @@ function custMenu(keep) {
       return card(`<div class="flex justify-between gap-2"><p class="font-bold">${esc(l.title)} · ${won(l.price)}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${l.status === 'open' ? '판매 중' : l.status === 'sold' ? '거래 체결' : '판매 종료'}</span></div>
         <div class="mt-3 flex flex-wrap gap-2 items-center">${l.status === 'open' ? btn('ldet', l.id, n ? `받은 제안 ${n}건 보기` : '판매글 보기', n ? 'p' : 's') : conBlock(c)}</div>`); }).join('') : '') +
     (buys.length ? '<h3 class="mt-6 font-bold">내 구매</h3>' + buys.map(c => card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)}</p><div class="mt-3 flex flex-wrap gap-2 items-center">${conBlock(c)}</div>`)).join('') : '') +
-    (pre.length ? '<h3 class="mt-6 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(t.u2_name)} 기사님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : '') +
+    (pre.length ? '<h3 class="mt-6 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(thN(t, 'u2'))} 기사님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : '') +
     `<h3 class="mt-6 font-bold">고객센터</h3>` + card(`<p class="text-sm text-sea/75">결제·기사·A/S 관련 궁금한 점을 1:1로 문의하고 처리 상태를 확인해요.</p><div class="mt-3 flex flex-wrap gap-2">${btn('inqnew', '', '✏️ 1:1 문의하기', 'a')}${btn('cs', '', `내 문의 내역${unreadN() ? ' · 새 답변 ' + unreadN() : ''}`, 's')}</div>`), keep);
   menuCur = 'cust';
 }
@@ -1510,7 +1510,7 @@ function onNewMessage(m) {
   const list = S.msgs[m.thread_id];
   if (list && !list.some(x => x.id === m.id)) list.push(m);
   if (chatCur === m.thread_id) chatModal(m.thread_id, true);
-  else if (m.sender_id && m.sender_id !== me()) { const t = S.thr.find(x => x.id === m.thread_id); if (t) { const who = t.u1 === me() ? t.u2_name : t.u1_name, txt = m.kind === 'photo' ? '사진' : String(m.body).slice(0, 30); toast(`💬 ${who}: ${txt}`); phoneNote('새 메시지', `${who}: ${txt}`); } }
+  else if (m.sender_id && m.sender_id !== me()) { const t = S.thr.find(x => x.id === m.thread_id); if (t) { const who = t.u1 === me() ? thN(t, 'u2') : thN(t, 'u1'), txt = m.kind === 'photo' ? '사진' : String(m.body).slice(0, 30); toast(`💬 ${who}: ${txt}`); phoneNote('새 메시지', `${who}: ${txt}`); } }
   if (!S.thr.some(t => t.id === m.thread_id)) queueLoad('thr');
 }
 /* 채팅에서 금액·날짜·합의 얘기가 나오면 '예약하기를 눌러야 진행돼요' 안내 (예약이 아직 없을 때만) */
@@ -1546,7 +1546,7 @@ function addrModal(tid) {
   const t = S.thr.find(x => x.id === +tid); if (!t) return;
   const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null;
   const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, x) => `<label for="${f}" class="block mt-4 text-sm font-bold">${x}</label>`;
-  openM(head('📍 작업 장소 보내기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님이 찾아갈 수 있게 알려 주세요. 이 내용은 <b>이 채팅방의 기사님께만</b> 보여요.</p>
+  openM(head('📍 작업 장소 보내기') + `<p class="text-sm"><b>${esc(thN(t, 'u2'))}</b> 기사님이 찾아갈 수 있게 알려 주세요. 이 내용은 <b>이 채팅방의 기사님께만</b> 보여요.</p>
     ${c && c.work_date ? `<p class="mt-2 rounded-xl bg-cool/10 p-3 text-sm">작업일 <b>${esc(c.work_date)}</b></p>` : ''}
     ${lab('ad-addr', '작업 장소 (상세 주소)')}<input id="ad-addr" maxlength="120" autocomplete="street-address" placeholder="예: 서울 강남구 ○○로 12, 101동 1203호" class="${inp}">
     ${lab('ad-time', '방문 가능 시간대')}<select id="ad-time" class="${inp}"><option>시간은 채팅으로 협의</option><option>오전 (9~12시)</option><option>오후 (12~18시)</option><option>저녁 (18시 이후)</option><option>종일 가능</option></select>
@@ -1570,7 +1570,7 @@ async function chatModal(tid, keep) {
   let t = S.thr.find(x => x.id === tid);
   if (!t) { await load('thr'); t = S.thr.find(x => x.id === tid); if (!t) return toast('채팅방을 찾을 수 없어요.'); }
   if (!S.msgs[tid]) { try { await loadMsgs(tid); } catch (e) { return toast(errMsg(e)); } }
-  const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null, other = t.u1 === me() ? t.u2_name : t.u1_name, imCust = t.u1 === me();
+  const c = t.contract_id ? S.con.find(x => x.id === t.contract_id) : null, other = t.u1 === me() ? thN(t, 'u2') : thN(t, 'u1'), imCust = t.u1 === me();
   const i0 = $('#chat-in'), draft = keep && i0 ? i0.value : '', focused = keep && document.activeElement === i0;
   const hasRead = 'u1_read_at' in t, otherRead = imCust ? t.u2_read_at : t.u1_read_at;
   const lastM = [...(S.msgs[tid] || [])].reverse().find(m => m.sender_id === me() && m.kind !== 'sys'), lastMine = lastM ? lastM.id : null;
@@ -1578,6 +1578,18 @@ async function chatModal(tid, keep) {
   const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
   const hint = agreeHint(tid, c, imCust), qx = hint.on ? qaHot : qa;
+  const guide = (() => {   // 채팅창 위 안내: 고객은 합의 → 보증서, 기사님은 확정 → 계약 확정 건 + 등급(건수) 안내
+    const box = h => `<div class="mt-2 rounded-2xl bg-ice p-3 text-xs leading-relaxed text-sea/80 sm:text-sm" role="note">${h}</div>`;
+    if (imCust) return box(c ? '작업이 끝나면 기사님이 <b>거래 확정</b>을 눌러요. 확정되면 작업 내역서와 후기 작성이 열려요.' : '합의가 되면 <b>[📝 합의 내용으로 예약하기]</b>를 눌러 주세요. <b>눌러야 보증서(14일 재점검)가 나와요.</b>');
+    if (!S.pro) return '';
+    let g = '';
+    try {
+      const p = S.pro, key = p.grade || 'sprout', d = +p.done_count || 0, nn = +p.rating_count || 0, avg = nn ? (+p.rating_sum || 0) / nn : 0, cur = gradeOf(p);
+      const nx = key === 'sprout' ? ['eagle', 10, 4.5] : key === 'eagle' ? ['crown', 30, 4.8] : null;
+      g = `<br>${cur.e} <b>${cur.n}</b> 기사님 · 수수료 <b>3,500원 + ${cur.pct}%</b>` + (nx ? ` · 완료 <b>${Math.max(0, nx[1] - d)}건</b> 더 하면 ${GRADES[nx[0]].e} <b>${GRADES[nx[0]].n}</b>(${GRADES[nx[0]].pct}%)${avg < nx[2] || nn < 3 ? ` <span class="text-sea/60">(평점 ${nx[2]} 이상·후기 3개 이상 필요)</span>` : ''}` : ' · 최고 등급이에요 👑');
+    } catch (_) {}
+    return box((c ? '작업이 끝나면 <b>[✅ 거래 확정]</b>을 눌러 주세요. <b>눌러야 계약 확정 건이 되고 완료 건수가 쌓여요.</b>' : '손님이 <b>[합의 내용으로 예약하기]</b>를 누르면 예약이 만들어져요. 작업이 끝나면 <b>[✅ 거래 확정]</b>을 눌러 주세요.') + g);
+  })();
   const ci = cardInfo(tid), live = !!c && c.status !== 'completed';
   if (live) { if (imCust) acts.unshift(ci.card ? qa('addr', tid, '📍 작업 장소 다시 보내기') : qaHot('addr', tid, '📍 작업 장소 보내기')); else if (ci.card && !ci.ack) acts.unshift(qaHot('cack', tid, '✅ 예약 안내 확인했어요')); }
   const ban = !live ? '' : imCust ? (ci.card ? '' : '<div class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm" role="status">📍 기사님이 찾아갈 수 있게 <b>작업 장소</b>를 보내 주세요. 아래 <b>[📍 작업 장소 보내기]</b>를 누르면 돼요.</div>') : ci.card ? (ci.ack ? '' : '<div class="mt-2 rounded-2xl border-2 border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed sm:text-sm" role="status">손님이 보낸 <b>예약 안내</b>를 확인하고 <b>[✅ 예약 안내 확인했어요]</b>를 눌러 주세요.</div>') : '<div class="mt-2 rounded-2xl bg-ice p-3 text-xs text-sea/70" role="status">손님이 작업 장소를 보내면 여기에 나와요.</div>';
@@ -1585,13 +1597,13 @@ async function chatModal(tid, keep) {
   openM(head('안심 채팅') + `<p class="text-xs text-sea/60">${c ? conCode(c.id) + ' · ' : ''}상대: ${esc(other)} · 전화번호는 공개되지 않아요</p>
     <div id="chatbox" class="mt-3 h-[42vh] min-h-[14rem] sm:h-72 overflow-y-auto rounded-2xl bg-ice p-3 space-y-2">${(S.msgs[tid] || []).map(m => isCardMsg(m) ? cardHtml(m, tid, imCust, ci) : isAckMsg(m) ? ackHtml(m) : m.kind === 'sys'
       ? `<p class="text-center text-xs text-sea/60">${esc(m.body)}</p>`
-      : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : esc(m.body)}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
-    ${ban}${hint.html}
+      : `<div class="flex ${m.sender_id === me() ? 'justify-end' : ''}"><div class="max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.sender_id === me() ? 'bg-sea text-white' : 'bg-white'}">${m.photo && isPhotoUrl(m.photo) ? `<a href="${esc(m.photo)}" target="_blank" rel="noopener"><img src="${esc(m.photo)}" alt="보낸 사진" class="mb-1 block max-h-48 rounded-xl"></a>` : ''}${m.kind === 'photo' ? '' : `<span class="whitespace-pre-wrap break-words">${esc(m.body)}</span>`}<p class="mt-0.5 text-[10px] opacity-60">${fmtT(m.created_at)}${m.id === lastMine ? readTag : ''}</p></div></div>`).join('')}</div>
+    ${ban}${hint.html}${guide}
     <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="빠른 실행">${acts.join('')}<input id="chat-photo" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true"><input id="chat-cam" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-hidden="true"></div>
-    <div class="mt-2 flex gap-2"><input id="chat-in" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3">${btn('csend', tid, '보내기')}</div>`);
+    <div class="mt-2 flex gap-2"><textarea id="chat-in" rows="1" maxlength="1000" aria-label="메시지" placeholder="메시지를 입력하세요 (엔터는 줄바꿈)" class="min-w-0 flex-1 resize-none rounded-xl bg-ice px-4 py-3 leading-snug" style="max-height:7.5rem"></textarea>${btn('csend', tid, '보내기')}</div>`);
   chatCur = tid; markRead(t);
   const b = $('#chatbox'); b.scrollTop = b.scrollHeight;
-  const i1 = $('#chat-in'); i1.value = draft; if (keep ? focused : innerWidth >= 768) i1.focus();
+  const i1 = $('#chat-in'); i1.value = draft; const fit = () => { i1.style.height = 'auto'; i1.style.height = Math.min(i1.scrollHeight, 120) + 'px'; }; i1.addEventListener('input', fit); fit(); if (keep ? focused : innerWidth >= 768) i1.focus();
   if (!c) i1.addEventListener('input', () => { const v = i1.value, hb = $('#agree-hint'); if (!hb || !(AGREE_RE.test(v) || OFF_RE.test(v))) return; hb.classList.remove('hidden'); const bt = document.querySelector('#mm-body [data-act="qdirect"], #mm-body [data-act="qask"]'); if (bt) bt.classList.add('ring-2', 'ring-brand/20', 'border-brand', 'bg-brand-50', 'text-brand'); });
 }
 /* 채팅 읽음 표시: 내가 채팅방을 보고 있으면 '읽은 시각'을 서버에 남겨요 → 상대 화면에 '읽음'으로 보여요 */
@@ -1606,6 +1618,8 @@ function markRead(t) {
   rpc('mark_thread_read', { p_thread:t.id }).then(() => { t[k] = lastOther.created_at; }).catch(() => {}).finally(() => { markBusy = 0; });
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && chatCur) markRead(S.thr.find(x => x.id === chatCur)); });
+/* 채팅방 상대 이름: 방을 만들 때 저장된 옛 이름 대신, 지금 쓰는 이름(기사님 상호명·내 이름)을 먼저 보여줘요 */
+const thN = (t, k) => k === 'u2' ? ((proPub(t.u2) || {}).name || t.u2_name) : (t.u1 === me() && S.profile && S.profile.name ? S.profile.name : t.u1_name);
 async function chatOfContract(cid) {
   let t = S.thr.find(x => x.contract_id === +cid);
   if (!t) { await load('thr'); t = S.thr.find(x => x.contract_id === +cid); }
@@ -1614,7 +1628,7 @@ async function chatOfContract(cid) {
 }
 async function csend(el, tid) {
   const i = $('#chat-in'), body = i.value.trim(); if (!body) return;
-  await busy(el, async () => { const { error } = await sb.from('messages').insert({ thread_id:+tid, body }); if (error) throw error; i.value = ''; await loadMsgs(+tid); chatModal(+tid, true); $('#chat-in').focus(); });
+  await busy(el, async () => { const { error } = await sb.from('messages').insert({ thread_id:+tid, body }); if (error) throw error; i.value = ''; i.style.height = 'auto'; await loadMsgs(+tid); chatModal(+tid, true); $('#chat-in').focus(); });
 }
 async function sendChatPhoto(f) {
   const tid = chatCur; if (!tid || !f) return;
@@ -1626,7 +1640,7 @@ function directModal(tid) {
   const t = S.thr.find(x => x.id === +tid), p = proPub(t.u2) || { fields:[], areas:[] }, codes = (KINDS[p.kind] || KINDS.aircon).svcs.filter(c => c !== 'freezer_sale');
   const guess = codes[0];
   const inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5', lab = (f, x) => `<label for="${f}" class="block mt-4 text-sm font-bold">${x}</label>`;
-  openM(head('합의 내용으로 예약하기') + `<p class="text-sm"><b>${esc(t.u2_name)}</b> 기사님과 채팅으로 합의한 내용을 예약으로 등록해요.</p>
+  openM(head('합의 내용으로 예약하기') + `<p class="text-sm"><b>${esc(thN(t, 'u2'))}</b> 기사님과 채팅으로 합의한 내용을 예약으로 등록해요.</p>
     <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 예약 채팅방이 열려요.</p>
     ${lab('dc-svc', '서비스')}<select id="dc-svc" class="${inp}">${codes.map(c => `<option value="${c}"${c === guess ? ' selected' : ''}>${SVC[c]}</option>`).join('')}</select>
     ${lab('dc-gu', '작업 지역')}<select id="dc-gu" class="${inp}">${guOpts(GG_ALL, (p.areas || [])[0])}</select>
@@ -1937,7 +1951,7 @@ function proMenu(keep) {
   const qs = S.quo.filter(q => q.pro_id === me()), offs = S.off.filter(o => o.buyer_id === me()), cs = S.con.filter(c => c.provider_id === me() || (c.client_id === me() && c.kind === 'sale'));
   const pre = S.thr.filter(t => t.contract_id == null && t.u2 === me());
   openM(head('내 견적·예약 관리') + `<p class="font-bold">${esc(S.pro.name)}</p>
-    ${pre.length ? '<h3 class="mt-4 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(t.u1_name)} 고객님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : ''}
+    ${pre.length ? '<h3 class="mt-4 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(thN(t, 'u1'))} 고객님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : ''}
     <h3 class="mt-4 font-bold">진행 중인 예약 · 정산</h3>${cs.length ? cs.map(c => { const w = reworkOf(c.id), v = reviewOf(c.id), prov = c.provider_id === me();
       return card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p>
         <p class="text-xs text-sea/60">${conCode(c.id)} · ${esc(prov ? c.client_name : c.provider_name)} · ${c.status === 'completed' ? '완료' : c.status === 'pending' ? '고객 확인 대기' : wdOf(c) + ' 예정 ' + esc(c.work_date || '')}${c.fee_payer === me() ? ` · 수수료 ${+c.fee_ver === 2 && !c.fee_charged ? '예상 ' : ''}${won(c.fee)}${c.fee_charged ? ' 차감 완료' : ' (확정 시 차감)'}` : ''}</p>
@@ -2529,7 +2543,6 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { if (!$('#rm').classList.contains('hidden')) return $('#rm').classList.add('hidden'); if (mmOpen()) return closeM(); if (!qm.classList.contains('hidden')) return closeQuote(); }
   if (e.key === 'Enter' && e.target.id === 'bk-in' && !e.isComposing) { e.preventDefault(); return ACT.bkcustom(); }
-  if (e.key === 'Enter' && e.target.id === 'chat-in' && !e.isComposing) { e.preventDefault(); document.querySelector('[data-act="csend"]')?.click(); }
   if (e.key === 'Enter' && /^(acert|pecert|bcert)-in$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); ACT[e.target.id.replace('-in', '') + 'add'](); }
   if (e.key === 'Enter' && /^au-(email|pw|pw2)$/.test(e.target.id) && !e.isComposing) { e.preventDefault(); document.querySelector(au.tab === 'login' ? '[data-act="alogin"]' : '[data-act="asignup"]')?.click(); }
 });
@@ -2618,6 +2631,7 @@ window.addEventListener('hyapns', async e => {
   if (d.status === 'error') { if (d.ask) toast('알림 등록에 실패했어요. 잠시 뒤 다시 시도해 주세요.'); return; }
   if (d.token) { window.__hyTok = d.token; const ok = await apnsSave(d.token); if (d.ask) toast(ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림은 켜졌지만 저장에 실패했어요. 로그인 상태를 확인해 주세요.'); try { render(); } catch (_) {} }
 });
+window.addEventListener('hyapns', e => { const d = e.detail || {}; window.__hySt = d.status || window.__hySt; setTimeout(() => { try { const mb = document.getElementById('mm-body'); if (mb && /알림 설정/.test(mb.textContent) && ACT.nset) ACT.nset(); } catch (_) {} }, 600); });   // 알림 설정 창이 열려 있으면 상태를 다시 그려요
 /* 앱을 닫아도 오는 푸시 알림 (Web Push). 공개키는 config.js 의 VAPID_PUBLIC_KEY 가 있으면 그것을 써요 */
 const VAPID_PUB = C.VAPID_PUBLIC_KEY || 'BOz7NrzRKbibpXKeN5D6Z9qcIXMRESo5n3ALslPgtyg04mCkJ22-QKHLsmulLMqGMH5Q1qfJtvYNbSKUTPLPYYs';
 const b64u = s => { const p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, c => c.charCodeAt(0)); };

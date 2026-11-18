@@ -688,10 +688,12 @@
   async function nsetModal() {
     if (!S.user) return;
     if (S.pro && sb && PA.uid !== me()) { try { await paLoad(); } catch (_) {} }
-    const perm = ('Notification' in window && window.isSecureContext) ? Notification.permission : 'unsupported';
+    const inApp = (() => { try { return typeof hyApns === 'function' && hyApns(); } catch (_) { return false; } })();   // 아이폰 한여름 앱 안
+    const perm = inApp ? (window.__hyTok ? 'granted' : window.__hySt === 'denied' ? 'denied' : 'default')
+      : ('Notification' in window && window.isSecureContext) ? Notification.permission : 'unsupported';
     const push = perm === 'granted' ? nsPill('켜짐', true) : perm === 'default' ? btn('nspush', '', '켜기', 'a') : nsPill(perm === 'denied' ? '차단됨' : '사용 불가', false);
-    const pushDesc = perm === 'granted' ? '앱을 닫아 두어도 새 소식이 휴대폰으로 와요. 끄려면 휴대폰 설정 → 알림에서 한여름을 꺼 주세요.'
-      : perm === 'denied' ? '차단돼 있어요. 휴대폰 설정 → 알림(앱/사이트 알림)에서 한여름을 허용으로 바꿔 주세요.'
+    const pushDesc = perm === 'granted' ? (inApp ? '앱을 닫아 두어도 새 소식이 아이폰으로 와요. 끄려면 아이폰 설정 → 한여름 → 알림에서 꺼 주세요.' : '앱을 닫아 두어도 새 소식이 휴대폰으로 와요. 끄려면 휴대폰 설정 → 알림에서 한여름을 꺼 주세요.')
+      : perm === 'denied' ? (inApp ? '꺼져 있어요. 아이폰 설정 → 한여름 → 알림에서 허용으로 바꿔 주세요.' : '차단돼 있어요. 휴대폰 설정 → 알림(앱/사이트 알림)에서 한여름을 허용으로 바꿔 주세요.')
       : perm === 'unsupported' ? '이 화면에서는 켤 수 없어요. 아이폰은 Safari에서 [홈 화면에 추가]한 앱에서만 켤 수 있어요.'
       : '예약·채팅·견적 소식이 오면 앱을 닫아 두어도 휴대폰으로 알려 드려요.';
     let kakao = '';
