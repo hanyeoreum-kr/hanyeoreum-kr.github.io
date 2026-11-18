@@ -1643,7 +1643,7 @@ function directModal(tid) {
   openM(head('합의 내용으로 예약하기') + `<p class="text-sm"><b>${esc(thN(t, 'u2'))}</b> 기사님과 채팅으로 합의한 내용을 예약으로 등록해요.</p>
     <p class="mt-2 rounded-xl bg-cool/10 p-3 text-xs leading-relaxed">등록하면 작업 내역서가 발급되고 예약 채팅방이 열려요.</p>
     ${lab('dc-svc', '서비스')}<select id="dc-svc" class="${inp}">${codes.map(c => `<option value="${c}"${c === guess ? ' selected' : ''}>${SVC[c]}</option>`).join('')}</select>
-    ${lab('dc-gu', '작업 지역')}<select id="dc-gu" class="${inp}">${guOpts(GG_ALL, (p.areas || [])[0])}</select>
+    ${lab('dc-gu', '작업 지역')}<select id="dc-gu" class="${inp}">${guOpts(GG_NEAR, ((p.areas || []).find(x => GU.includes(x) || GG_NEAR.includes(x))) || '')}</select>
     ${lab('dc-date', '작업 날짜')}<input id="dc-date" type="date" min="${today()}" class="${inp}">
     ${lab('dc-price', '합의 금액(원)')}<input id="dc-price" type="number" min="1000" step="1000" inputmode="numeric" class="${inp}">${errBox()}
     <div class="mt-4 flex gap-3">${btn('chat', t.id, '취소', 's')}${wbtn('dsend', t.id, '예약 등록')}</div>`);
@@ -2446,7 +2446,7 @@ const ACT = {
   ffree: () => { FS.free = !FS.free; renderPros(); }, fkind: k => { FS.kind = k || ''; renderPros(); },
   qcat: k => { closeM(); openQuote({ cat:k, district:($('#hgu') || {}).value || hguGet() }); }, qopen0: () => { closeM(); openQuote({}); },
   preq: id => { const p = proPub(id); if (!p) return; closeM(); const k = p.kind || 'aircon'; openQuote({ cat:k, service:k === 'truck' ? 'truck' : '', target:p.id, targetName:p.name }); toast(`${p.name} 기사님께만 보이는 견적 요청을 작성해요.`); },
-  noti: () => { if (needLogin('알림은 로그인 후 볼 수 있어요.')) return; csModal('ntf'); },
+  noti: () => { if (needLogin('알림은 로그인 후 볼 수 있어요.')) return; if (ACT.nset) ACT.nset(); else csModal('ntf'); },   // 종 모양 = 알림 설정 (받은 알림 목록은 설정 창 안의 버튼으로)
   guarantee: () => openM(head('재점검·보완 안심 보장제') + `<ul class="space-y-3 text-sm leading-relaxed">
     <li class="rounded-2xl bg-ice p-4"><b>설비 작업 · 14일 재점검</b><br><span class="text-sub">에어컨·보일러·냉장냉동·주방설비 작업은 거래가 확정된 뒤 14일 안에 같은 부위에서 같은 증상이 다시 생기면, 담당 기사님의 재점검 방문을 연결해요.</span></li>
     <li class="rounded-2xl bg-ice p-4"><b>청소 · 3일 재점검 (명백한 하자 한정)</b><br><span class="text-sub">청소는 깨끗함의 기준이 사람마다 달라서, 거래가 확정된 뒤 3일 안에 작업 중 생긴 명백한 하자(파손·누수 등 객관적으로 확인되는 문제)가 있을 때만 담당 기사님의 재점검 방문을 연결해요. 청소 정도에 대한 만족도 차이는 해당되지 않아요.</span></li>

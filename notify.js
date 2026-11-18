@@ -709,11 +709,12 @@
     }
     const mkt = `<button type="button" data-act="mktgo" class="mt-3 flex w-full items-center justify-between rounded-2xl border border-mist px-4 py-4 text-left font-bold hover:bg-ice"><span>📣 이벤트·혜택 알림</span><span id="mkt-st" class="rounded-full bg-ice px-2.5 py-0.5 text-xs text-sea/60">확인 중</span></button>`;
     const info = S.pro ? '' : '<p class="mt-3 rounded-xl bg-ice p-3 text-xs leading-relaxed text-sea/70">견적이 도착하면 견적을 요청할 때 입력한 번호로 카톡이 가요.</p>';
-    openM(head('🔔 알림 설정') + '<p class="text-sm text-sea/70">받고 싶은 알림을 골라 주세요. 예약·채팅 소식은 앱 알림으로 와요.</p>' + nsRow('📱 앱 알림', pushDesc, push) + kakao + mkt + info);
+    openM(head('🔔 알림 설정') + '<p class="text-sm text-sea/70">받고 싶은 알림을 골라 주세요. 예약·채팅 소식은 앱 알림으로 와요.</p>' + nsRow('📱 앱 알림', pushDesc, push) + kakao + mkt + info + '<button type="button" data-act="notiinbox" class="mt-3 flex w-full items-center justify-between rounded-2xl border border-mist px-4 py-4 text-left font-bold hover:bg-ice"><span>📬 받은 알림 보기</span><span class="text-sea/30" aria-hidden="true">›</span></button>');
     try { if (typeof mktPaint === 'function') mktPaint(); } catch (_) {}
     const inp = document.getElementById('ns-phone'); if (inp) inp.addEventListener('input', () => { inp.value = phFmt(phDigits(inp.value)); });
   }
   ACT.nset = () => { nsetModal(); };
+  ACT.notiinbox = () => { try { csModal('ntf'); } catch (_) {} };
   ACT.nspush = () => { Promise.resolve().then(() => notifOn()).catch(() => {}).then(() => setTimeout(nsetModal, 700)); };
   ACT.nspaon = async () => {
     const d = phDigits((document.getElementById('ns-phone') || {}).value), ag = document.getElementById('ns-agree'), er = document.getElementById('ns-err');
