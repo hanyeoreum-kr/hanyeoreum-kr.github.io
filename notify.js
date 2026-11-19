@@ -191,13 +191,15 @@
   const plLine = () => { const p = []; if (PV.where.length) p.push('위치: ' + PV.where.join('·')); if (PV.bld) p.push('건물: ' + PV.bld); if (PV.hurry) p.push('급함: ' + PV.hurry); return p.length ? '[상황] ' + p.join(' / ') : ''; };
   const plChip = (g, x, on) => `<button type="button" data-pl="${g}" data-v="${x}" aria-pressed="${on}" class="rounded-full border-2 px-3 py-2 text-sm font-bold ${on ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`;
   const PY = ['10평 미만', '10평대', '20평대', '30평대', '40평대', '50평대', '60평 이상'];
-  const DV = { kind:'', counts:{}, py:'' };
+  const RT = ['원룸', '1.5룸', '투룸', '쓰리룸', '4룸 이상', '상가·사무실'];
+  const DV = { kind:'', counts:{}, py:'', rt:'', pyn:'' };
+  const cleanTxt = () => [DV.rt, DV.pyn ? DV.pyn + '평' : ''].filter(Boolean).join(' · ');
   const devKind = () => qform.service === 'truck' || !qform.service ? '' : (qform.etc || kindOf(qform.service));
   const devTotal = () => Object.values(DV.counts).reduce((a, b) => a + b, 0);
-  const devLine = () => DV.kind === 'plumb' ? plLine() : DV.kind === 'clean' ? (DV.py ? `[평수] ${DV.py}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
+  const devLine = () => DV.kind === 'plumb' ? plLine() : DV.kind === 'clean' ? (cleanTxt() ? `[평수] ${cleanTxt()}` : '') : (devTotal() ? '[기기] ' + Object.entries(DV.counts).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}대`).join(' · ') : '');
   function devRender0() {
     const sec = document.querySelector('#qm [data-step="2"]'); if (!sec) return;
-    const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; }
+    const k = devKind(); if (k !== DV.kind) { DV.kind = k; DV.counts = {}; DV.py = ''; DV.rt = ''; DV.pyn = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; }
     let box = document.getElementById('qm-dev');
     if (!DEV[k] && k !== 'clean' && k !== 'plumb') { if (box) box.remove(); return; }
     if (!box) { sec.insertAdjacentHTML('beforeend', '<div id="qm-dev"></div>'); box = document.getElementById('qm-dev'); }
@@ -209,8 +211,11 @@
       return;
     }
     if (k === 'clean') {
-      box.innerHTML = `<p class="mt-5 text-sm font-bold">청소할 곳 평수 ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
-        <div class="mt-2 grid grid-cols-4 gap-2">${PY.map(x => `<button type="button" data-py="${x}" class="rounded-xl border-2 px-1 py-2.5 text-xs font-bold ${DV.py === x ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`).join('')}</div>`;
+      box.innerHTML = `<p class="mt-5 text-sm font-bold">집 구조 <span class="font-normal text-sea/60">(선택)</span></p>
+        <div class="mt-2 grid grid-cols-3 gap-2">${RT.map(x => `<button type="button" data-rt="${x}" aria-pressed="${DV.rt === x}" class="rounded-xl border-2 px-1 py-2.5 text-sm font-bold ${DV.rt === x ? 'border-brand bg-brand-50 text-brand' : 'border-mist bg-white'}">${x}</button>`).join('')}</div>
+        <p class="mt-4 text-sm font-bold">정확한 평수 <span class="font-normal text-sea/60">(선택 · 아는 만큼)</span></p>
+        <div class="mt-2 flex items-center gap-2"><input id="qm-py" type="number" inputmode="decimal" min="1" max="500" step="0.5" value="${esc(DV.pyn)}" placeholder="예) 24" aria-label="평수" class="min-w-0 flex-1 rounded-xl border-2 border-mist bg-white px-4 py-3 text-base font-bold"><span class="shrink-0 font-bold">평</span></div>
+        <p class="mt-1 text-xs text-sea/60">전용면적(㎡)만 아시면 ㎡ ÷ 3.3 이 평수예요. 잘 모르겠으면 비워 두셔도 돼요.</p>`;
       return;
     }
     box.innerHTML = `<p class="mt-5 text-sm font-bold">${DEV[k].t} ${opt ? '<span class="font-normal text-sea/60">(선택)</span>' : '<span class="text-sun">(필수)</span>'}</p>
@@ -229,18 +234,23 @@
     devRender0();
     const box = document.getElementById('qm-dev'); if (!box || !box.innerHTML.trim()) return;
     const k = DV.kind; if (k !== DVLAST) { DVLAST = k; DVOPEN = true; }
-    const t = k === 'plumb' ? '문제 상황 알려주기' : k === 'clean' ? '청소할 곳 평수' : (DEV[k] ? DEV[k].t : '');
-    const sum = k === 'plumb' ? (PV.where.length || PV.bld || PV.hurry ? ' · 입력됨' : '') : k === 'clean' ? (DV.py ? ' · ' + DV.py : '') : (devTotal() ? ` · 총 ${devTotal()}대` : '');
+    const t = k === 'plumb' ? '문제 상황 알려주기' : k === 'clean' ? '집 구조·평수' : (DEV[k] ? DEV[k].t : '');
+    const sum = k === 'plumb' ? (PV.where.length || PV.bld || PV.hurry ? ' · 입력됨' : '') : k === 'clean' ? (cleanTxt() ? ' · ' + cleanTxt() : '') : (devTotal() ? ` · 총 ${devTotal()}대` : '');
     let inner = box.innerHTML; if (k !== 'plumb') inner = inner.replace(/^\s*<p class="mt-5 text-sm font-bold">[\s\S]*?<\/p>\s*/, '');
     box.innerHTML = `<button type="button" data-dvt="1" aria-expanded="${DVOPEN}" class="mt-5 flex w-full items-center justify-between rounded-xl bg-ice px-4 py-3 text-left"><span class="min-w-0 text-sm font-bold">${t} <span class="font-normal text-sea/60">(선택)${sum}</span></span><span aria-hidden="true" class="ml-2 shrink-0 text-xs font-bold text-sea/60">${DVOPEN ? '▲ 접기' : '▼ 펼치기'}</span></button><div class="${DVOPEN ? '' : 'hidden'}">${inner}</div>`;
   }
   document.addEventListener('click', e => {
     const tg = e.target.closest('#qm-dev [data-dvt]'); if (tg) { DVOPEN = !DVOPEN; devRender(); return; }
-    const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-py], #qm-dev [data-pl]'); if (!b) return;
+    const b = e.target.closest('#qm-dev [data-dv], #qm-dev [data-rt], #qm-dev [data-pl]'); if (!b) return;
     if (b.dataset.pl) { const g = b.dataset.pl, x = b.dataset.v; if (PL[g].multi) PV[g] = PV[g].includes(x) ? PV[g].filter(y => y !== x) : [...PV[g], x]; else PV[g] = PV[g] === x ? '' : x; }
-    else if (b.dataset.py) DV.py = DV.py === b.dataset.py ? '' : b.dataset.py;
+    else if (b.dataset.rt) DV.rt = DV.rt === b.dataset.rt ? '' : b.dataset.rt;
     else { const it = b.dataset.dv, n = Math.max(0, Math.min(50, (DV.counts[it] || 0) + +b.dataset.d)); if (n) DV.counts[it] = n; else delete DV.counts[it]; }
     qErr(''); devRender();
+  });
+  document.addEventListener('input', e => {
+    const t = e.target; if (!t || t.id !== 'qm-py') return;
+    let v = String(t.value || '').replace(/[^0-9.]/g, ''); if (+v > 500) v = '500'; DV.pyn = v;
+    const sp = document.querySelector('#qm-dev [data-dvt] span.font-normal'); if (sp) sp.textContent = '(선택)' + (cleanTxt() ? ' · ' + cleanTxt() : '');
   });
   /* 2단계 '다음'을 누르면: 필수 확인 → 요청사항 맨 위에 한 줄로 적어 둬요 (기사님이 그대로 봐요) */
   if (qmEl) qmEl.addEventListener('click', e => {
@@ -252,7 +262,7 @@
     d.dispatchEvent(new Event('input', { bubbles:true }));
   }, true);
   const _qShow2 = qShow;
-  qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; } };
+  qShow = function (n) { _qShow2(n); if (n === 2) devRender(); if (n === 4) { DV.kind = ''; DV.counts = {}; DV.py = ''; DV.rt = ''; DV.pyn = ''; PV.where = []; PV.bld = ''; PV.hurry = ''; } };
   /* ---------- 7) 거래 마무리: 성사 기사님 표시 · 고객 직접 확정 · 관리자 대신 완료 요청 ---------- */
   const conOfReq = id => S.con.find(c => c.request_id === id);
   const CST = c => c.status === 'completed' ? '거래 확정' : c.status === 'pending' ? '고객 확인 대기' : '진행 중';

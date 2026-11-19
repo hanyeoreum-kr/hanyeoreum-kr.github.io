@@ -390,7 +390,16 @@ async function onSession(session) {
   if (S.user) setTimeout(async () => {
     if (hyApns()) hyAsk('token');
     if (canNote() && Notification.permission === 'granted') pushSubscribe();
-    else if (((canNote() && Notification.permission === 'default') || (hyApns() && !window.__hyTok)) && (S.pro || S.admin) && !sessionStorageGet('hy_push_ask')) { sessionStorageSet('hy_push_ask', '1'); setTimeout(() => { if (!mmOpen()) openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 예약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 1500); }
+    /* 아이폰 앱은 기기 번호가 조금 늦게 와요 → 4초 기다리고, 한 번이라도 켠 적이 있으면 다시는 안 물어봐요 (안 켠 분께만 하루 1번) */
+    const waitMs = hyApns() ? 4000 : 0, wasOn = (() => { try { return localStorage.getItem('hy_push_on') === '1'; } catch (_) { return false; } })();
+    setTimeout(() => {
+      const needWeb = canNote() && Notification.permission === 'default', needApp = hyApns() && !wasOn && !window.__hyTok && window.__hySt !== 'authorized' && window.__hySt !== 'granted';
+      if (!(needWeb || needApp) || !(S.pro || S.admin) || sessionStorageGet('hy_push_ask')) return;
+      let last = 0; try { last = +localStorage.getItem('hy_push_ask_at') || 0; } catch (_) {}
+      if (Date.now() - last < 24 * 3600e3) return;
+      sessionStorageSet('hy_push_ask', '1'); try { localStorage.setItem('hy_push_ask_at', String(Date.now())); } catch (_) {}
+      setTimeout(() => { if (mmOpen() || window.__hyTok) return; openM(head('🔔 알림을 켜 주세요') + `<p class="leading-relaxed text-sea/80">${S.admin ? '기사 가입 신청, 충전 신청, 새 문의가 오면' : '새 견적 요청, 지정 요청, 예약·채팅 소식이 오면'} <b>앱을 닫아 두어도</b> 휴대폰으로 바로 알려 드려요.</p><div class="mt-5 flex gap-3"><button type="button" data-mclose class="${B.s}">나중에</button>${wbtn('notifon', '', '알림 켜기')}</div>`); }, 300);
+    }, waitMs);
   }, 800);
   if (S.user && S.pro) load('myRefs').then(() => { if (S.mode === 'pro') render(); });
   if (S.user) claimRef();
@@ -660,10 +669,20 @@ async function uploadBizDoc(f) {
   await rpc('set_biz_doc', { p_path:path });
 }
 async function openBizDoc(path) {
-  const w = window.open('', '_blank');
   const { data, error } = await sb.storage.from('docs').createSignedUrl(path, 300);
-  if (error || !data) { if (w) w.close(); return toast('파일을 열 수 없어요. ' + errMsg(error)); }
-  if (w) w.location = data.signedUrl; else location.href = data.signedUrl;
+  if (error || !data) return toast('파일을 열 수 없어요. ' + errMsg(error));
+  /* 앱(웹뷰)에서는 새 창을 닫을 수 없어서, 화면 안에 보기 창을 띄우고 [닫기]로 돌아와요 */
+  const old = document.getElementById('doc-view'); if (old) old.remove();
+  const u = data.signedUrl, pdf = /\.pdf(\?|$)/i.test(path);
+  const el = document.createElement('div'); el.id = 'doc-view';
+  el.style.cssText = 'position:fixed;inset:0;z-index:2147483200;background:#0f172a;display:flex;flex-direction:column';
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 10px;background:#0f172a;color:#fff"><b style="flex:1;font-size:16px">사업자등록증</b><button type="button" id="doc-x" style="background:#fff;color:#0f172a;font-weight:800;border-radius:12px;padding:10px 18px;font-size:15px">닫기 ✕</button></div>`
+    + (pdf ? `<iframe src="${esc(u)}" title="사업자등록증" style="flex:1;width:100%;border:0;background:#fff"></iframe>`
+           : `<div style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;text-align:center"><img src="${esc(u)}" alt="사업자등록증" style="max-width:100%;height:auto;background:#fff;border-radius:8px"></div>`)
+    + `<div style="padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);background:#0f172a"><button type="button" id="doc-x2" style="width:100%;background:#fff;color:#0f172a;font-weight:800;border-radius:12px;padding:14px;font-size:16px">닫고 돌아가기</button></div>`;
+  document.body.appendChild(el);
+  const close = () => { try { el.remove(); } catch (_) {} };
+  el.querySelector('#doc-x').addEventListener('click', close); el.querySelector('#doc-x2').addEventListener('click', close);
 }
 const bizDocCard = p => `<div class="mt-4 rounded-2xl border-2 ${p.biz_doc ? 'border-cool/40 bg-cool/5' : 'border-sun/50 bg-sun/5'} p-5">
   <p class="font-bold">${p.biz_doc ? '📄 사업자등록증 제출 완료' : '📄 사업자등록증을 올려 주세요'}</p>
@@ -2627,9 +2646,9 @@ async function apnsSave(tok) {
 }
 window.addEventListener('hyapns', async e => {
   const d = e.detail || {};
-  if (d.status === 'denied') { if (d.ask) toast('알림이 꺼져 있어요. 아이폰 설정 → 알림 → 한여름에서 허용해 주세요.'); return; }
+  if (d.status === 'denied') { try { localStorage.removeItem('hy_push_on'); } catch (_) {} if (d.ask) toast('알림이 꺼져 있어요. 아이폰 설정 → 알림 → 한여름에서 허용해 주세요.'); return; }
   if (d.status === 'error') { if (d.ask) toast('알림 등록에 실패했어요. 잠시 뒤 다시 시도해 주세요.'); return; }
-  if (d.token) { window.__hyTok = d.token; const ok = await apnsSave(d.token); if (d.ask) toast(ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림은 켜졌지만 저장에 실패했어요. 로그인 상태를 확인해 주세요.'); try { render(); } catch (_) {} }
+  if (d.token) { window.__hyTok = d.token; try { localStorage.setItem('hy_push_on', '1'); } catch (_) {} const ok = await apnsSave(d.token); if (d.ask) toast(ok ? '알림을 켰어요. 앱을 닫아도 새 소식을 알려 드려요.' : '알림은 켜졌지만 저장에 실패했어요. 로그인 상태를 확인해 주세요.'); try { render(); } catch (_) {} }
 });
 window.addEventListener('hyapns', e => { const d = e.detail || {}; window.__hySt = d.status || window.__hySt; setTimeout(() => { try { const mb = document.getElementById('mm-body'); if (mb && /알림 설정/.test(mb.textContent) && ACT.nset) ACT.nset(); } catch (_) {} }, 600); });   // 알림 설정 창이 열려 있으면 상태를 다시 그려요
 /* 앱을 닫아도 오는 푸시 알림 (Web Push). 공개키는 config.js 의 VAPID_PUBLIC_KEY 가 있으면 그것을 써요 */
