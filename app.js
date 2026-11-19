@@ -2114,7 +2114,7 @@ async function inqDel(el, id) {
 /* =====================================================================
    관리자 (admins 표의 이메일로 인증된 계정만 — 서버에서도 매번 검사해요)
    ===================================================================== */
-let AF = 'ALL';
+let AF = 'ALL', AIP = 0;
 const slaOver = i => { const t = Date.now(), c = T(i.created_at); return (i.status === 'RECEIVED' && t - c > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - c > SLA_ANS); };
 /* 관리자: 방문 통계 카드 */
 let VS = null, vsAt = 0, FN = null;
@@ -2364,7 +2364,7 @@ function adminView() {
   const pend = S.adminPros.filter(p => p.approval === 'PENDING'), chg = S.chg.filter(c => c.status === 'requested');
   const day = new Date().toDateString(), fee = S.inc.filter(l => new Date(l.created_at).toDateString() === day).reduce((s, l) => s + l.amount, 0), feeAll = S.inc.reduce((s, l) => s + l.amount, 0);
   const proName = id => (S.adminPros.find(p => p.id === id) || {}).name || '기사';
-  const list = AF === 'ALL' ? S.inq : S.inq.filter(i => i.status === AF), cnt = s => S.inq.filter(i => i.status === s).length;
+  const list0 = AF === 'ALL' ? S.inq : S.inq.filter(i => i.status === AF); AIP = Math.max(0, Math.min(AIP, Math.ceil(list0.length / 5) - 1)); const list = list0, cnt = s => S.inq.filter(i => i.status === s).length;
   const fchip = (k, t, n) => `<button type="button" data-act="ifilt" data-id="${k}" aria-pressed="${AF === k}" class="${chipCls(AF === k)}">${t} ${n}</button>`;
   const cst = c => c.status === 'cancelled' ? '취소됨' : c.status === 'completed' ? '완료' : c.status === 'pending' ? `확인 대기 · <span class="tabular-nums" data-timer="${c.id}">${hms(remainMs(c))}</span>${c.paused ? ' (정지)' : ''}` : '진행 중';
   $('#pview').innerHTML = `
@@ -2382,9 +2382,10 @@ function adminView() {
 
     <h2 class="mt-10 text-2xl font-bold">민원 처리 <span class="text-base font-normal text-sea/60">1:1 문의 · 분쟁·재점검 신고</span></h2>
     <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="상태 필터">${fchip('ALL', '전체', S.inq.length)}${Object.keys(IST).map(s => fchip(s, IST[s], cnt(s))).join('')}</div>
-    <div class="mt-1">${list.map(i => card(`<div class="flex flex-wrap items-center gap-2"><span class="font-display text-lg">${inqCode(i.id)}</span>${stBadge(i.status)}<span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT[i.cat]}</span>${i.priority === 'HIGH' ? '<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">긴급</span>' : ''}${slaOver(i) ? '<span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">응답 기한 초과</span>' : ''}${i.by_role === '기사' ? '<span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-bold">기사 신고</span>' : ''}</div>
+    <div class="mt-1">${list.slice(AIP * 5, AIP * 5 + 5).map(i => card(`<div class="flex flex-wrap items-center gap-2"><span class="font-display text-lg">${inqCode(i.id)}</span>${stBadge(i.status)}<span class="rounded-full bg-ice px-2.5 py-0.5 text-xs font-bold">${CAT[i.cat]}</span>${i.priority === 'HIGH' ? '<span class="rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">긴급</span>' : ''}${slaOver(i) ? '<span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">응답 기한 초과</span>' : ''}${i.by_role === '기사' ? '<span class="rounded-full bg-mist px-2.5 py-0.5 text-xs font-bold">기사 신고</span>' : ''}</div>
       <p class="mt-2 text-sm font-bold">${esc(i.title)}</p><p class="text-xs text-sea/60">${fmtT(i.created_at)}${i.assignee ? ' · 담당 ' + esc(i.assignee) : ' · 담당자 없음'}${i.live && i.status !== 'CLOSED' ? ' · <b class="text-sun">자동 확정 타이머 정지 중</b>' : ''}</p>
       <div class="mt-3 flex flex-wrap gap-2">${i.status === 'RECEIVED' ? btn('iassign', i.id, '처리 시작', 'a') : ''}${btn('iadm', i.id, i.status === 'CLOSED' ? '이력 보기' : '상세·답변', 's')}${i.status === 'ANSWERED' ? btn('iclose', i.id, '종결', 's') : ''}</div>`)).join('') || `<div class="mt-3">${empty('해당 상태의 문의가 없어요.')}</div>`}</div>
+    ${list.length > 5 ? `<div class="mt-3 flex items-center justify-center gap-3">${btn('ipg', '-1', '← 이전', 's')}<span class="text-sm font-bold tabular-nums">${Math.min(AIP, Math.ceil(list.length / 5) - 1) + 1} / ${Math.ceil(list.length / 5)}</span>${btn('ipg', '1', '다음 →', 's')}</div>` : ''}
 
     <div class="mt-10 grid lg:grid-cols-2 gap-6">
       <section class="rounded-3xl border border-mist bg-white p-6"><h2 class="text-xl font-bold">자동 확정 시간</h2><p class="mt-2 text-sm leading-relaxed text-sea/75">기사님이 작업 완료를 요청한 뒤 고객이 확인하지 않으면 이 시간이 지나 자동 확정돼요. 다음 요청부터 적용돼요.</p>
@@ -2518,7 +2519,7 @@ const ACT = {
   inqnew: () => inqForm(true), iqcat: k => { saveIq(); iq.cat = k; iq.cid = ''; inqForm(); }, inqsend: (id, el) => inqSend(el),
   inqdet: id => inqDetail(id), inqfu: (id, el) => inqFollow(el, id), inqdel: (id, el) => inqDel(el, id),
   refresh: () => { loadVisits(true); loadDels(true); return loadAll().then(() => toast('새로 불러왔어요.')); },
-  ifilt: k => { AF = k; render(); }, iadm: id => inqAdmin(id),
+  ifilt: k => { AF = k; AIP = 0; render(); }, ipg: d => { AIP = Math.max(0, AIP + (+d)); render(); }, iadm: id => inqAdmin(id),
   iassign: (id, el) => adminAct(el, id, 'assign'), inote: (id, el) => adminAct(el, id, 'note'), ianswer: (id, el) => adminAct(el, id, 'answer'), iclose: (id, el) => adminAct(el, id, 'close'),
   creopen: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:false }, '예약 확정 상태로 되돌렸어요. 수수료 기록도 취소했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
   creopenr: (id, el) => { if (!confirmBox(el)) return; adminSimple(el, 'admin_reopen_contract', { p_contract:+id, p_refund:true }, '예약 확정 상태로 되돌리고 수수료를 예치금으로 환불했어요.', ['con', 'inc', 'led', 'pro', 'adminPros', 'aud']); },
