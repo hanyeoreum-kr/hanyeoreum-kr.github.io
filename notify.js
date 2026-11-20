@@ -785,4 +785,128 @@
     setTimeout(() => { const b = document.getElementById('qm-next'); if (b && qstep === 3) b.click(); qdBusy = false; }, 900);
   }
   setInterval(qdResume, 1000);
+
+  /* ---------- 22) 개업 원큐 견적 (에어컨 · 냉장고 · 청소를 한 번에) ----------
+     한 번만 적으면 고른 분야마다 견적 요청이 따로 만들어져요. 알림은 기존 방식(그 분야 기사님 최대 10명)으로 가요. */
+  const PK_TAG = '[개업 패키지]';
+  const PK_BIZ = ['식당', '카페', '미용실·네일', '사무실', '학원·병원', '기타'];
+  const PK_ITEMS = [
+    { id:'aircon', icon:'❄️', name:'에어컨', hint:'냉난방 에어컨 설치 · 청소 · 점검', opts:[['aircon_install', '설치'], ['aircon_clean', '청소'], ['aircon_check', '냉난방 점검'], ['aircon_repair', '수리']] },
+    { id:'cold', icon:'🧊', name:'냉장·냉동고', hint:'업소용 냉장고 · 냉동고', opts:[['cold_repair', '수리 · 점검'], ['freezer_removal', '기존 냉장고 철거']] },
+    { id:'clean', icon:'🧹', name:'청소', hint:'공사 뒤 분진 · 준공 청소 (마지막 날짜로 정해 주세요)', opts:[['clean_store', '상가 · 사무실 청소'], ['clean_movein', '입주청소']] }
+  ];
+  const pkEl = id => document.getElementById(id);
+  const pkClone = (id, d) => (pkEl(id) || {}).innerHTML || d;
+  const pkErr = m => { const e = pkEl('pk-err'); if (e) { e.textContent = m || ''; e.classList.toggle('hidden', !m); } };
+  const pkCard = it => `<div class="mt-3 rounded-2xl border-2 border-mist p-3">
+    <label class="flex cursor-pointer items-center gap-3 font-bold"><input type="checkbox" id="pk-on-${it.id}" class="h-5 w-5 shrink-0 accent-brand"><span class="text-xl" aria-hidden="true">${it.icon}</span><span>${it.name}<span class="block text-xs font-medium text-sea/60">${it.hint}</span></span></label>
+    <div id="pk-box-${it.id}" class="mt-3 hidden space-y-2">
+      <select id="pk-svc-${it.id}" aria-label="${it.name} 세부 작업" class="w-full rounded-xl bg-ice px-3 py-3 font-medium">${it.opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>
+      <label for="pk-date-${it.id}" class="block text-xs font-bold text-sea/70">희망일</label>
+      <input id="pk-date-${it.id}" type="date" min="${today()}" class="w-full rounded-xl bg-ice px-3 py-3 font-medium">
+      ${it.id === 'cold' ? `<div id="pk-site" class="hidden grid-cols-2 gap-2"><p class="col-span-2 text-xs font-bold text-sea/70">철거는 현장 정보가 필요해요</p>
+        <select id="pk-floor" aria-label="물건 위치" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-floor', '<option value="">위치</option>')}</select>
+        <select id="pk-elev" aria-label="엘리베이터" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-elev', '<option value="">엘리베이터</option>')}</select>
+        <select id="pk-ladder" aria-label="사다리차" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-ladder', '<option value="">사다리차</option>')}</select>
+        <select id="pk-park" aria-label="주차" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-park', '<option value="">주차</option>')}</select></div>` : ''}
+    </div></div>`;
+  const pkForm = () => `<div class="flex items-start justify-between gap-3"><div><h2 class="font-display text-2xl">🔑 개업 원큐 견적</h2>
+      <p class="mt-1 text-sm leading-relaxed text-sea/75">한 번만 적으면 고른 분야 기사님들께 견적 요청이 동시에 가요. 견적 요청 · 비교는 무료예요.</p></div>
+      <button type="button" data-mclose aria-label="닫기" class="shrink-0 rounded-full bg-ice px-3 py-1.5 text-sm font-bold">닫기</button></div>
+    <p class="mt-5 text-sm font-bold">가게 정보</p>
+    <div class="mt-2 grid grid-cols-2 gap-2"><select id="pk-biz" aria-label="업종" class="rounded-xl bg-ice px-3 py-3 font-medium"><option value="">업종 (선택)</option>${PK_BIZ.map(b => `<option>${b}</option>`).join('')}</select>
+      <input id="pk-py" type="number" inputmode="numeric" min="1" max="999" placeholder="평수 (선택)" class="rounded-xl bg-ice px-3 py-3 font-medium"></div>
+    <label for="pk-gu" class="mt-3 block text-sm font-bold">작업 지역</label>
+    <select id="pk-gu" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">${pkClone('qm-gu', '<option value="">지역을 선택하세요</option>')}</select>
+    <p class="mt-5 text-sm font-bold">필요한 분야를 골라 주세요</p>
+    ${PK_ITEMS.map(pkCard).join('')}
+    <label for="pk-memo" class="mt-5 block text-sm font-bold">요청사항 (선택)</label>
+    <textarea id="pk-memo" rows="3" maxlength="300" placeholder="예) 12평 카페예요. 오픈은 다음 달 초예요. 주차는 건물 앞에 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3 font-medium"></textarea>
+    <div class="mt-5 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4"><p class="text-sm font-black">💬 견적이 오면 카톡으로 알려드려요</p>
+      <p class="mt-1 text-xs font-bold text-sea/70">🔒 번호는 기사님께 공개되지 않아요</p>
+      <input id="pk-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-3 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
+      <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="pk-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand"><span>견적 도착 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <b class="text-sun">(필수)</b></span></label></div>
+    <p id="pk-err" role="alert" class="mt-3 hidden text-sm font-bold text-red-600"></p>
+    <button type="button" data-act="pkgo" id="pk-go" class="mt-4 w-full rounded-2xl bg-sun py-4 text-base font-black text-white hover:brightness-95">고른 분야 견적 한 번에 요청하기</button>
+    <p class="mt-2 text-center text-xs text-sea/60">분야마다 요청이 따로 만들어지고, 견적도 분야별로 도착해요.</p>`;
+
+  ACT.pkopen = () => {
+    if (!sb) return toast('사이트 설정이 아직 끝나지 않았어요.');
+    if (S.mode !== 'customer') setMode('customer');
+    openM(pkForm());
+    (async () => {   // 저장된 번호가 있으면 채워 줘요
+      try {
+        if (!S.user) return;
+        let sv = NP.saved && NP.saved.uid === me() ? NP.saved : null;
+        if (!sv) { const { data } = await sb.from('customer_phones').select('phone, notify_ok').eq('user_id', me()).maybeSingle(); sv = { uid:me(), phone:data ? data.phone : '', notify_ok:!!(data && data.notify_ok) }; NP.saved = sv; }
+        const i = pkEl('pk-phone'), a = pkEl('pk-agree');
+        if (i && !i.value && sv.phone) { i.value = phFmt(sv.phone); if (sv.notify_ok && a) a.checked = true; }
+      } catch (_) {}
+    })();
+  };
+  document.addEventListener('change', e => {
+    const id = e.target && e.target.id || '';
+    if (/^pk-on-/.test(id)) { const b = pkEl('pk-box-' + id.slice(6)); if (b) b.classList.toggle('hidden', !e.target.checked); }
+    if (id === 'pk-svc-cold') { const s = pkEl('pk-site'); if (s) { s.classList.toggle('hidden', e.target.value !== 'freezer_removal'); s.classList.toggle('grid', e.target.value === 'freezer_removal'); } }
+  });
+  document.addEventListener('input', e => { if (e.target && e.target.id === 'pk-phone') e.target.value = phFmt(phDigits(e.target.value)); });
+
+  let pkBusy = false;
+  ACT.pkgo = async () => {
+    if (pkBusy) return;
+    pkErr('');
+    const picks = PK_ITEMS.filter(it => (pkEl('pk-on-' + it.id) || {}).checked);
+    if (!picks.length) return pkErr('필요한 분야를 한 가지 이상 골라 주세요.');
+    const gu = pkEl('pk-gu').value; if (!gu) return pkErr('작업 지역을 선택해 주세요.');
+    const rows = [];
+    for (const it of picks) {
+      const svc = pkEl('pk-svc-' + it.id).value, date = pkEl('pk-date-' + it.id).value;
+      if (!date) return pkErr(`${it.name}의 희망일을 입력해 주세요.`);
+      if (date < today()) return pkErr(`${it.name}은 오늘 이후 날짜를 선택해 주세요.`);
+      let site = '';
+      if (svc === 'freezer_removal') {
+        const v = ['pk-floor', 'pk-elev', 'pk-ladder', 'pk-park'].map(x => pkEl(x).value);
+        if (v.some(x => !x)) return pkErr('냉장고 철거는 현장 정보(위치 층 · 엘리베이터 · 사다리차 · 주차)를 모두 선택해 주세요.');
+        site = `${v[0]} · 엘리베이터 ${v[1]} · 사다리차 ${v[2]} · 주차 ${v[3]}`;
+      }
+      rows.push({ it, svc, date, site });
+    }
+    const d = phDigits(pkEl('pk-phone').value);
+    if (!phOk(d)) return pkErr('알림 받을 휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)');
+    if (!pkEl('pk-agree').checked) return pkErr('견적 도착 알림 수신에 동의해 주세요.');
+    const btnGo = pkEl('pk-go'); pkBusy = true; btnGo.disabled = true; btnGo.textContent = '보내는 중...';
+    const fail = m => { pkBusy = false; btnGo.disabled = false; btnGo.textContent = '고른 분야 견적 한 번에 요청하기'; pkErr(m); };
+    try {
+      if (!S.user) {   // 가입 없이 보내기: 임시 손님 계정을 만들고, 안 되면 로그인 창을 보여줘요
+        let ok = false; try { const { data, error } = await sb.auth.signInAnonymously(); ok = !error && !!(data && data.session); } catch (_) {}
+        for (let i = 0; ok && i < 40 && !S.user; i++) await sleepMs(100);
+        if (!ok || !S.user) { fail(''); closeM(); toast('견적 요청은 로그인 후 보낼 수 있어요.'); return authModal('login'); }
+      }
+      const biz = pkEl('pk-biz').value, py = (pkEl('pk-py').value || '').replace(/\D/g, '').slice(0, 3), memo = pkEl('pk-memo').value.trim();
+      const head = `${PK_TAG} ${[biz, py ? py + '평' : ''].filter(Boolean).join(' · ')} (${picks.map(x => x.name).join('·')} 동시 요청)`.replace(/\s+\(/, ' (');
+      const made = [], bad = [];
+      for (const r of rows) {
+        const details = [r.site ? `${SITE_TAG} ${r.site}` : '', head, memo].filter(Boolean).join('\n').slice(0, 500);
+        try {
+          const { data, error } = await sb.from('requests').insert({ service:r.svc, gu, wish_date:r.date, details, photos:[] }).select('id').single();
+          if (error) throw error;
+          made.push({ id:data.id, svc:r.svc, date:r.date });
+        } catch (e) { bad.push({ svc:r.svc, msg:errMsg(e) }); }
+      }
+      if (!made.length) return fail(bad[0] ? bad[0].msg : '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.');
+      track('quote');
+      await savePhone(d);
+      try { await load('req'); render(); } catch (_) {}
+      sb.functions.invoke('alimtalk', { body:{ notify_pros:true } }).catch(() => {});
+      pkBusy = false;
+      const list = made.map(m => `<div class="flex justify-between gap-3 rounded-xl bg-ice px-3 py-2.5 text-sm"><span class="font-bold">${esc(SVC[m.svc] || m.svc)}</span><span class="text-sea/70">${esc(reqCode(m.id))} · ${esc(m.date)}</span></div>`).join('');
+      const warn = bad.length ? `<p class="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">${bad.map(b => esc(SVC[b.svc] || b.svc)).join(', ')} 요청은 보내지 못했어요. 아래 [닫기] 후 일반 견적 요청으로 다시 보내 주세요.</p>` : '';
+      const guest = isGuest() ? `<div class="mt-4 rounded-2xl border-2 border-brand/30 bg-brand-50 p-4 text-left"><p class="font-bold">📩 견적이 도착하면 확인할 수 있게 가입해 주세요</p><p class="mt-1 text-sm text-sea/75">요청 내용은 그대로 이어져요. 가입은 1분이면 끝나요.</p><div class="mt-3 grid gap-2"><button type="button" data-act="guestjoin" data-id="kakao" class="rounded-xl bg-[#FEE500] py-3 font-bold text-black">💬 카카오로 3초 가입</button><button type="button" data-act="guestjoin" data-id="email" class="rounded-xl border-2 border-mist bg-white py-3 font-bold">이메일로 가입</button></div></div>` : '';
+      $('#mm-body').innerHTML = `<div class="text-center"><p class="text-4xl" aria-hidden="true">✅</p><h2 class="mt-2 font-display text-2xl">${made.length}개 분야 견적 요청이 접수됐어요</h2>
+        <p class="mt-2 text-sm leading-relaxed text-sea/75">분야별 기사님들께 알림이 갔어요. 견적이 도착하면 카톡(${esc(phMask(d))})으로 알려 드려요.</p></div>
+        <div class="mt-4 space-y-2">${list}</div>${warn}${guest}
+        <button type="button" data-mclose class="mt-5 w-full rounded-2xl bg-sea py-4 font-bold text-white">닫기</button>`;
+    } catch (e) { fail(errMsg(e) || '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); }
+  };
+
 })();

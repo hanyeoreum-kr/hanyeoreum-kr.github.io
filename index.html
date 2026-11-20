@@ -142,6 +142,7 @@ if (window.tailwind) tailwind.config = {
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
+    <div id="hwrap">
     <form id="hfind" class="mt-5 rounded-3xl bg-white p-3.5 text-sea shadow-2xl lg:mt-0 lg:p-6" aria-label="동네와 필요한 서비스로 견적 요청">
       <p class="hidden text-lg font-black lg:block">어디에서, 무엇이 필요하세요?</p>
       <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-0.5 lg:mt-4 lg:py-1">
@@ -159,6 +160,8 @@ if (window.tailwind) tailwind.config = {
       <p class="mt-2.5 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold leading-snug text-amber-800">🌙 24시간 언제든 요청하세요 · 밤에 올려 두고 아침에 도착한 견적을 확인하세요</p>
       <p class="mt-2 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
     </form>
+    <button type="button" data-act="pkopen" class="mt-3 flex w-full items-center justify-between gap-3 rounded-2xl bg-white/95 px-4 py-3.5 text-left text-sea shadow-xl hover:bg-white lg:mt-4"><span><span class="block text-[15px] font-black lg:text-base">🔑 가게 오픈 준비 중이세요?</span><span class="block text-xs font-bold text-sub">에어컨 · 냉장고 · 청소 견적을 한 번에 요청</span></span><span class="shrink-0 rounded-full bg-sun px-3 py-1.5 text-xs font-black text-white">원큐 견적</span></button>
+    </div>
   </div>
 </section>
 
@@ -484,6 +487,6 @@ if (window.tailwind) tailwind.config = {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=19"></script>
 <script src="app.js?v=114"></script>
-<script src="notify.js?v=41"></script>
+<script src="notify.js?v=42"></script>
 </body>
 </html>
