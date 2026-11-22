@@ -1290,7 +1290,7 @@ async function pchat(el, pid) {
    ===================================================================== */
 const qm = $('#qm');
 let qstep = 1, qopener = null, qphotos = [], qsending = false;
-const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' };
+const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false };
 function qErr(msg) { const e = $('#qm-err'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
 /* 기타 요청: 2단계를 없애고, 희망일·지역을 3단계로 옮겨요 (그 외 분야는 2단계 맨 위가 희망일) */
 function qPlace() {
@@ -1319,9 +1319,20 @@ function qShow(n) {
   $('#qm-next').disabled = false;
   qm.querySelector('.overflow-y-auto').scrollTop = 0;
 }
-const qPrefix = () => [qform.etc ? ETC_TAG : '', qform.site ? `${SITE_TAG} ${qform.site}` : ''].filter(Boolean).join(' ');
+const qPrefix = () => [qform.etc ? ETC_TAG : '', qform.site ? `${SITE_TAG} ${qform.site}` : '', qform.tbd ? '[희망일 미정 · 상담 후 조율]' : ''].filter(Boolean).join(' ');
+/* 날짜 빠른 선택: 오늘 · 내일 · 이번 주말 · 날짜 미정 (한 번 눌러서 끝) */
+const qIso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+function qQuickDate(k) {
+  const d = new Date(), dow = d.getDay();
+  if (k === '1') d.setDate(d.getDate() + 1);
+  else if (k === 'we') d.setDate(d.getDate() + (dow === 0 ? 0 : 6 - dow));
+  else if (k === 'tbd') d.setDate(d.getDate() + 7);
+  $('#qm-date').value = qIso(d); qform.tbd = k === 'tbd'; qErr('');
+  document.querySelectorAll('#qm-dchips [data-qd]').forEach(b => { const on = b.dataset.qd === k; b.classList.toggle('bg-brand', on); b.classList.toggle('text-white', on); b.classList.toggle('bg-ice', !on); });
+}
 function qReset() {
-  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'' });
+  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false });
+  document.querySelectorAll('#qm-dchips [data-qd]').forEach(b => { b.classList.remove('bg-brand', 'text-white'); b.classList.add('bg-ice'); });
   ['#qm-floor', '#qm-elev', '#qm-ladder', '#qm-park'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   $('#qm-to').value = ''; $('#qm-ton').value = ''; $('#qm-lift').checked = false; qCat('');
   qphotos.forEach(p => URL.revokeObjectURL(p.url)); qphotos = []; qThumbs();
@@ -1337,6 +1348,7 @@ function openQuote(pre = {}, trigger) {
   qopener = trigger || document.activeElement;
   if (pre.service) { qform.etc = null; qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
   if (pre.district) { qform.district = pre.district; $('#qm-gu').value = pre.district; }
+  else if (!$('#qm-gu').value) { const g0 = ($('#hgu') || {}).value || hguGet(); if (g0) { $('#qm-gu').value = g0; if ($('#qm-gu').value) qform.district = g0; } }   // 홈에서 고른 동네를 미리 채워요
   if (pre.target) { qform.target = pre.target; qform.targetName = pre.targetName || ''; }
   qCat(pre.cat || '');
   $('#qm-date').min = today();
@@ -2464,7 +2476,7 @@ const ACT = {
   fprev: () => { fp = (fp - 1 + fpages) % fpages; renderFeed(); }, fnext: () => { fp = (fp + 1) % fpages; renderFeed(); },
   mtab: k => { MK.tab = k; renderMarket(); }, mcat: k => { MK.cat = k || ''; renderMarket(); }, mgr: g => { MK.grades.has(g) ? MK.grades.delete(g) : MK.grades.add(g); renderMarket(); }, mfree: () => { MK.free = !MK.free; renderMarket(); },
   ffree: () => { FS.free = !FS.free; renderPros(); }, fkind: k => { FS.kind = k || ''; renderPros(); },
-  qcat: k => { closeM(); openQuote({ cat:k, district:($('#hgu') || {}).value || hguGet() }); }, qopen0: () => { closeM(); openQuote({}); },
+  qcat: k => { closeM(); openQuote({ cat:k, district:($('#hgu') || {}).value || hguGet() }); }, qopen0: () => { closeM(); openQuote({}); }, qsvc: k => { closeM(); openQuote({ service:k, district:($('#hgu') || {}).value || hguGet() }); },
   preq: id => { const p = proPub(id); if (!p) return; closeM(); const k = p.kind || 'aircon'; openQuote({ cat:k, service:k === 'truck' ? 'truck' : '', target:p.id, targetName:p.name }); toast(`${p.name} 기사님께만 보이는 견적 요청을 작성해요.`); },
   noti: () => { if (needLogin('알림은 로그인 후 볼 수 있어요.')) return; if (ACT.nset) ACT.nset(); else csModal('ntf'); },   // 종 모양 = 알림 설정 (받은 알림 목록은 설정 창 안의 버튼으로)
   guarantee: () => openM(head('재점검·보완 안심 보장제') + `<ul class="space-y-3 text-sm leading-relaxed">
@@ -2597,6 +2609,8 @@ $('#qm-thumbs').addEventListener('click', e => { const b = e.target.closest('[da
 })();
 $('#qm-details').addEventListener('input', e => $('#qm-count').textContent = `${e.target.value.length} / ${e.target.maxLength > 0 ? e.target.maxLength : 500}`);
 $('#qm-next').addEventListener('click', qNext);
+$('#qm-date').addEventListener('input', () => { qform.tbd = false; document.querySelectorAll('#qm-dchips [data-qd]').forEach(b => { b.classList.remove('bg-brand', 'text-white'); b.classList.add('bg-ice'); }); });
+$('#qm-dchips').addEventListener('click', e => { const b = e.target.closest('[data-qd]'); if (b) qQuickDate(b.dataset.qd); });
 $('#qm-back').addEventListener('click', () => qShow(qstep === 3 && qform.etc ? 1 : qstep - 1));
 qm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeQuote(); });
 document.addEventListener('submit', e => {
@@ -2831,9 +2845,10 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   if (!standalone() && !isHyApp()) { const hi = $('#hero-inst'); hi.textContent = isIOS() ? '📲 앱스토어에서 한여름 앱 받기' : '📲 홈 화면에 한여름 앱 추가하기'; hi.classList.remove('hidden'); }
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
   try { const q0 = new URLSearchParams(location.search), rp = q0.get('pro'); if (rp && UUID_RE.test(rp)) { if (!refGet() || refGet().pro !== rp) refSet(rp); refFromUrl = true; q0.delete('pro'); history.replaceState(null, '', location.pathname + (q0.toString() ? '?' + q0 : '') + location.hash); } } catch (_) {}
-  try { const q = new URLSearchParams(location.search), go = q.get('go'), gcat = q.get('cat');
-    if (go || q.has('app')) { q.delete('go'); q.delete('app'); q.delete('cat'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
-    if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote(gcat && KINDS[gcat] ? { cat:gcat } : {}); else if (go === 'delete') delModal(); }, 1500);
+  try { const q = new URLSearchParams(location.search), go = q.get('go'), gcat = q.get('cat'), gsvc = q.get('svc');   // 광고 주소: ?svc=aircon_clean 이면 분야 선택을 건너뛰고 바로 지역·날짜로
+    if (go || gsvc || q.has('app')) { q.delete('go'); q.delete('app'); q.delete('cat'); q.delete('svc'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
+    if (gsvc && SVC[gsvc] && gsvc !== 'freezer_sale') setTimeout(() => openQuote({ service:gsvc }), 900);
+    else if (go) setTimeout(() => { if (go === 'market') openMarket(); else if (go === 'pros') openPros(); else if (go === 'quote') openQuote(gcat && KINDS[gcat] ? { cat:gcat } : {}); else if (go === 'delete') delModal(); }, 1500);
   } catch (e) {}
   if (!sb) { $('#setup-warn').classList.remove('hidden'); render(); return; }
   render(); socialCheck();

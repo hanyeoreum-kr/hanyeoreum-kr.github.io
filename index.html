@@ -139,6 +139,15 @@ if (window.tailwind) tailwind.config = {
       <h1 class="mt-3 text-[1.6rem] font-black leading-tight lg:mt-5 lg:text-[3.1rem] lg:leading-[1.15]"><span class="text-sky-200">시원하고</span> <span class="text-orange-300">따뜻함</span>의 모든 것,<br>한여름에서 <span class="text-amber-300">한 번에!</span></h1>
       <p class="mt-2 hidden text-sm text-white/80 md:block lg:mt-5 lg:text-lg"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">배관·하수구</b> · <b class="text-white">업소용 냉장·주방설비</b> · <b class="text-white">입주청소</b> · <b class="text-white">세탁기·생활가전</b>까지 검증된 기사님을 바로 연결해요.</p>
       <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold lg:mt-6 lg:text-sm"><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 견적 요청·비교 0원</span><span class="rounded-full bg-amber-300/25 px-2.5 py-1">🌙 24시간 요청 가능</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 실거래 후기만</span><span class="rounded-full bg-white/15 px-2.5 py-1">✓ 14일 재점검 보장</span></div>
+      <button type="button" data-act="qopen0" class="mt-4 w-full rounded-2xl bg-sun px-5 py-4 text-lg font-black text-white shadow-lg hover:brightness-95 lg:w-auto lg:px-10">⚡ 1분 무료 견적 받기</button>
+      <div class="mt-3 grid grid-cols-3 gap-2 text-[13px] font-black lg:flex lg:flex-wrap lg:text-sm" aria-label="자주 찾는 서비스로 바로 견적">
+        <button type="button" data-act="qsvc" data-id="aircon_clean" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">❄️ 에어컨 청소</button>
+        <button type="button" data-act="qsvc" data-id="clean_movein" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">🏠 입주청소</button>
+        <button type="button" data-act="qsvc" data-id="plumb_drain" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">🚿 하수구 막힘</button>
+        <button type="button" data-act="qsvc" data-id="heat_repair" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">🔥 보일러 수리</button>
+        <button type="button" data-act="qsvc" data-id="home_clean" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">🧺 세탁기 청소</button>
+        <button type="button" data-act="qsvc" data-id="cold_repair" class="rounded-xl bg-white/15 px-2 py-2.5 hover:bg-white/25 lg:px-4">🧊 냉장·냉동 수리</button>
+      </div>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden">📲 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
@@ -387,8 +396,9 @@ if (window.tailwind) tailwind.config = {
         <h3 class="text-xl font-bold">어디에서, 언제 필요하세요?</h3>
         <div id="qm-when">
         <label for="qm-date" class="block mt-5 text-sm font-bold">작업 희망일</label>
+        <div id="qm-dchips" class="mt-2 flex flex-wrap gap-2"><button type="button" data-qd="0" class="rounded-full bg-ice px-4 py-2 text-sm font-bold">오늘</button><button type="button" data-qd="1" class="rounded-full bg-ice px-4 py-2 text-sm font-bold">내일</button><button type="button" data-qd="we" class="rounded-full bg-ice px-4 py-2 text-sm font-bold">이번 주말</button><button type="button" data-qd="tbd" class="rounded-full bg-ice px-4 py-2 text-sm font-bold">날짜 미정</button></div>
         <input id="qm-date" type="date" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
-        <p class="mt-2 text-xs text-sea/60">정확한 시간은 기사님과 채팅으로 조율해요.</p>
+        <p class="mt-2 text-xs text-sea/60">정확한 시간은 기사님과 채팅으로 조율해요. 날짜가 안 정해졌으면 "날짜 미정"을 눌러 주세요.</p>
         </div>
         <div id="qm-where">
         <label id="qm-gu-l" for="qm-gu" class="block mt-5 text-sm font-bold">작업 지역</label>
