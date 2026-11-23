@@ -505,7 +505,7 @@ if (window.tailwind) tailwind.config = {
   var box=document.getElementById('qm-services'),jump=document.getElementById('qm-jump');
   if(!box||!jump)return;
   function build(){
-    var g=[].slice.call(box.children).filter(function(e){return e.offsetParent!==null||true});
+    var g=[].slice.call(box.children).filter(function(e){return e.tagName==='FIELDSET'});
     if(g.length<3){jump.className=jump.className.replace(/\bflex\b/,'hidden');jump.classList.add('hidden');jump.classList.remove('flex');jump.innerHTML='';return}
     var html='',firsts=g.map(function(e){var h=e.firstElementChild;return ((h&&h.textContent)||'').trim().split(/\s+/)[0]});
     g.forEach(function(el,i){
@@ -520,7 +520,7 @@ if (window.tailwind) tailwind.config = {
   new MutationObserver(function(){if(busy)return;busy=true;setTimeout(function(){build();busy=false},0)}).observe(box,{childList:true});
   jump.addEventListener('click',function(e){
     var b=e.target.closest('button[data-j]');if(!b)return;
-    var el=box.children[+b.dataset.j];if(!el)return;
+    var el=[].slice.call(box.children).filter(function(x){return x.tagName==='FIELDSET'})[+b.dataset.j];if(!el)return;
     var sc=jump.closest('.overflow-y-auto');
     if(sc){sc.scrollTo({top:sc.scrollTop+el.getBoundingClientRect().top-sc.getBoundingClientRect().top-jump.offsetHeight-6,behavior:'smooth'})}
     else el.scrollIntoView({behavior:'smooth',block:'start'});

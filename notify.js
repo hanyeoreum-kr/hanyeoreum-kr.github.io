@@ -792,7 +792,7 @@
   const PK_BIZ = ['식당', '카페', '미용실·네일', '사무실', '학원·병원', '기타'];
   const PK_ITEMS = [
     { id:'aircon', icon:'❄️', name:'에어컨', hint:'냉난방 에어컨 설치 · 청소 · 점검', opts:[['aircon_install', '설치'], ['aircon_clean', '청소'], ['aircon_check', '냉난방 점검'], ['aircon_repair', '수리']] },
-    { id:'cold', icon:'🧊', name:'냉장·냉동고', hint:'업소용 냉장고 · 냉동고', opts:[['cold_repair', '수리 · 점검'], ['freezer_removal', '기존 냉장고 철거']] },
+    { id:'cold', icon:'🧊', name:'냉장·냉동고', hint:'업소용 냉장고 · 냉동고 (중고 구매 · 수리 · 철거)', opts:[['cold_buy', '중고 업소용 구매'], ['cold_repair', '수리 · 점검'], ['freezer_removal', '기존 냉장고 철거']] },
     { id:'clean', icon:'🧹', name:'청소', hint:'공사 뒤 분진 · 준공 청소 (마지막 날짜로 정해 주세요)', opts:[['clean_store', '상가 · 사무실 청소'], ['clean_movein', '입주청소']] }
   ];
   const pkEl = id => document.getElementById(id);
@@ -804,7 +804,11 @@
       <select id="pk-svc-${it.id}" aria-label="${it.name} 세부 작업" class="w-full rounded-xl bg-ice px-3 py-3 font-medium">${it.opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>
       <label for="pk-date-${it.id}" class="block text-xs font-bold text-sea/70">희망일</label>
       <input id="pk-date-${it.id}" type="date" min="${today()}" class="w-full rounded-xl bg-ice px-3 py-3 font-medium">
-      ${it.id === 'cold' ? `<div id="pk-site" class="hidden grid-cols-2 gap-2"><p class="col-span-2 text-xs font-bold text-sea/70">철거는 현장 정보가 필요해요</p>
+      ${it.id === 'cold' ? `<div id="pk-buy" class="space-y-2"><label for="pk-buyitem" class="block text-xs font-bold text-sea/70">어떤 제품을 찾으세요? <span class="text-sun">(필수)</span></label>
+        <input id="pk-buyitem" type="text" maxlength="80" placeholder="예) 4도어 업소용 냉장고 · 45박스 냉동고 · 쇼케이스" class="w-full rounded-xl bg-ice px-3 py-3 font-medium">
+        <div class="grid grid-cols-2 gap-2"><input id="pk-buyqty" type="text" maxlength="20" placeholder="수량 (예: 2대)" class="rounded-xl bg-ice px-3 py-3 font-medium"><input id="pk-buybudget" type="text" maxlength="20" placeholder="예산 (선택)" class="rounded-xl bg-ice px-3 py-3 font-medium"></div>
+        <p class="text-xs text-sea/60">원하는 제품을 적어 주시면 보유 재고가 있는 업체가 견적을 보내 드려요. 중고장터 거래는 수수료 0원이에요.</p></div>
+      <div id="pk-site" class="hidden grid-cols-2 gap-2"><p class="col-span-2 text-xs font-bold text-sea/70">철거는 현장 정보가 필요해요</p>
         <select id="pk-floor" aria-label="물건 위치" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-floor', '<option value="">위치</option>')}</select>
         <select id="pk-elev" aria-label="엘리베이터" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-elev', '<option value="">엘리베이터</option>')}</select>
         <select id="pk-ladder" aria-label="사다리차" class="rounded-xl bg-ice px-3 py-3 font-medium">${pkClone('qm-ladder', '<option value="">사다리차</option>')}</select>
@@ -847,6 +851,7 @@
   document.addEventListener('change', e => {
     const id = e.target && e.target.id || '';
     if (/^pk-on-/.test(id)) { const b = pkEl('pk-box-' + id.slice(6)); if (b) b.classList.toggle('hidden', !e.target.checked); }
+    if (id === 'pk-svc-cold') { const bx = pkEl('pk-buy'); if (bx) bx.classList.toggle('hidden', e.target.value !== 'cold_buy'); }
     if (id === 'pk-svc-cold') { const s = pkEl('pk-site'); if (s) { s.classList.toggle('hidden', e.target.value !== 'freezer_removal'); s.classList.toggle('grid', e.target.value === 'freezer_removal'); } }
   });
   document.addEventListener('input', e => { if (e.target && e.target.id === 'pk-phone') e.target.value = phFmt(phDigits(e.target.value)); });
@@ -863,13 +868,18 @@
       const svc = pkEl('pk-svc-' + it.id).value, date = pkEl('pk-date-' + it.id).value;
       if (!date) return pkErr(`${it.name}의 희망일을 입력해 주세요.`);
       if (date < today()) return pkErr(`${it.name}은 오늘 이후 날짜를 선택해 주세요.`);
-      let site = '';
+      let site = '', buy = '';
+      if (svc === 'cold_buy') {
+        const bi = pkEl('pk-buyitem').value.trim(); if (!bi) return pkErr('구매하실 제품(예: 4도어 업소용 냉장고)을 적어 주세요.');
+        const bq = pkEl('pk-buyqty').value.trim(), bb = pkEl('pk-buybudget').value.trim();
+        buy = `[중고 구매 희망] 제품: ${bi}${bq ? ' · 수량: ' + bq : ''}${bb ? ' · 예산: ' + bb : ''}`;
+      }
       if (svc === 'freezer_removal') {
         const v = ['pk-floor', 'pk-elev', 'pk-ladder', 'pk-park'].map(x => pkEl(x).value);
         if (v.some(x => !x)) return pkErr('냉장고 철거는 현장 정보(위치 층 · 엘리베이터 · 사다리차 · 주차)를 모두 선택해 주세요.');
         site = `${v[0]} · 엘리베이터 ${v[1]} · 사다리차 ${v[2]} · 주차 ${v[3]}`;
       }
-      rows.push({ it, svc, date, site });
+      rows.push({ it, svc:svc === 'cold_buy' ? 'cold_repair' : svc, date, site, buy });
     }
     const d = phDigits(pkEl('pk-phone').value);
     if (!phOk(d)) return pkErr('알림 받을 휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)');
@@ -886,11 +896,11 @@
       const head = `${PK_TAG} ${[biz, py ? py + '평' : ''].filter(Boolean).join(' · ')} (${picks.map(x => x.name).join('·')} 동시 요청)`.replace(/\s+\(/, ' (');
       const made = [], bad = [];
       for (const r of rows) {
-        const details = [r.site ? `${SITE_TAG} ${r.site}` : '', head, memo].filter(Boolean).join('\n').slice(0, 500);
+        const details = [r.buy, r.site ? `${SITE_TAG} ${r.site}` : '', head, memo].filter(Boolean).join('\n').slice(0, 500);
         try {
           const { data, error } = await sb.from('requests').insert({ service:r.svc, gu, wish_date:r.date, details, photos:[] }).select('id').single();
           if (error) throw error;
-          made.push({ id:data.id, svc:r.svc, date:r.date });
+          made.push({ id:data.id, svc:r.svc, date:r.date, buy:!!r.buy });
         } catch (e) { bad.push({ svc:r.svc, msg:errMsg(e) }); }
       }
       if (!made.length) return fail(bad[0] ? bad[0].msg : '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.');
@@ -899,7 +909,7 @@
       try { await load('req'); render(); } catch (_) {}
       sb.functions.invoke('alimtalk', { body:{ notify_pros:true } }).catch(() => {});
       pkBusy = false;
-      const list = made.map(m => `<div class="flex justify-between gap-3 rounded-xl bg-ice px-3 py-2.5 text-sm"><span class="font-bold">${esc(SVC[m.svc] || m.svc)}</span><span class="text-sea/70">${esc(reqCode(m.id))} · ${esc(m.date)}</span></div>`).join('');
+      const list = made.map(m => `<div class="flex justify-between gap-3 rounded-xl bg-ice px-3 py-2.5 text-sm"><span class="font-bold">${m.buy ? '중고 업소용 구매' : esc(SVC[m.svc] || m.svc)}</span><span class="text-sea/70">${esc(reqCode(m.id))} · ${esc(m.date)}</span></div>`).join('');
       const warn = bad.length ? `<p class="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">${bad.map(b => esc(SVC[b.svc] || b.svc)).join(', ')} 요청은 보내지 못했어요. 아래 [닫기] 후 일반 견적 요청으로 다시 보내 주세요.</p>` : '';
       const guest = isGuest() ? `<div class="mt-4 rounded-2xl border-2 border-brand/30 bg-brand-50 p-4 text-left"><p class="font-bold">📩 견적이 도착하면 확인할 수 있게 가입해 주세요</p><p class="mt-1 text-sm text-sea/75">요청 내용은 그대로 이어져요. 가입은 1분이면 끝나요.</p><div class="mt-3 grid gap-2"><button type="button" data-act="guestjoin" data-id="kakao" class="rounded-xl bg-[#FEE500] py-3 font-bold text-black">💬 카카오로 3초 가입</button><button type="button" data-act="guestjoin" data-id="email" class="rounded-xl border-2 border-mist bg-white py-3 font-bold">이메일로 가입</button></div></div>` : '';
       $('#mm-body').innerHTML = `<div class="text-center"><p class="text-4xl" aria-hidden="true">✅</p><h2 class="mt-2 font-display text-2xl">${made.length}개 분야 견적 요청이 접수됐어요</h2>
