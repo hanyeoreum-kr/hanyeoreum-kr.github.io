@@ -1041,4 +1041,38 @@
     });
   })();
 
+
+  /* ---------- 25) 견적 접수 후 '가입' 안내에 네이버 버튼 추가 ----------
+     손님(임시 계정)이 네이버로 가입해도 방금 보낸 견적이 그대로 이어지게, 로그인 요청에 손님 계정 정보를 함께 보내요.
+     네이버 로그인이 켜져 있을 때만 버튼이 보여요. */
+  (() => {
+    const $q = id => document.getElementById(id);
+    async function naverJoin() {
+      try {
+        const ns = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+        sessionStorageSet('hy_ns', ns); try { localStorage.setItem('hy_ns', ns); } catch (_) {}
+        let url = NAVER_FN + '?start=1&ns=' + ns;
+        try {
+          const { data } = await sb.auth.getSession(); const tk = data && data.session && data.session.access_token;
+          if (tk) {
+            const r = await fetch(NAVER_FN + '?start=1&json=1&ns=' + ns, { headers:{ Authorization:'Bearer ' + tk, apikey:C.SUPABASE_ANON_KEY } });
+            const j = r.ok ? await r.json() : null; if (j && j.url) url = j.url;
+          }
+        } catch (_) {}
+        location.href = url;
+      } catch (_) { toast('네이버 연결이 아직 준비되지 않았어요. 이메일로 가입해 주세요.'); }
+    }
+    const _gj = guestJoin;
+    guestJoin = function (k) { return k === 'naver' ? naverJoin() : _gj(k); };
+    function addBtn() {
+      try { if (typeof SOC === 'undefined' || SOC.indexOf('naver') < 0) return; } catch (_) { return; }
+      document.querySelectorAll('[data-act="guestjoin"][data-id="email"]').forEach(em => {
+        if (em.parentNode.querySelector('[data-id="naver"]')) return;
+        em.insertAdjacentHTML('beforebegin', '<button type="button" data-act="guestjoin" data-id="naver" class="rounded-xl bg-[#03C75A] py-3 font-bold text-white"><span class="inline-block align-[-2px]">' + SOC_ICON.naver + '</span> 네이버로 3초 가입</button>');
+      });
+    }
+    new MutationObserver(addBtn).observe(document.body, { childList:true, subtree:true });
+    setTimeout(addBtn, 800); setTimeout(addBtn, 2500);
+  })();
+
 })();
