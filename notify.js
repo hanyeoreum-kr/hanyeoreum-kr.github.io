@@ -574,7 +574,7 @@
     try {
       if (!KINDS.plumb || !S.pro || document.getElementById('note-plumb')) return;
       const has = proKinds(S.pro).includes('plumb');
-      if (has && noteSeen()) return;
+      if (noteSeen()) return;   // 한 번 닫았으면 다시 안 떠요
       const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
       top.insertAdjacentHTML('afterend', `<section id="note-plumb" class="mt-6 rounded-3xl border-2 border-sky-300 bg-sky-50 p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3"><p class="text-xs font-black tracking-wide text-sky-700">📢 한여름 공지 · NEW</p><button type="button" data-act="noteplx" aria-label="공지 닫기" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
@@ -596,7 +596,7 @@
       if (!KINDS.interior || !S.pro || document.getElementById('note-interior')) return;
       let seen = false; try { seen = localStorage.getItem(IN_NOTE) === '1'; } catch (_) {}
       const has = proKinds(S.pro).includes('interior');
-      if (has && seen) return;
+      if (seen) return;   // 한 번 닫았으면 다시 안 떠요
       const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
       top.insertAdjacentHTML('afterend', `<section id="note-interior" class="mt-6 rounded-3xl border-2 border-pink-300 bg-pink-50 p-4 sm:p-5">
         <div class="flex items-start justify-between gap-3"><p class="text-xs font-black tracking-wide text-pink-700">📢 한여름 공지 · NEW</p><button type="button" data-act="noteinx" aria-label="공지 닫기" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
