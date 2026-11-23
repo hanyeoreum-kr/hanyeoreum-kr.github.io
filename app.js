@@ -54,10 +54,10 @@ const TONS = ['다마스', '라보', '1톤', '1.4톤', '2.5톤', '5톤 이상'];
 const kindOf = code => { const c = String(code); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c.startsWith('plumb') ? 'plumb' : c.startsWith('interior') ? 'interior' : c === 'truck' ? 'truck' : 'cold'; };
 /* 분야별 '기타 (직접 입력)': DB 서비스 코드는 그대로 쓰고, 요청 내용 앞에 [기타 요청] 표시를 붙여요 */
 const ETC_SVC = { aircon:'aircon_repair', heat:'heat_repair', cold:'cold_repair', kitchen:'kitchen_repair', clean:'clean_home', home:'home_repair', plumb:'plumb_drain', interior:'interior_full' };
-const ETC_TAG = '[기타 요청]', SITE_TAG = '[현장]';
+const ETC_TAG = '[기타 요청]', SITE_TAG = '[현장]', BUY_TAG = '[중고 구매 희망]';
 const SITE_SVCS = ['freezer_removal'];   // 현장 정보(층·엘리베이터·사다리차·주차)를 꼭 받는 서비스
 const isEtc = r => String((r && r.details) || '').startsWith(ETC_TAG);
-const svcOf = r => isEtc(r) ? ((KINDS[kindOf(r.service)] || {}).name || '') + ' · 기타' : SVC[r.service];
+const svcOf = r => String((r && r.details) || '').startsWith('[중고 구매 희망]') ? '중고 업소용 구매' : isEtc(r) ? ((KINDS[kindOf(r.service)] || {}).name || '') + ' · 기타' : SVC[r.service];
 const svgI = (d, cls = 'h-6 w-6') => `<svg viewBox="0 0 24 24" class="${cls}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const reqWhere = r => r.service === 'truck' ? `${esc(place(r.gu))} → ${esc(place(r.to_gu) || '?')}${r.ton ? ' · ' + esc(r.ton) : ''}${r.lift ? ' · 리프트' : ''}` : esc(place(r.gu));
 const SPEC = Object.values(KINDS).map(k => k.name);
@@ -1290,7 +1290,7 @@ async function pchat(el, pid) {
    ===================================================================== */
 const qm = $('#qm');
 let qstep = 1, qopener = null, qphotos = [], qsending = false;
-const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false };
+const qform = { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false, buy:false };
 function qErr(msg) { const e = $('#qm-err'); e.textContent = msg || ''; e.classList.toggle('hidden', !msg); }
 /* 기타 요청: 2단계를 없애고, 희망일·지역을 3단계로 옮겨요 (그 외 분야는 2단계 맨 위가 희망일) */
 function qPlace() {
@@ -1310,8 +1310,8 @@ function qShow(n) {
   $('#qm-site').classList.toggle('hidden', !(n === 2 && SITE_SVCS.includes(qform.service)));
   if (n === 3) {
     const lab = document.querySelector('label[for="qm-details"]'), d = $('#qm-details'), room = 500 - qPrefix().length;
-    lab.innerHTML = qform.etc ? '어떤 작업이 필요한지 적어 주세요 <span class="text-sun">(필수)</span>' : '세부 요청사항 · 특이사항';
-    d.placeholder = qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.';
+    lab.innerHTML = qform.buy ? '어떤 제품을 찾으세요? <span class="text-sun">(필수)</span>' : qform.etc ? '어떤 작업이 필요한지 적어 주세요 <span class="text-sun">(필수)</span>' : '세부 요청사항 · 특이사항';
+    d.placeholder = qform.buy ? '예) 4도어 업소용 냉장고 2대 / 45박스 냉동고 / 쇼케이스 · 예산 · 설치 필요 여부' : qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.';
     d.maxLength = room; if (d.value.length > room) d.value = d.value.slice(0, room); $('#qm-count').textContent = `${d.value.length} / ${room}`;
   }
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
@@ -1319,7 +1319,7 @@ function qShow(n) {
   $('#qm-next').disabled = false;
   qm.querySelector('.overflow-y-auto').scrollTop = 0;
 }
-const qPrefix = () => [qform.etc ? ETC_TAG : '', qform.site ? `${SITE_TAG} ${qform.site}` : '', qform.tbd ? '[희망일 미정 · 상담 후 조율]' : ''].filter(Boolean).join(' ');
+const qPrefix = () => [qform.etc ? (qform.buy ? BUY_TAG : ETC_TAG) : '', qform.site ? `${SITE_TAG} ${qform.site}` : '', qform.tbd ? '[희망일 미정 · 상담 후 조율]' : ''].filter(Boolean).join(' ');
 /* 날짜 빠른 선택: 오늘 · 내일 · 이번 주말 · 날짜 미정 (한 번 눌러서 끝) */
 const qIso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 function qQuickDate(k) {
@@ -1331,7 +1331,7 @@ function qQuickDate(k) {
   document.querySelectorAll('#qm-dchips [data-qd]').forEach(b => { const on = b.dataset.qd === k; b.classList.toggle('bg-brand', on); b.classList.toggle('text-white', on); b.classList.toggle('bg-ice', !on); });
 }
 function qReset() {
-  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false });
+  Object.assign(qform, { service:'', district:'', date:'', details:'', to:'', ton:'', lift:false, target:null, targetName:'', etc:null, site:'', tbd:false, buy:false });
   document.querySelectorAll('#qm-dchips [data-qd]').forEach(b => { b.classList.remove('bg-brand', 'text-white'); b.classList.add('bg-ice'); });
   ['#qm-floor', '#qm-elev', '#qm-ladder', '#qm-park'].forEach(id => { const e = $(id); if (e) e.value = ''; });
   $('#qm-to').value = ''; $('#qm-ton').value = ''; $('#qm-lift').checked = false; qCat('');
@@ -1360,7 +1360,7 @@ function closeQuote() { qm.classList.add('hidden'); if (!mmOpen()) document.body
 function qThumbs() { $('#qm-thumbs').innerHTML = qphotos.map((p, i) => `<li class="relative aspect-square"><img src="${p.url}" alt="첨부 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-rm="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join(''); }
 async function qNext() {
   if (qstep === 4) return closeQuote();
-  if (qstep === 1) { const r = document.querySelector('input[name="qm-svc"]:checked'); if (!r) return qErr('서비스를 선택해 주세요.'); qform.etc = r.value.startsWith('etc_') ? r.value.slice(4) : null; qform.service = qform.etc ? ETC_SVC[qform.etc] : r.value; if (!SITE_SVCS.includes(qform.service)) qform.site = '';
+  if (qstep === 1) { const r = document.querySelector('input[name="qm-svc"]:checked'); if (!r) return qErr('서비스를 선택해 주세요.'); qform.buy = r.value === 'buy_cold'; qform.etc = qform.buy ? 'cold' : r.value.startsWith('etc_') ? r.value.slice(4) : null; qform.service = qform.etc ? ETC_SVC[qform.etc] : r.value; if (!SITE_SVCS.includes(qform.service)) qform.site = '';
     if (r.value === 'freezer_sale') { r.checked = false; qform.service = ''; closeQuote(); return sellOpen(); }
     if (qform.target && !KINDS[kindOf(qform.service)].svcs.includes(qform.service)) qform.target = null; }
   if (qstep === 2) {
@@ -2816,7 +2816,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   $('#qm-ton').insertAdjacentHTML('beforeend', TONS.map(t => `<option>${t}</option>`).join(''));
   $('#svc').innerHTML = Object.values(KINDS).map(k => `<optgroup label="${k.name}">${k.svcs.map(c => `<option value="${c}">${SVC[c]}</option>`).join('')}</optgroup>`).join('');
   const short = c => c === 'freezer_sale' ? '매입·판매 (장터)' : SVC[c].replace('에어컨 ', '').replace('냉장·냉동고 ', '').replace('냉장·냉동 ', '');
-  $('#qm-services').innerHTML = GROUPS.map(([title, codes, k]) => `<fieldset data-cat="${k}"><legend class="flex items-center gap-2 text-sm font-bold text-sub"><span class="grid h-7 w-7 place-items-center rounded-lg ${KINDS[k].color}">${svgI(KINDS[k].icon, 'h-4 w-4')}</span>${title}</legend><div class="mt-2 grid grid-cols-2 gap-2.5">${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">${short(c)}</span></label>`).join('')}${ETC_SVC[k] ? `<label class="relative"><input type="radio" name="qm-svc" value="etc_${k}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">기타 (직접 입력)</span></label>` : ''}</div></fieldset>`).join('')
+  $('#qm-services').innerHTML = GROUPS.map(([title, codes, k]) => `<fieldset data-cat="${k}"><legend class="flex items-center gap-2 text-sm font-bold text-sub"><span class="grid h-7 w-7 place-items-center rounded-lg ${KINDS[k].color}">${svgI(KINDS[k].icon, 'h-4 w-4')}</span>${title}</legend><div class="mt-2 grid grid-cols-2 gap-2.5">${codes.map(c => `<label class="relative"><input type="radio" name="qm-svc" value="${c}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">${short(c)}</span></label>`).join('')}${k === 'cold' ? `<label class="relative"><input type="radio" name="qm-svc" value="buy_cold" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">중고 구매 (제품 입력)</span></label>` : ''}${ETC_SVC[k] ? `<label class="relative"><input type="radio" name="qm-svc" value="etc_${k}" class="peer sr-only"><span class="block rounded-2xl border-2 border-mist px-3 py-4 text-center font-bold cursor-pointer hover:bg-ice peer-checked:border-brand peer-checked:bg-brand-50 peer-checked:text-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-brand">기타 (직접 입력)</span></label>` : ''}</div></fieldset>`).join('')
     + '<button type="button" id="qm-allcat" class="hidden text-sm font-bold text-brand underline">다른 서비스도 보기</button>';
   $('#qm-allcat').addEventListener('click', () => qCat(''));
   ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
