@@ -20,9 +20,9 @@
   const step3 = document.querySelector('#qm [data-step="3"]');
   if (step3 && !document.getElementById('qm-phone')) {
     step3.insertAdjacentHTML('beforeend', `
-      <div class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
+      <div id="qm-phonebox" class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
         <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로</span> 알려드려요</p>
-        <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
+        <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>💬 기사님과는 한여름 안심채팅으로만 대화해요</li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
         <label for="qm-phone" class="mt-3 block text-sm font-bold">📱 휴대폰 번호</label>
         <input id="qm-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-2 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
         <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="qm-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
@@ -918,5 +918,131 @@
         <button type="button" data-mclose class="mt-5 w-full rounded-2xl bg-sea py-4 font-bold text-white">닫기</button>`;
     } catch (e) { fail(errMsg(e) || '요청을 보내지 못했어요. 잠시 후 다시 시도해 주세요.'); }
   };
+
+  /* ---------- 24) 견적 요청: 한 화면에 질문 하나 + 진행률(%) ----------
+     기존 1·2·3단계는 그대로 두고, 단계 안의 질문을 한 화면에 하나씩만 보여줘요.
+     (지역 → 날짜 → 현장·기기 → 사진·요청사항 → 카톡 알림 번호) 진행률은 '지금 몇 번째 화면인가'로 계산해요. */
+  (() => {
+    if (!qmEl) return;
+    const s2 = qmEl.querySelector('[data-step="2"]'), s3 = qmEl.querySelector('[data-step="3"]'), scroller = qmEl.querySelector('.overflow-y-auto');
+    if (!s2 || !s3 || !scroller) return;
+    const st = document.createElement('style');
+    st.textContent = '#qm .qp-off{display:none!important}#qm-bar,#qm-label{display:none!important}#qm-gu-l,#qm label[for="qm-date"]{display:none}#qm-phonebox{border:0;background:transparent;padding:0;margin-top:1rem}#qm-phonebox>p:first-child{display:none}#qm-gu,#qm-to,#qm-ton{min-height:3.5rem;font-size:1rem}#qp-fill{transition:width .3s ease}#qm-jump,#qm-allcat{display:none!important}';
+    document.head.appendChild(st);
+
+    const bar = document.getElementById('qm-bar');
+    if (bar && !document.getElementById('qp-top')) bar.insertAdjacentHTML('beforebegin',
+      '<div id="qp-top" class="mt-4"><div class="flex items-center gap-3"><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-mist" role="progressbar" aria-label="견적 요청 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="qp-fill" class="block h-full rounded-full bg-brand" style="width:0%"></i></div><span id="qp-pct" class="w-11 text-right text-sm font-bold text-brand">0%</span></div><p id="qp-tgt" class="mt-2 hidden text-sm text-sea/70"></p></div>');
+    if (!document.getElementById('qp-head')) s2.parentNode.insertBefore(Object.assign(document.createElement('div'), { id:'qp-head', className:'hidden mb-1', innerHTML:'<h3 id="qp-h" class="text-xl font-bold leading-snug"></h3><p id="qp-s" class="mt-1 text-sm leading-relaxed text-sea/70"></p>' }), s2);
+
+    const QP = { k:'cat', back:false, cat:'' };
+    const $q = id => document.getElementById(id);
+    const vis = el => el && !el.classList.contains('hidden');
+    const TXT = {
+      cat:['어떤 분야가 필요하세요?', '분야를 고르면 세부 서비스를 보여 드려요.'],
+      svc:['어떤 서비스가 필요하세요?', ''],
+      where:['어느 지역이세요?', '작업할 곳의 지역을 골라 주세요.'],
+      when:['언제가 좋으세요?', ''],
+      truck:['이동 정보를 알려 주세요', ''],
+      site:['현장 정보를 알려 주세요', ''],
+      dev:['조금 더 알려 주세요', '아는 만큼만 알려 주세요. 몰라도 괜찮아요.'],
+      details:['상태를 알려주시면 견적이 더 정확해져요', '사진과 요청사항은 선택이에요. 사진은 최대 5장까지 올릴 수 있어요.'],
+      phone:['견적이 오면 카톡으로 알려 드릴게요', '']
+    };
+
+    function tag() {
+      const t = (el, k) => { if (el) el.dataset.qp = k; };
+      t($q('qm-where'), 'where'); t($q('qm-when'), 'when'); t($q('qm-truck'), 'truck'); t($q('qm-site'), 'site'); t($q('qm-dev'), 'dev');
+      const s1 = qmEl.querySelector('[data-step="1"]');
+      if (s1) {
+        t(s1.querySelector('h3'), 'none'); t($q('qm-jump'), 'none'); t($q('qm-services'), 'svc');
+        const sv = $q('qm-services');
+        if (sv && !$q('qm-cats') && sv.querySelector('fieldset')) {
+          const bs = [...sv.querySelectorAll('fieldset')].map(f => { const lg = f.querySelector('legend'); return '<button type="button" data-qcat="' + f.dataset.cat + '" class="flex items-center gap-3 rounded-2xl border-2 border-mist px-4 py-4 text-left font-bold hover:bg-ice">' + (lg ? lg.innerHTML : '') + '</button>'; }).join('');
+          sv.insertAdjacentHTML('beforebegin', '<div id="qm-cats" data-qp="cat" class="mt-3 grid gap-2.5">' + bs + '</div><button type="button" id="qp-recat" data-qp="svc" class="mt-1 text-sm font-bold text-brand underline">← 분야 다시 고르기</button>');
+          $q('qm-cats').querySelectorAll('legend,[data-qcat] > *').forEach(x => x.classList.remove('text-sub'));
+        }
+      }
+      t(s2.querySelector('h3'), 'none'); t(s3.querySelector('h3'), 'none'); t(s3.querySelector('p'), 'none');
+      [...s3.children].forEach(el => { if (!el.dataset.qp) el.dataset.qp = el.id === 'qm-phonebox' ? 'phone' : 'details'; });
+    }
+    function pagesOf(n) {
+      if (n === 1) return ['cat', 'svc'];
+      if (n === 2) { const p = ['where', 'when']; if (vis($q('qm-truck'))) p.push('truck'); if (vis($q('qm-site'))) p.push('site'); const dv = $q('qm-dev'); if (dv && dv.innerHTML.trim()) p.push('dev'); return p; }
+      if (n === 3) return (qform.etc ? ['where', 'when'] : []).concat(['details', 'phone']);
+      return [n === 1 ? 'svc' : 'done'];
+    }
+    function allPages() {
+      const a = [{ s:1, k:'cat' }, { s:1, k:'svc' }];
+      if (!qform.etc) pagesOf(2).forEach(k => a.push({ s:2, k }));
+      pagesOf(3).forEach(k => a.push({ s:3, k }));
+      return a;
+    }
+    function apply() {
+      const n = qstep, ps = pagesOf(n);
+      if (ps.indexOf(QP.k) < 0) QP.k = ps[0];
+      qmEl.querySelectorAll('[data-qp]').forEach(el => { el.classList.toggle('qp-off', el.dataset.qp === 'none' || el.dataset.qp !== QP.k); });
+      const head = $q('qp-head'), box = $q('qp-top');
+      const showHead = (n >= 1 && n <= 3) && TXT[QP.k];
+      head.classList.toggle('hidden', !showHead);
+      if (showHead) {
+        let sub = TXT[QP.k][1];
+        if (QP.k === 'details' && qform.etc) sub = qform.buy ? '찾으시는 제품을 꼭 적어 주세요.' : '어떤 작업이 필요한지 꼭 적어 주세요.';
+        $q('qp-h').textContent = TXT[QP.k][0]; $q('qp-s').textContent = sub; $q('qp-s').classList.toggle('hidden', !sub);
+      }
+      const all = allPages(), idx = n === 4 ? all.length : Math.max(0, all.findIndex(x => x.s === n && x.k === QP.k));
+      const p = Math.round(idx / all.length * 100);
+      $q('qp-fill').style.width = p + '%'; $q('qp-pct').textContent = p + '%';
+      const pb = box.querySelector('[role="progressbar"]'); if (pb) pb.setAttribute('aria-valuenow', p);
+      const tg = $q('qp-tgt'); tg.textContent = qform.targetName ? '지정 기사님: ' + qform.targetName : ''; tg.classList.toggle('hidden', !qform.targetName || n === 4);
+      const nx = $q('qm-next'); if (n === 1) nx.style.display = QP.k === 'cat' ? 'none' : '';
+      if (n === 2 || n === 3) nx.textContent = (n === 3 && QP.k === 'phone') ? '견적 요청 보내기' : '다음';
+      qErr(''); scroller.scrollTop = 0;
+    }
+    const _qShow24 = qShow;
+    qShow = function (n) {
+      _qShow24(n); tag();
+      const ps = pagesOf(n); if (n === 1 && !QP.back) { QP.k = QP.cat ? 'svc' : 'cat'; QP.back = false; apply(); return; }
+      QP.k = QP.back && ps.length > 1 ? ps[ps.length - 1] : ps[0]; QP.back = false;
+      apply();
+    };
+
+    const _qCat24 = qCat;
+    qCat = function (k) { QP.cat = k || ''; return _qCat24(k); };
+    qmEl.addEventListener('click', e => {
+      const c = e.target.closest('[data-qcat]'), r = e.target.closest('#qp-recat');
+      if (c) { qCat(c.dataset.qcat); QP.k = 'svc'; apply(); }
+      else if (r) { qCat(''); QP.k = 'cat'; apply(); }
+    });
+    function check(k) {
+      if (k === 'cat' && !QP.cat) return '분야를 선택해 주세요.';
+      if (k === 'where' && !$q('qm-gu').value) return '작업할 지역을 선택해 주세요.';
+      if (k === 'when') { const d = $q('qm-date').value; if (!d) return '작업 희망일을 선택해 주세요.'; if (d < today()) return '오늘 이후 날짜를 선택해 주세요.'; }
+      if (k === 'truck') { if (!$q('qm-to').value) return '도착지 지역을 선택해 주세요.'; if (!$q('qm-ton').value) return '희망 차량을 선택해 주세요.'; }
+      if (k === 'site' && ['qm-floor', 'qm-elev', 'qm-ladder', 'qm-park'].some(id => !$q(id).value)) return '현장 정보를 모두 선택해 주세요.';
+      if (k === 'details' && qform.etc && ($q('qm-details').value.trim().length < 5)) return qform.buy ? '찾으시는 제품을 5자 이상 적어 주세요.' : '어떤 작업이 필요한지 5자 이상 적어 주세요.';
+      return '';
+    }
+    function go(dir) {
+      const ps = pagesOf(qstep), i = ps.indexOf(QP.k);
+      if (dir < 0) { if (i > 0) { QP.k = ps[i - 1]; apply(); return true; } QP.back = true; return false; }
+      if (i < ps.length - 1) { const m = check(QP.k); if (m) { qErr(m); return true; } QP.k = ps[i + 1]; apply(); return true; }
+      return false;
+    }
+    document.addEventListener('click', e => {
+      if (!e.isTrusted || qmEl.classList.contains('hidden') || (qstep < 1 || qstep > 3)) return;
+      const nx = e.target.closest('#qm-next'), bk = e.target.closest('#qm-back');
+      if (!nx && !bk) return;
+      if (go(bk ? -1 : 1)) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+    qmEl.addEventListener('change', e => {
+      if (!e.isTrusted || qstep !== 1 || !e.target || e.target.name !== 'qm-svc') return;
+      setTimeout(() => { const b = $q('qm-next'); if (b && qstep === 1) b.click(); }, 150);
+    });
+    qmEl.addEventListener('click', e => {
+      if (!e.isTrusted || qstep !== 2 || QP.k !== 'when' || !e.target.closest('#qm-dchips [data-qd]')) return;
+      setTimeout(() => { if (qstep === 2 && QP.k === 'when' && !go(1)) { const b = $q('qm-next'); if (b) b.click(); } }, 250);
+    });
+  })();
 
 })();
