@@ -138,8 +138,13 @@ if (window.tailwind) tailwind.config = {
       <span class="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울·경기 · 견적 요청 무료</span>
       <h1 class="mt-3 text-[1.75rem] font-black leading-[1.28] lg:mt-5 lg:text-[3.1rem] lg:leading-[1.15]">필요한 기사님,<br><span class="text-amber-300">한 번에 비교</span>하세요</h1>
       <p class="mt-2 text-sm text-white/85 lg:hidden">요청 한 번이면 검증된 기사님 견적이 도착해요.</p>
-      <p class="mt-5 hidden text-lg text-white/85 lg:block"><b class="text-white">에어컨</b> · <b class="text-white">보일러</b> · <b class="text-white">배관·하수구</b> · <b class="text-white">업소용 냉장·주방설비</b> · <b class="text-white">입주청소</b> · <b class="text-white">세탁기·생활가전</b>까지 검증된 기사님을 바로 연결해요.</p>
-      <div class="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold lg:mt-6 lg:text-sm"><span class="rounded-full bg-white/15 px-2.5 py-1"><svg class="h-3.5 w-3.5 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> 견적 요청·비교 0원</span><span class="rounded-full bg-white/15 px-2.5 py-1"><svg class="h-3.5 w-3.5 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg> 24시간 요청 가능</span></div>
+      <div class="mt-6 hidden flex-wrap gap-2 lg:flex"><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">에어컨</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">보일러</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">배관·하수구</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">업소용 냉장·주방설비</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">입주청소</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">세탁기·생활가전</span></div>
+      <p class="mt-3 hidden text-lg text-white/85 lg:block">검증된 기사님을 바로 연결해 드려요.</p>
+      <div class="mt-8 hidden gap-3 lg:grid lg:grid-cols-3">
+        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><p class="mt-2 text-[15px] font-black">검증된 기사님</p><p class="mt-0.5 text-xs text-white/75">가입 심사를 거친 분만</p></div>
+        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z"/></svg><p class="mt-2 text-[15px] font-black">실거래 후기만</p><p class="mt-0.5 text-xs text-white/75">작업 완료 후 작성</p></div>
+        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><p class="mt-2 text-[15px] font-black">번호 비공개 채팅</p><p class="mt-0.5 text-xs text-white/75">안심하고 상담</p></div>
+      </div>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden"><svg class="h-4 w-4 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg> 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
@@ -173,7 +178,7 @@ if (window.tailwind) tailwind.config = {
 
 <!-- 분야 6개 한눈에 -->
 <section id="services" class="mx-auto mt-5 max-w-6xl px-4 lg:-mt-12 lg:px-8">
-  <div id="cats" class="grid grid-cols-3 gap-2.5 lg:grid-cols-9 lg:gap-3"></div>
+  <div id="cats" class="grid grid-cols-3 gap-2.5 lg:grid-cols-10 lg:gap-2"></div>
 </section>
 
 <!-- 14일 보장 -->
@@ -502,10 +507,11 @@ if (window.tailwind) tailwind.config = {
   function build(){
     var g=[].slice.call(box.children).filter(function(e){return e.offsetParent!==null||true});
     if(g.length<3){jump.className=jump.className.replace(/\bflex\b/,'hidden');jump.classList.add('hidden');jump.classList.remove('flex');jump.innerHTML='';return}
-    var html='';
+    var html='',firsts=g.map(function(e){var h=e.firstElementChild;return ((h&&h.textContent)||'').trim().split(/\s+/)[0]});
     g.forEach(function(el,i){
-      var h=el.firstElementChild,t=((h&&h.textContent)||'').trim().split(/\s+/)[0];
+      var h=el.firstElementChild,w=((h&&h.textContent)||'').trim().split(/\s+/),t=w[0];
       if(!t)return;
+      if(firsts.filter(function(x){return x===t}).length>1&&w[1])t=w[1].split('·')[0].length>=2?w[1]:w[0];
       html+='<button type="button" data-j="'+i+'" class="shrink-0 whitespace-nowrap rounded-full border border-mist bg-white px-3.5 py-1.5 text-sm font-bold text-sea shadow-sm active:scale-95">'+t.replace(/[<>&]/g,'')+'</button>';
     });
     jump.innerHTML=html;jump.classList.remove('hidden');jump.classList.add('flex');
