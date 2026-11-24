@@ -1189,12 +1189,13 @@
         if (!S.admin || document.getElementById('doc-unchecked')) return;
         const h = [...document.querySelectorAll('#pview h2')].find(x => x.textContent.trim() === '기사 가입 승인'); if (!h) return;
         const sec = h.closest('section') || h.parentElement;
-        const list = (S.adminPros || []).filter(p => p.approval === 'APPROVED' && p.biz_doc && !p.doc_checked_at);
+        const all = (S.adminPros || []).filter(p => p.approval === 'APPROVED' && p.biz_doc && !p.doc_checked_at), list = all.slice(0, window.__docN || 5);
         const vt = v => v === 'ok' ? '<span class="font-bold text-cool">국세청 조회 통과</span>' : v === 'unchecked' ? '<span class="text-sea/60">국세청 조회 안 함</span>' : '';
-        sec.insertAdjacentHTML('beforebegin', `<section id="doc-unchecked" class="rounded-3xl border-2 border-sun bg-sun/10 p-6"><h2 class="text-xl font-bold">서류 미확인 기사 ${list.length}명</h2><p class="mt-1 text-sm text-sea/70">서류를 올리면 바로 승인된 분들이에요. 등록증을 열어 상호·대표자를 확인하고 <b>확인 완료</b>를 누르세요. 이상하면 <b>활동 정지</b>를 누르세요.</p>
-          ${list.map(p => `<div class="mt-3 rounded-2xl bg-white p-4"><p class="font-bold">${esc(p.name || '이름 없음')}</p><p class="mt-1 text-xs text-sea/70">${(p.areas || []).map(esc).join(', ')} · 사업자번호 ${p.biz_no ? esc(bizFmt(p.biz_no)) : '미입력'} · ${vt(p.biz_verify)}</p><p class="text-xs text-sea/50">서류 제출 ${fmtT(p.biz_doc_at)}</p><div class="mt-3 flex flex-wrap gap-2">${btn('pdoc', p.id, '사업자등록증 보기', 'p')}${btn('dcheck', p.id, '확인 완료', 'a')}${btn('preject', p.id, '활동 정지', 's')}</div></div>`).join('') || `<div class="mt-3">${empty('확인할 기사가 없어요.')}</div>`}</section>`);
+        sec.insertAdjacentHTML('beforebegin', `<section id="doc-unchecked" class="rounded-3xl border-2 border-sun bg-sun/10 p-6"><h2 class="text-xl font-bold">서류 미확인 기사 ${all.length}명</h2><p class="mt-1 text-sm text-sea/70">서류를 올리면 바로 승인된 분들이에요. 등록증을 열어 상호·대표자를 확인하고 <b>확인 완료</b>를 누르세요. 이상하면 <b>활동 정지</b>를 누르세요.</p>
+          ${list.map(p => `<div class="mt-3 rounded-2xl bg-white p-4"><p class="font-bold">${esc(p.name || '이름 없음')}</p><p class="mt-1 text-xs text-sea/70">${(p.areas || []).map(esc).join(', ')} · 사업자번호 ${p.biz_no ? esc(bizFmt(p.biz_no)) : '미입력'} · ${vt(p.biz_verify)}</p><p class="text-xs text-sea/50">서류 제출 ${fmtT(p.biz_doc_at)}</p><div class="mt-3 flex flex-wrap gap-2">${btn('pdoc', p.id, '사업자등록증 보기', 'p')}${btn('dcheck', p.id, '확인 완료', 'a')}${btn('preject', p.id, '활동 정지', 's')}</div></div>`).join('') || `<div class="mt-3">${empty('확인할 기사가 없어요.')}</div>`}${all.length > list.length ? `<div class="mt-4 text-center">${btn('dmore', '', '더 보기 (' + (all.length - list.length) + '명 남음)', 's')}</div>` : ''}</section>`);
       } catch (_) {}
     };
+    ACT.dmore = () => { window.__docN = (window.__docN || 5) + 5; render(); };
     ACT.dcheck = (id, el) => adminSimple(el, 'admin_mark_doc_checked', { p_pro:id }, '확인 완료로 표시했어요.', ['adminPros']);
   })();
 
