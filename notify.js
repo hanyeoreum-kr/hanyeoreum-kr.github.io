@@ -1246,4 +1246,49 @@
     render = function () { _r.apply(this, arguments); mark(); };
   })();
 
+  /* ---------- 32) 기사 화면: 알림이 꺼져 있을 때만 맨 위에 '알림 켜기' 안내 + 첫 터치 때 알림 허용 창 ---------- */
+  (() => {
+    const need = () => {
+      try {
+        if (!S || !S.user || !S.pro || S.mode !== 'pro') return '';
+        if (hyApns()) return window.__hyTok ? '' : 'default';
+        if (!canNote()) return '';
+        const p = Notification.permission;
+        if (p === 'granted') return '';
+        if (isIOS() && !standalone()) return 'ios';
+        return p === 'denied' ? 'denied' : 'default';
+      } catch (_) { return ''; }
+    };
+    const box = (t, d, b) => `<div id="push-banner" class="mb-4 rounded-2xl border-2 border-sun bg-sun/10 p-4 text-sm"><p class="font-bold">${t}</p><p class="mt-1 leading-relaxed text-sea/80">${d}</p>${b || ''}</div>`;
+    function paintBanner() {
+      try {
+        const old = document.getElementById('push-banner'), n = need(), host = document.getElementById('pview');
+        if (!n || !host || host.classList.contains('hidden')) { if (old) old.remove(); return; }
+        if (old && old.dataset.s === n) return;
+        if (old) old.remove();
+        const html = n === 'denied'
+          ? box('🔕 알림이 차단돼 있어요', '손님 채팅과 새 요청을 놓칠 수 있어요. 휴대폰 설정 → 앱(또는 크롬) → 알림에서 한여름을 허용해 주세요.')
+          : n === 'ios'
+            ? box('🔔 알림이 꺼져 있어요', '아이폰은 홈 화면에 추가한 한여름 앱에서만 알림을 켤 수 있어요.', '<button type="button" data-act="install" class="mt-3 w-full rounded-xl bg-sea py-3 font-bold text-white">홈 화면에 추가하기</button>')
+            : box('🔔 알림이 꺼져 있어요', '켜 두면 새 견적 요청과 손님 채팅을 앱을 닫아도 바로 받아요. 꺼 두면 손님 연락을 놓칠 수 있어요.', '<button type="button" data-act="notifon" class="mt-3 w-full rounded-xl bg-sea py-3 font-bold text-white">알림 켜기</button>');
+        host.insertAdjacentHTML('afterbegin', html);
+        const nb = document.getElementById('push-banner'); if (nb) nb.dataset.s = n;
+      } catch (_) {}
+    }
+    const _r = render;
+    render = function () { _r.apply(this, arguments); paintBanner(); };
+    setInterval(paintBanner, 3000);
+    /* 알림이 꺼진 기사님이 앱을 열고 처음 화면을 누를 때 알림 허용 창을 한 번 띄워요 (하루 2번까지) */
+    let asked = false;
+    document.addEventListener('click', () => {
+      try {
+        if (asked || need() !== 'default') return;
+        let last = 0; try { last = +localStorage.getItem('hy_push_auto') || 0; } catch (_) {}
+        if (Date.now() - last < 12 * 3600e3) return;
+        asked = true; try { localStorage.setItem('hy_push_auto', String(Date.now())); } catch (_) {}
+        setTimeout(() => { try { notifOn(); } catch (_) {} }, 300);
+      } catch (_) {}
+    }, true);
+  })();
+
 })();
