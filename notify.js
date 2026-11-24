@@ -1417,4 +1417,38 @@
     }, true);
   })();
 
+  /* ---------- 38) 내가 보낸 채팅 글/사진 삭제 (상대 화면에는 '삭제된 메시지예요'로 바뀌어요) ---------- */
+  (() => {
+    const GONE = '삭제된 메시지예요';
+    const deletable = m => m && m.sender_id === me() && m.kind !== 'sys' && typeof m.body === 'string'
+      && !m.body.startsWith('[예약안내') && m.body !== GONE;
+    function paint() {
+      try {
+        const box = document.getElementById('chatbox'); if (!box || box.dataset.hydel === '1' || typeof chatCur === 'undefined' || !chatCur) return;
+        const list = S.msgs[chatCur] || [], kids = Array.from(box.children);
+        if (!list.length || kids.length !== list.length) return;
+        box.dataset.hydel = '1';
+        list.forEach((m, i) => {
+          const row = kids[i];
+          if (m.body === GONE) { const sp = row.querySelector('span'); if (sp) sp.style.cssText = 'font-style:italic;opacity:.7'; return; }
+          if (!deletable(m)) return;
+          const t = row.querySelector('p'); if (!t || t.querySelector('[data-hydel]')) return;
+          t.insertAdjacentHTML('beforeend', ' <button type="button" data-hydel="' + m.id + '" class="ml-1 underline" style="font-size:10px;opacity:.9" aria-label="이 메시지 삭제">삭제</button>');
+        });
+      } catch (_) {}
+    }
+    new MutationObserver(paint).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('click', async e => {
+      const b = e.target && e.target.closest && e.target.closest('[data-hydel]'); if (!b || !b.dataset.hydel) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('이 메시지를 삭제할까요?\n상대방 화면에도 "삭제된 메시지예요"로 바뀌어요.')) return;
+      const tid = chatCur; b.disabled = true;
+      try {
+        const { error } = await sb.rpc('delete_my_message', { p_id: +b.dataset.hydel });
+        if (error) throw error;
+        await loadMsgs(tid); chatModal(tid, true); toast('메시지를 삭제했어요.');
+      } catch (_) { b.disabled = false; toast('삭제하지 못했어요. 잠시 뒤 다시 해 주세요.'); }
+    }, true);
+  })();
+
 })();
