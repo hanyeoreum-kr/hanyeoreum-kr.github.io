@@ -18,7 +18,7 @@ const FAR = '기타(지방)';const NEAR = {"가평군":["남양주시","양평�
 const isNear = (areas, gu) => !!gu && (areas || []).some(g => (NEAR[gu] || []).includes(g));
 const place = g => !g ? '' : GU.includes(g) ? '서울 ' + g : GG_ALL.includes(g) ? '경기 ' + g : g;
 const guOpts = (gg, sel = '', extra = []) => `<optgroup label="서울">${GU.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup><optgroup label="${gg === GG_NEAR ? '경기 (서울 인접)' : '경기'}">${gg.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}</optgroup>${extra.map(g => `<option${g === sel ? ' selected' : ''}>${g}</option>`).join('')}`;
-const SVC = { home_repair:'생활가전 수리', home_clean:'세탁기·건조기 청소', home_install:'생활가전 설치·이전', clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', plumb_drain:'하수구·싱크대 막힘', plumb_toilet:'변기 막힘·교체', plumb_thaw:'동파·해빙(배관 녹임)', plumb_leak:'누수 탐지·수리', plumb_pipe:'배관 교체·용접', plumb_fixture:'수전·싱크대·세면대 연결', plumb_jet:'하수관 고압 세척', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도', interior_wallpaper:'도배·장판', interior_tile:'타일·욕실', interior_paint:'도장·페인트', interior_wood:'목공·가구·붙박이', interior_light:'조명·전기', interior_window:'샷시·창호', interior_demo:'철거·폐기물', interior_full:'종합 리모델링' };
+const SVC = { home_repair:'생활가전 수리', home_clean:'세탁기·건조기 청소', home_install:'생활가전 설치·이전', clean_movein:'입주청소', clean_moveout:'이사(퇴거)청소', clean_home:'거주 중 청소', clean_store:'상가·사무실 청소', aircon_install:'에어컨 설치', aircon_repair:'에어컨 수리', aircon_clean:'에어컨 청소', aircon_check:'냉난방 점검', cold_repair:'냉장·냉동 수리', freezer_removal:'냉장·냉동고 철거', heat_repair:'보일러 수리', heat_install:'보일러 교체·설치', heat_clean:'보일러·난방배관 청소', kitchen_repair:'주방설비 수리', kitchen_clean:'후드·덕트 청소', truck:'용달·화물', plumb_drain:'하수구·싱크대 막힘', plumb_toilet:'변기 막힘·교체', plumb_thaw:'동파·해빙(배관 녹임)', plumb_leak:'누수 탐지·수리', plumb_pipe:'배관 교체·용접', plumb_fixture:'수전·싱크대·세면대 연결', plumb_jet:'하수관 고압 세척', freezer_sale:'중고 설비 매입·판매', freezer_stock:'중고 재고 매도', interior_wallpaper:'도배·장판', interior_tile:'타일·욕실', interior_grout:'줄눈 시공', interior_paint:'도장·페인트', interior_wood:'목공·가구·붙박이', interior_light:'조명·전기', interior_window:'샷시·창호', interior_demo:'철거·폐기물', interior_full:'종합 리모델링' };
 /* 서비스 분야 (홈 카드 · 견적 요청 · 기사 전문 분야 공통)
    용달·화물(truck)은 운송주선업 허가 전까지 보류: KINDS_OFF 에서 KINDS 로 옮기면 다시 켜져요 */
 const KINDS = {
@@ -40,7 +40,7 @@ const KINDS_ON = {
     icon:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M17 3l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>' },
   home:{ name:'생활가전', title:'세탁기·건조기 등 생활가전 수리·청소', desc:'세탁기 · 건조기 · 가정용 냉장고 · 식기세척기 · 정수기', pro:'생활가전 전문 기사님', subs:['세탁기', '건조기', '가정용 냉장고·김치냉장고', '식기세척기', '정수기·비데', '전자레인지·오븐', '기타 생활가전'], svcs:['home_repair', 'home_clean', 'home_install'], color:'bg-violet-50 text-violet-700', avatar:'bg-violet-600',
     icon:'<rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M4 7h16"/><circle cx="12" cy="14" r="4.2"/><path d="M7 4.8h.01M9.5 4.8h.01"/>' },
-  interior:{ name:'인테리어', title:'도배·타일·욕실·리모델링 인테리어', desc:'도배·장판 · 타일·욕실 · 도장 · 목공 · 조명 · 샷시 · 종합 리모델링', pro:'인테리어 전문 기사님', subs:['도배·장판', '타일·욕실', '도장·페인트', '목공·가구·붙박이', '조명·전기', '샷시·창호', '철거·폐기물', '종합 리모델링', '기타 인테리어'], svcs:['interior_wallpaper', 'interior_tile', 'interior_paint', 'interior_wood', 'interior_light', 'interior_window', 'interior_demo', 'interior_full'], color:'bg-pink-50 text-pink-700', avatar:'bg-pink-600',
+  interior:{ name:'인테리어', title:'도배·타일·욕실·리모델링 인테리어', desc:'도배·장판 · 타일·욕실 · 줄눈 · 도장 · 목공 · 조명 · 샷시 · 종합 리모델링', pro:'인테리어 전문 기사님', subs:['도배·장판', '타일·욕실', '줄눈 시공', '도장·페인트', '목공·가구·붙박이', '조명·전기', '샷시·창호', '철거·폐기물', '종합 리모델링', '기타 인테리어'], svcs:['interior_wallpaper', 'interior_tile', 'interior_grout', 'interior_paint', 'interior_wood', 'interior_light', 'interior_window', 'interior_demo', 'interior_full'], color:'bg-pink-50 text-pink-700', avatar:'bg-pink-600',
     icon:'<rect x="3.5" y="3" width="14" height="6" rx="1.5"/><path d="M17.5 6H20v5.5h-8V14"/><rect x="10.5" y="14" width="3" height="7" rx="1"/>' }
 };
 const KINDS_OFF = {
@@ -105,7 +105,7 @@ const BANK = (() => { const d = { name:'카카오뱅크', account:'3333-38-57185
 /* 결제: live 키면 모두, test 키면 심사용 테스트 계정(C.TOSS_TEST_EMAIL)에게만 결제창을 보여요 */
 const TOSS_KEY = typeof C.TOSS_CLIENT_KEY === 'string' ? C.TOSS_CLIENT_KEY.trim() : '';
 const tossOn = () => /^live_/.test(TOSS_KEY) || (/^test_/.test(TOSS_KEY) && !!S.user && !!C.TOSS_TEST_EMAIL && (S.user.email || '').toLowerCase() === String(C.TOSS_TEST_EMAIL).toLowerCase());
-const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'l87482305@gmail.com';
+const TERMS_URL = C.TERMS_URL || 'terms.html', PRIVACY_URL = C.PRIVACY_URL || 'privacy.html', CS_EMAIL = C.CS_EMAIL || 'ADMIN_EMAIL_HERE';
 const pad = n => String(n).padStart(2, '0');
 /* 희망일이 2일 넘게 지난 요청: 서버가 마감하기 전이라도 기사님 목록에서는 숨겨요 */
 const reqStale = r => !!(r && r.wish_date && String(r.wish_date).slice(0, 10) < (() => { const d = new Date(Date.now() - 2 * 864e5); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })());
@@ -133,8 +133,8 @@ const errBox = () => `<p id="merr" role="alert" class="mt-3 text-sm font-bold te
 const setErr = m => { const e = $('#merr'); if (e) e.textContent = m || ''; return false; };
 const FREE_CHIP = '<span class="rounded-full bg-cool/15 px-2 py-0.5 text-xs font-bold text-cool">🚚 무료 출장 견적 가능</span>';
 const flat = code => /^(aircon|heat|kitchen|clean|home|plumb|interior)/.test(String(code)) || ['truck', 'cold_repair'].includes(code);
-/* 기사 등급제 (2026-11-21 성사 거래부터: 3,500원 + 최종 금액 × 등급 %) */
-const GRADES = { sprout:{ e:'🐣', n:'새싹', pct:10, c:'bg-lime-50 text-lime-700', need:'처음 시작하는 기사님' }, eagle:{ e:'🦅', n:'우수', pct:7, c:'bg-sky-50 text-sky-700', need:'완료 10건 이상 · 평점 4.5 이상' }, crown:{ e:'👑', n:'베스트', pct:5, c:'bg-amber-50 text-amber-700', need:'완료 30건 이상 · 평점 4.8 이상' } };
+/* 기사 등급제 (2026-11-24 변경: 최종 금액 × 등급 %, 최소 1,500원 · 새싹5 우수4 베스트3) */
+const GRADES = { sprout:{ e:'🐣', n:'새싹', pct:5, c:'bg-lime-50 text-lime-700', need:'처음 시작하는 기사님' }, eagle:{ e:'🦅', n:'우수', pct:4, c:'bg-sky-50 text-sky-700', need:'완료 10건 이상 · 평점 4.5 이상' }, crown:{ e:'👑', n:'베스트', pct:3, c:'bg-amber-50 text-amber-700', need:'완료 30건 이상 · 평점 4.8 이상' } };
 const gradeOf = p => GRADES[(p && p.grade) || 'sprout'] || GRADES.sprout;
 const gbadge = p => { const g = gradeOf(p); return `<span class="rounded-full ${g.c} px-2 py-0.5 text-[11px] font-bold">${g.e} ${g.n} 기사님</span>`; };
 const V2_DEFAULT = Date.parse('2026-11-21T00:00:00+09:00');
@@ -143,9 +143,9 @@ const v2Day = () => { const d = new Date((typeof S !== 'undefined' && S.v2From) 
 const v2Me = () => v2On() || !!(typeof S !== 'undefined' && S.pro && S.pro.fee_v2_at);
 const feeOk = () => v2Me();
 const myPct = () => gradeOf(typeof S !== 'undefined' ? S.pro : null).pct;
-const gradeFee = (price, pct) => 3500 + Math.round((+price || 0) * pct / 100);
+const gradeFee = (price, pct) => Math.max(1500, Math.round((+price || 0) * pct / 100));
 const calcFee = (code, price) => ['freezer_sale', 'freezer_stock'].includes(code) ? 0 : v2Me() ? gradeFee(price, myPct()) : code === 'freezer_removal' ? Math.min(Math.round(price * 0.05), 100000) : flat(code) ? 3500 : 0;
-const feeNote = code => ['freezer_sale', 'freezer_stock'].includes(code) ? '0원 (중고장터)' : v2Me() ? `3,500원 + 최종 금액의 ${myPct()}%` : code === 'freezer_removal' ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
+const feeNote = code => ['freezer_sale', 'freezer_stock'].includes(code) ? '0원 (중고장터)' : v2Me() ? `최종 금액의 ${myPct()}% (최소 1,500원)` : code === 'freezer_removal' ? '거래금액의 5%, 상한 10만 원' : flat(code) ? '3,500원' : '0원';
 const errMsg = e => { const m = (e && (e.message || e.error_description)) || String(e || ''); if (/row-level security/i.test(m)) return '권한이 없거나 조건이 맞지 않아요.'; if (/JWT|session/i.test(m)) return '로그인이 필요해요.'; if (/Failed to fetch|NetworkError/i.test(m)) return '인터넷 연결을 확인해 주세요.'; if (/listings_years_check/i.test(m)) return '연식(4자리 연도) 저장 준비가 안 됐어요. 관리자: supabase_update.sql 을 실행해 주세요.'; if (/violates check constraint/i.test(m)) return '입력한 값 중 저장할 수 없는 값이 있어요. 숫자 칸을 다시 확인해 주세요.'; return m.replace(/^.*?ERROR:\s*/, ''); };
 
 function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3200); }
@@ -336,9 +336,9 @@ const gradeCard = p => {
   const next = key === 'sprout' ? ['eagle', 10, 4.5] : key === 'eagle' ? ['crown', 30, 4.8] : null;
   const goal = next ? `<p class="mt-2 text-sm text-sea/80">다음 등급 ${GRADES[next[0]].e} <b>${GRADES[next[0]].n}</b>까지: 완료 <b>${Math.max(0, next[1] - d)}건</b> 더${avg < next[2] || n < 3 ? ` · 평점 ${next[2]} 이상(후기 3개 이상)` : ''} <span class="text-xs text-sea/60">(지금 완료 ${d}건 · ${n ? '★ ' + avg.toFixed(1) + ' / 후기 ' + n + '개' : '후기 없음'})</span></p>` : '<p class="mt-2 text-sm font-bold text-amber-700">최고 등급이에요. 지금처럼만 유지해 주세요!</p>';
   return `<section class="mt-6 rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 lg:p-6"><div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-xs font-black text-amber-700">내 기사 등급</p><p class="mt-1 text-2xl font-black">${g.e} ${g.n} 기사님</p></div>
-    <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-card"><p class="text-xs text-sea/60">${v2Me() ? '내 수수료' : '동의하면 내 수수료'}</p><p class="font-display text-xl">3,500원 + ${g.pct}%</p></div></div>${goal}
+    <div class="rounded-2xl bg-white px-4 py-3 text-center shadow-card"><p class="text-xs text-sea/60">${v2Me() ? '내 수수료' : '동의하면 내 수수료'}</p><p class="font-display text-xl">${g.pct}% · 최소 1,500원</p></div></div>${goal}
     <div class="mt-3 grid grid-cols-3 gap-2 text-center text-xs">${Object.entries(GRADES).map(([k, x]) => `<div class="rounded-xl ${k === key ? 'bg-sea text-white' : 'bg-white'} px-2 py-2"><p class="font-bold">${x.e} ${x.n}</p><p class="mt-0.5 ${k === key ? 'text-white/80' : 'text-sea/60'}">+${x.pct}%</p></div>`).join('')}</div>
-    ${v2Me() ? '' : `<p class="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-sea/80">📢 수수료가 <b>3,500원 + 최종 결제 금액 × 등급 %</b>로 바뀌었어요. <b>동의하면 바로 적용</b>되고 견적을 낼 수 있어요. 냉장·냉동 철거를 포함한 모든 서비스가 같은 방식이고, <b>중고장터 사고팔기와 내 손님 거래는 0원</b>이에요. <a href="pricing.html" target="_blank" rel="noopener" class="font-bold underline">자세히 보기</a></p>`}
+    ${v2Me() ? '' : `<p class="mt-3 rounded-xl bg-white p-3 text-xs leading-relaxed text-sea/80">📢 수수료가 <b>최종 결제 금액 × 등급 %(최소 1,500원)</b>로 바뀌었어요. <b>동의하면 바로 적용</b>되고 견적을 낼 수 있어요. 냉장·냉동 철거를 포함한 모든 서비스가 같은 방식이고, <b>중고장터 사고팔기와 내 손님 거래는 0원</b>이에요. <a href="pricing.html" target="_blank" rel="noopener" class="font-bold underline">자세히 보기</a></p>`}
     <p class="mt-2 text-xs text-sea/60">등급 배지는 기사님 찾기·견적 비교·프로필에 표시되고, 우수·베스트 기사님은 추천순에서 더 위에 보여요.</p></section>`;
 };
 const rankCard = ks => {
@@ -546,7 +546,7 @@ async function agreeAs(el) {
 }
 function feeModal(qid) {
   openM(head('새 수수료(기사 등급제) 동의') + `<p class="text-sm leading-relaxed text-sea/80">한여름 수수료가 <b>모든 분야 공통</b>으로 바뀌었어요. 동의하면 <b>지금부터 성사되는 거래</b>에 적용되고, 바로 견적을 낼 수 있어요.</p>
-    <div class="mt-3 rounded-2xl bg-ice p-4 text-sm leading-relaxed"><p class="font-black">거래 확정 시 3,500원 + 최종 결제 금액 × 등급 %</p>
+    <div class="mt-3 rounded-2xl bg-ice p-4 text-sm leading-relaxed"><p class="font-black">거래 확정 시 최종 결제 금액 × 등급 % (최소 1,500원)</p>
     <ul class="mt-2 space-y-1">${Object.values(GRADES).map(g => `<li>${g.e} <b>${g.n}</b> ${g.pct}% <span class="text-xs text-sea/60">· ${g.need}</span></li>`).join('')}</ul>
     <p class="mt-2 text-xs text-sea/70">· 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요 (상한 없음)<br>· 냉장·냉동 철거를 포함한 <b>모든 서비스</b>가 같은 방식 · <b>중고장터 사고팔기(재고 판매 포함)·내 손님 거래는 0원</b><br>· 이미 낸 견적이 동의 전에 성사되면 예전 수수료가 적용돼요</p></div>
     <label class="mt-4 flex items-start gap-2 text-sm font-bold"><input id="fv-ck" type="checkbox" class="mt-1 h-4 w-4"><span>위 수수료와 <a href="terms.html#c4" target="_blank" rel="noopener" class="underline">개정 이용약관(제20조·제20조의2)</a>에 동의해요</span></label>${errBox()}
@@ -1168,7 +1168,7 @@ const QMAP = [
   [/보일러|온수|난방|가스\s*보일러/, /교체|설치/, 'heat', 'heat_install', 'heat_repair', /배관|청소/, 'heat_clean'],
   [/하수구|배수구|배수관|막혔|막힘|역류|변기|동파|얼었|해빙|녹임|누수|물이?\s*새|배관|용접|수전|수도꼭지|세면대|싱크대\s*(연결|설치|교체)|고압\s*세척|하수관|오수|맨홀/, /변기/, 'plumb', 'plumb_toilet', 'plumb_drain', /동파|얼었|해빙|녹임|안\s*나와/, 'plumb_thaw', /누수|물이?\s*새|아랫집/, 'plumb_leak', /배관|용접|수전|수도꼭지|세면대|연결|설치|교체/, 'plumb_pipe'],
   [/업소용|쇼케이스|제빙|저온|냉동고|냉장고|냉동|냉장/, /철거|폐업/, 'cold', 'freezer_removal', 'cold_repair', /매입|팔|판매|중고/, 'freezer_sale'],
-  [/인테리어|리모델링|도배|벽지|장판|마루|타일|욕실\s*(공사|리모델링)|페인트|도장|목공|샷시|창호|몰딩|붙박이|조명\s*(교체|설치)/, /도배|벽지|장판|마루/, 'interior', 'interior_wallpaper', 'interior_full', /타일|욕실/, 'interior_tile', /페인트|도장/, 'interior_paint', /목공|붙박이|몰딩/, 'interior_wood', /조명/, 'interior_light', /샷시|창호/, 'interior_window'],
+  [/인테리어|리모델링|도배|벽지|장판|마루|줄눈|폴리|케라|타일|욕실\s*(공사|리모델링)|페인트|도장|목공|샷시|창호|몰딩|붙박이|조명\s*(교체|설치)/, /도배|벽지|장판|마루/, 'interior', 'interior_wallpaper', 'interior_full', /줄눈|폴리아스파틱|케라폭시|에폭시\s*줄눈/, 'interior_grout', /타일|욕실/, 'interior_tile', /페인트|도장/, 'interior_paint', /목공|붙박이|몰딩/, 'interior_wood', /조명/, 'interior_light', /샷시|창호/, 'interior_window'],
   [/주방|후드|덕트|식기세척|가스레인지|오븐|화구/, /청소|후드|덕트/, 'kitchen', 'kitchen_clean', 'kitchen_repair'],
   [/입주|이사|청소|거주|상가|사무실|준공/, /이사\s*(나|퇴거)|퇴거/, 'clean', 'clean_moveout', null, /상가|사무실|매장/, 'clean_store', /거주|살면서|대청소/, 'clean_home', /입주|신축|준공/, 'clean_movein']
 ];
@@ -1515,7 +1515,7 @@ function finModal(c) {
 function feeBoxes() {
   const el = $('#fee-boxes'); if (!el) return;
   const gb = Object.values(GRADES).map(g => `<div class="rounded-3xl bg-white/10 p-4"><p class="text-sm text-white/70">${g.e} ${g.n} 기사님</p><p class="mt-1 text-2xl font-black text-sky-300">+${g.pct}%</p><p class="mt-1 text-[11px] leading-snug text-white/55">${g.need}</p></div>`).join('');
-  el.innerHTML = `<div class="col-span-2 rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">모든 분야 공통 · 거래 확정 시</p><p class="mt-2 text-3xl font-black text-sky-300">3,500원 <span class="text-xl text-white/80">+ 최종 금액의 등급 %</span></p><p class="mt-1 text-xs text-white/55">상한 없음 · 중고장터 사고팔기 0원 · 내 손님 거래 0원</p></div><div class="col-span-2 grid grid-cols-3 gap-2 lg:gap-3">${gb}</div>`;
+  el.innerHTML = `<div class="col-span-2 rounded-3xl bg-white/10 p-5"><p class="text-sm text-white/70">모든 분야 공통 · 거래 확정 시</p><p class="mt-2 text-3xl font-black text-sky-300">3~5% <span class="text-xl text-white/80">최종 금액 기준 · 등급별 (최소 1,500원)</span></p><p class="mt-1 text-xs text-white/55">상한 없음 · 중고장터 사고팔기 0원 · 내 손님 거래 0원</p></div><div class="col-span-2 grid grid-cols-3 gap-2 lg:gap-3">${gb}</div>`;
 }
 async function confirmDeal(el, cid, fin) {
   const c = S.con.find(x => x.id === +cid); if (!c) return;
@@ -1616,7 +1616,7 @@ async function chatModal(tid, keep) {
     try {
       const p = S.pro, key = p.grade || 'sprout', d = +p.done_count || 0, nn = +p.rating_count || 0, avg = nn ? (+p.rating_sum || 0) / nn : 0, cur = gradeOf(p);
       const nx = key === 'sprout' ? ['eagle', 10, 4.5] : key === 'eagle' ? ['crown', 30, 4.8] : null;
-      g = `<br>${cur.e} <b>${cur.n}</b> 기사님 · 수수료 <b>3,500원 + ${cur.pct}%</b>` + (nx ? ` · 완료 <b>${Math.max(0, nx[1] - d)}건</b> 더 하면 ${GRADES[nx[0]].e} <b>${GRADES[nx[0]].n}</b>(${GRADES[nx[0]].pct}%)${avg < nx[2] || nn < 3 ? ` <span class="text-sea/60">(평점 ${nx[2]} 이상·후기 3개 이상 필요)</span>` : ''}` : ' · 최고 등급이에요 👑');
+      g = `<br>${cur.e} <b>${cur.n}</b> 기사님 · 수수료 <b>${cur.pct}% (최소 1,500원)</b>` + (nx ? ` · 완료 <b>${Math.max(0, nx[1] - d)}건</b> 더 하면 ${GRADES[nx[0]].e} <b>${GRADES[nx[0]].n}</b>(${GRADES[nx[0]].pct}%)${avg < nx[2] || nn < 3 ? ` <span class="text-sea/60">(평점 ${nx[2]} 이상·후기 3개 이상 필요)</span>` : ''}` : ' · 최고 등급이에요 👑');
     } catch (_) {}
     return box((c ? '작업이 끝나면 <b>[✅ 거래 확정]</b>을 눌러 주세요. <b>눌러야 계약 확정 건이 되고 완료 건수가 쌓여요.</b>' : '손님이 <b>[합의 내용으로 예약하기]</b>를 누르면 예약이 만들어져요. 작업이 끝나면 <b>[✅ 거래 확정]</b>을 눌러 주세요.') + g);
   })();
@@ -1810,12 +1810,12 @@ function proView() {
   const pc = pendingCharge();
   $('#pview').innerHTML = top + (on ? '' : '<p class="mt-4 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">휴무 중에는 새 견적·매입 제안을 낼 수 없고, 기사찾기에 휴무로 표시돼요.</p>') + `
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-br from-brand to-brand-800 p-6 text-white shadow-lg shadow-brand/30">
-      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 3500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${holdNote()}${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
+      <div><p class="text-sm text-white/70">선충전 예치금${p.balance < 1500 ? ' <span class="ml-2 rounded-full bg-sun px-2.5 py-0.5 text-xs font-bold text-white">잔액 부족</span>' : ''}</p><p class="font-display text-4xl mt-1">${won(p.balance)}</p>${holdNote()}${pc ? `<p class="mt-1 text-xs text-sun font-bold">충전 확인 중 · ${won(pc.amount)}</p>` : ''}</div>
       <div class="flex flex-wrap gap-2"><button type="button" data-act="wallet" class="rounded-2xl bg-white px-5 py-3 text-sm font-black text-brand">충전 · 내역</button></div></div>
-    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 3,500원 + 최종 결제 금액의 등급 %(🐣10 · 🦅7 · 👑5%)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
+    <p class="mt-2 text-xs text-sub">견적 제출은 무료예요. ${v2Me() ? `<b>거래가 확정될 때만</b> 최종 결제 금액의 등급 %(🐣5 · 🦅4 · 👑3%, 최소 1,500원)가 예치금에서 자동 차감돼요. 최종 금액은 고객이 확정할 때 입력하고, 입력하지 않으면 견적 금액으로 계산해요. 중고장터 사고팔기와 내 손님 거래는 0원이고, 고객이 취소하면 차감되지 않아요.` : `<b>거래가 확정될 때만</b> 에어컨·보일러·냉장냉동 수리·주방설비·청소는 건당 3,500원, 냉장·냉동고 철거는 확정 금액의 5%(최대 10만 원)가 예치금에서 자동 차감돼요. 중고장터 사고팔기는 0원이에요. 고객이 취소하면 차감되지 않아요.`}</p>${gradeCard(p)}
     ${p.low ? '<p class="mt-3 rounded-xl bg-sun/15 p-3 text-sm font-bold text-sun">예치금이 부족해 고객이 예약하지 못한 견적이 있어요. 충전하면 고객이 바로 예약할 수 있어요.</p>' : ''}
     <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">${stat('열린 요청', open.length + '건')}${stat('내가 낸 견적', mineQ.length + '건')}${stat('진행 중 예약', cons.filter(c => c.status !== 'completed').length + '건')}${stat('완료 거래', cons.filter(c => c.status === 'completed').length + '건')}</div>
-    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일(명백한 하자 한정). 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">3,500원 + 최종 금액의 등급 %(🐣10 · 🦅7 · 👑5%). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
+    ${p.as_agreed_at ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-sun bg-sun/10 p-5"><div><p class="font-black">견적을 내려면 재점검·보완 보장 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">설비 14일 재점검 · 청소 3일(명백한 하자 한정). 한 번만 동의하면 돼요.</p></div>${btn('asopen', '', '내용 보고 동의하기', 'a')}</section>`}${feeOk() ? '' : `<section class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-3xl border-2 border-brand bg-brand-50 p-5"><div><p class="font-black">견적을 내려면 새 수수료(기사 등급제) 동의가 필요해요</p><p class="mt-1 text-sm text-sea/70">최종 금액의 등급 %(🐣5 · 🦅4 · 👑3%, 최소 1,500원). 한 번만 동의하면 돼요.</p></div>${btn('fvopen', '', '내용 보고 동의하기', 'a')}</section>`}${rankCard(myKinds)}${refCard()}${proChat()}
     <h2 class="mt-10 text-2xl font-black">들어온 견적 요청</h2><p class="mt-1 text-sm text-sub">${myKinds.filter(k => KINDS[k]).map(k => KINDS[k].name).join(' · ') || kd.name} 분야 요청만 보여요. 나를 지정한 요청 → 내 활동 지역 → 📍근처 지역 순서로 나와요.</p>
     <div class="mt-4 grid md:grid-cols-2 gap-4">${open.length ? open.map(proReq).join('') : empty('지금 열린 요청이 없어요. 새 요청이 들어오면 여기에 바로 떠요.')}</div>
     ${myKinds.length ? `<h2 class="mt-10 text-2xl font-black">중고마켓 · 매입 제안</h2><p class="mt-1 text-sm text-sub">에어컨·보일러·냉장고·주방설비 중고를 업체와 소비자가 함께 사고팔아요. 매입 제안은 무료이고 매입 수수료도 0원이에요. 내 분야 물건이 먼저 보여요.</p>
@@ -2822,7 +2822,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   $('#qm-allcat').addEventListener('click', () => qCat(''));
   ['fg', 'fg2'].forEach(id => $('#' + id).innerHTML = '<option value="">전체 지역</option>' + guOpts(GG_ALL));
   const fsvc = $('#fc-svc'), famt = $('#fc-amt'), fupd = () => { const p = Math.max(0, +famt.value || 0), sale = ['freezer_sale', 'freezer_stock'].includes(fsvc.value), gl = Object.values(GRADES).map(g => `${g.e} ${won(gradeFee(p, g.pct))}`).join(' · ');
-    if (true) { $('#fc-out').textContent = sale ? won(0) : won(gradeFee(p, GRADES.sprout.pct)); $('#fc-note').textContent = sale ? '중고장터 사고팔기는 수수료가 없어요' : `🐣 새싹 기준 (3,500원 + 10%) · 등급별: ${gl}`; return; }
+    if (true) { $('#fc-out').textContent = sale ? won(0) : won(gradeFee(p, GRADES.sprout.pct)); $('#fc-note').textContent = sale ? '중고장터 사고팔기는 수수료가 없어요' : `🐣 새싹 기준 (5%, 최소 1,500원) · 등급별: ${gl}`; return; }
     const f = calcFee(fsvc.value, p); $('#fc-out').textContent = won(f); $('#fc-note').textContent = (['freezer_removal', 'freezer_stock'].includes(fsvc.value) ? (f >= 100000 ? '거래금액의 5% · 건당 상한 10만 원이 적용돼요' : '거래금액의 5%') : f ? '건당 정액(부가세 포함) · 금액과 관계없이 같아요' : '중고 매입은 수수료가 없어요') + (sale ? '' : ` · ${v2Day()} 성사 거래부터 등급제: ${gl}`); };
   fsvc.addEventListener('change', fupd); famt.addEventListener('input', fupd); fupd(); feeBoxes();
   const z = BIZ, bizNoD = String(z.bizNo).replace(/\D/g, '');

@@ -383,7 +383,8 @@
   chatModal = async function (tid, keep) { await _chat9(tid, keep); try { stripProFin(); } catch (_) {} };
 
   /* ---------- 10) 관리자: 최종 금액 정정 (수수료 차액 자동 차감·환급) ---------- */
-  const fixPct = c => { const base = c.final_price != null ? c.final_price : c.price; return base > 0 ? Math.round((c.fee - 3500) * 100 / base) : 10; };
+  const fixPct = c => { if (c.fee_pct != null && !isNaN(+c.fee_pct)) return +c.fee_pct; const base = c.final_price != null ? c.final_price : c.price; return base > 0 ? Math.round((c.fee - 3500) * 100 / base) : 5; };
+  const fixNew = (c, v) => (c.base_fee != null && +c.base_fee === 0) ? Math.max(1500, Math.round(v * fixPct(c) / 100)) : 3500 + Math.round(v * fixPct(c) / 100);
   const _adminView10 = adminView;
   adminView = function () {
     _adminView10();
@@ -406,7 +407,7 @@
     menuCur = 'fix';
     const pre = () => { const c = S.con.find(x => x.id === +($('#fx-con') || {}).value), v = moneyVal('#fx-amt'), el = $('#fx-pre'); if (!el || !c) return;
       if (!v) { el.textContent = `지금: 확정 금액 ${won(c.final_price != null ? c.final_price : c.price)} · 수수료 ${won(c.fee)} (등급 ${fixPct(c)}%)`; return; }
-      const nf = 3500 + Math.round(v * fixPct(c) / 100), d = nf - c.fee; el.textContent = `새 수수료 ${won(nf)} (3,500원 + ${fixPct(c)}%) → ${d > 0 ? '기사님 예치금에서 ' + won(d) + ' 추가 차감' : d < 0 ? '기사님께 ' + won(-d) + ' 돌려줌' : '차액 없음'}`; };
+      const nf = fixNew(c, v), d = nf - c.fee; el.textContent = `새 수수료 ${won(nf)} (${fixPct(c)}%${(c.base_fee != null && +c.base_fee === 0) ? ', 최소 1,500원' : ' + 3,500원'}) → ${d > 0 ? '기사님 예치금에서 ' + won(d) + ' 추가 차감' : d < 0 ? '기사님께 ' + won(-d) + ' 돌려줌' : '차액 없음'}`; };
     ['#fx-con', '#fx-amt'].forEach(sel => { const e = $(sel); if (e) { e.addEventListener('input', pre); e.addEventListener('change', pre); } }); pre();
   };
   ACT.fixgo = (id, el) => {
