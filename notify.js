@@ -1584,7 +1584,7 @@
       try {
         const tid = (typeof chatCur !== 'undefined') ? chatCur : 0; if (!tid) return;
         const b = document.querySelector('#mm-body [data-act="qsched"]'); if (!b) return;
-        const t = (S.thr || []).find(x => x.id === tid); if (!t || t.u1 !== me() || !t.contract_id) return;
+        const t = (S.thr || []).find(x => x.id === tid); if (!t || (t.u1 !== me() && t.u2 !== me()) || !t.contract_id) return;
         const c = (S.con || []).find(x => x.id === t.contract_id); if (!c || c.status === 'completed' || c.status === 'cancelled') return;
         b.setAttribute('data-act', 'hysched'); b.setAttribute('data-id', c.id); b.dataset.tid = tid; b.textContent = '📅 일정 직접 변경';
       } catch (_) {}
@@ -1593,11 +1593,11 @@
     ACT.hysched = (id, el) => {
       const c = (S.con || []).find(x => x.id === +id); if (!c) return;
       const tid = +(el && el.dataset.tid) || 0;
-      openM(head('작업 일정 변경') + `<p class="text-sm leading-relaxed">${esc2(c.provider_name)} 기사님과 약속한 <b>작업 날짜</b>를 바꿔요.</p>
+      openM(head('작업 일정 변경') + `<p class="text-sm leading-relaxed">${c.client_id === me() ? esc2(c.provider_name) + ' 기사님과' : esc2(c.client_name) + ' 고객님과'} 약속한 <b>작업 날짜</b>를 바꿔요.</p>
         <p class="mt-2 rounded-xl bg-ice p-3 text-sm">현재 일정 <b>${esc2(c.work_date || '채팅으로 협의')}</b></p>
         <label for="hy-wd" class="mt-4 block text-sm font-bold">바꿀 날짜</label>
         <input id="hy-wd" type="date" min="${today()}" value="${esc2(/^\d{4}-\d{2}-\d{2}$/.test(c.work_date || '') ? c.work_date : '')}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
-        <p class="mt-2 text-xs text-sea/60">바꾸면 기사님께 채팅으로 바로 알려요. 시간은 채팅에서 기사님과 정해 주세요.</p>${errBox()}
+        <p class="mt-2 text-xs text-sea/60">바꾸면 상대방에게 채팅으로 바로 알려요. 시간은 채팅에서 기사님과 정해 주세요.</p>${errBox()}
         <div class="mt-4 flex gap-3"><button type="button" data-act="chatopen" data-id="${tid}" class="${B.s}">취소</button><button type="button" data-act="hysave" data-id="${c.id}" data-tid="${tid}" class="${B.p}">일정 바꾸기</button></div>`);
     };
     ACT.hysave = (id, el) => {
