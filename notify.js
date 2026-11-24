@@ -1643,4 +1643,46 @@
     })();
   })();
 
+
+  /* ---------- 44) 비회원이 기존 계정으로 '로그인'해도 보낸 요청이 따라오게: 로그인 직전 열쇠를 기억했다가 로그인 뒤 옮겨요 ---------- */
+  (() => {
+    const KEY = 'hy_gk';
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const getK = () => { try { return localStorage.getItem(KEY) || ''; } catch (_) { return ''; } };
+    const setK = v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (_) {} };
+    let busyK = false, lastTry = 0;
+    // (가) 비회원일 때: 내 요청의 열쇠를 이 기기에 적어 둬요 (가입/로그인/다른 화면 어디서든 쓰려고)
+    const remember = async () => {
+      try {
+        if (busyK || !sb || !S.user || !S.user.is_anonymous) return;
+        if (Date.now() - lastTry < 4000) return; lastTry = Date.now(); busyK = true;
+        const { data } = await sb.rpc('my_guest_key');
+        if (data && /^\d{1,12}\.[A-Za-z0-9]{16,64}$/.test(data)) setK(data);
+      } catch (_) {} finally { busyK = false; }
+    };
+    // (나) 정식 회원으로 로그인된 뒤: 적어 둔 열쇠로 비회원 때 보낸 요청을 지금 계정으로 옮겨요
+    const merge = async () => {
+      const k = getK(); const m = k && /^(\d{1,12})\.([A-Za-z0-9]{16,64})$/.exec(k);
+      if (!m || !sb || !S.user || S.user.is_anonymous || busyK) return;
+      busyK = true;
+      try {
+        const { data, error } = await sb.rpc('claim_request', { p_request: +m[1], p_key: m[2] });
+        if (!error && data && data.ok) {
+          setK('');
+          if (data.moved) { await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render(); toast('비회원일 때 보낸 견적 요청을 내 계정으로 가져왔어요.'); }
+        } else if (data && (data.reason === 'MEMBER' || data.reason === 'BAD_KEY' || data.reason === 'NOT_FOUND')) setK('');
+      } catch (_) {} finally { busyK = false; }
+    };
+    const tick = () => { if (!S || !S.user) return; if (S.user.is_anonymous) remember(); else merge(); };
+    (async () => {
+      for (let n = 0; n < 60 && !(typeof S !== 'undefined' && sb); n++) await sleep(150);
+      if (typeof S === 'undefined' || !sb) return;
+      setTimeout(tick, 2500);
+      try { sb.auth.onAuthStateChange(() => setTimeout(tick, 1500)); } catch (_) {}
+      let rq = 0; new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; if (S.user && S.user.is_anonymous && (S.req || []).length && !getK()) remember(); }); }).observe(document.body, { childList: true, subtree: true });
+      // 로그인 창을 열 때(가입 아님)도 한 번 더 적어 둬요
+      document.addEventListener('click', () => { if (S.user && S.user.is_anonymous) { lastTry = 0; remember(); } }, true);
+    })();
+  })();
+
 })();
