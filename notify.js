@@ -1439,22 +1439,22 @@
       && !m.body.startsWith('[예약안내') && m.body !== GONE;
     function paint() {
       try {
-        const box = document.getElementById('chatbox'); if (!box || box.dataset.hydel === '1' || typeof chatCur === 'undefined' || !chatCur) return;
+        const box = document.getElementById('chatbox'); if (!box || box.dataset.hyDone === '1' || typeof chatCur === 'undefined' || !chatCur) return;
         const list = S.msgs[chatCur] || [], kids = Array.from(box.children);
         if (!list.length || kids.length !== list.length) return;
-        box.dataset.hydel = '1';
+        box.dataset.hyDone = '1';
         list.forEach((m, i) => {
           const row = kids[i];
           if (m.body === GONE) { const sp = row.querySelector('span'); if (sp) sp.style.cssText = 'font-style:italic;opacity:.7'; return; }
           if (!deletable(m)) return;
-          const t = row.querySelector('p'); if (!t || t.querySelector('[data-hydel]')) return;
+          const t = row.querySelector('p'); if (!t || t.querySelector('button[data-hydel]')) return;
           t.insertAdjacentHTML('beforeend', ' <button type="button" data-hydel="' + m.id + '" class="ml-1 underline" style="font-size:10px;opacity:.9" aria-label="이 메시지 삭제">삭제</button>');
         });
       } catch (_) {}
     }
     let rq38 = 0; new MutationObserver(() => { if (rq38) return; rq38 = requestAnimationFrame(() => { rq38 = 0; paint(); }); }).observe(document.body, { childList: true, subtree: true });
     document.addEventListener('click', async e => {
-      const b = e.target && e.target.closest && e.target.closest('[data-hydel]'); if (!b || !b.dataset.hydel) return;
+      const b = e.target && e.target.closest && e.target.closest('button[data-hydel]'); if (!b || !b.dataset.hydel) return;
       e.preventDefault(); e.stopPropagation();
       if (!confirm('이 메시지를 삭제할까요?\n상대방 화면에도 "삭제된 메시지예요"로 바뀌어요.')) return;
       const tid = chatCur; b.disabled = true;
@@ -1611,6 +1611,36 @@
         toast('작업 일정을 ' + d + '(으)로 바꿨어요.');
       });
     };
+  })();
+
+  /* ---------- 43) 알림톡 '견적 확인' 링크(?k=요청번호.열쇠): 다른 기기에서도 내 견적을 볼 수 있게 요청을 옮겨와요 ---------- */
+  (() => {
+    let p; try { p = new URLSearchParams(location.search); } catch (_) { return; }
+    const k = p.get('k'); const m = k && /^(\d{1,12})\.([A-Za-z0-9]{16,64})$/.exec(k); if (!m) return;
+    const rid = +m[1], key = m[2];
+    try { p.delete('k'); history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p : '') + location.hash); } catch (_) {}
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    (async () => {
+      try {
+        for (let n = 0; n < 40 && typeof S === 'undefined'; n++) await sleep(150);
+        await sleep(1200);
+        if (!sb) return;
+        if (!S.user) {   // 이 기기에 로그인 정보가 없으면 임시 계정을 만들어 그 위로 요청을 옮겨요
+          try { await sb.auth.signInAnonymously(); } catch (_) {}
+          for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150);
+        }
+        if (!S.user) { toast('로그인한 뒤 알림톡 링크를 다시 눌러 주세요.'); return; }
+        const { data, error } = await sb.rpc('claim_request', { p_request: rid, p_key: key });
+        if (error || !data || !data.ok) {
+          const why = data && data.reason;
+          toast(why === 'MEMBER' ? '이미 가입한 계정의 요청이에요. 가입한 이메일로 로그인해 주세요.' : why === 'BAD_KEY' ? '링크가 올바르지 않아요. 알림톡의 버튼을 다시 눌러 주세요.' : '견적을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+          return;
+        }
+        await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); render();
+        toast('내 견적을 불러왔어요.');
+        setTimeout(() => { try { compare(rid); } catch (_) {} }, 400);
+      } catch (_) { try { toast('견적을 불러오지 못했어요. 잠시 뒤 다시 눌러 주세요.'); } catch (__) {} }
+    })();
   })();
 
 })();
