@@ -1148,4 +1148,54 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
   })();
 
+  /* ── 28. 견적은 예치금 없이 낼 수 있게 (수수료는 거래 확정 때만) ───────── */
+  (function () {
+    try {
+      const _qm = quoteModal;
+      quoteModal = function (rid) {
+        const p = S && S.pro, b = p && p.balance;
+        if (p) p.balance = Math.max(+b || 0, 1e9);   /* 화면의 '예치금 부족' 막힘만 건너뛰어요 */
+        try { return _qm(rid); } finally { if (p) p.balance = b; }
+      };
+    } catch (_) {}
+  })();
+
+  /* ── 29. 서류 올리면 바로 승인(국세청 조회) + 관리자 '서류 미확인' 목록 ──── */
+  (function () {
+    const note = (d) => {
+      if (!d) return;
+      if (d.approved) setTimeout(() => { try { toast('승인됐어요! 이제 견적을 낼 수 있어요.'); } catch (_) {} }, 700);
+      else if (d.verdict === 'closed' || d.verdict === 'unregistered') setTimeout(() => { try { toast('사업자번호가 국세청 조회에서 확인되지 않았어요. 관리자가 직접 확인할게요.'); } catch (_) {} }, 700);
+    };
+    const verify = async () => {
+      if (!sb) return null;
+      try { const { data } = await sb.functions.invoke('biz-verify', { body:{} }); return data || null; } catch (_) { return null; }
+    };
+    const _ub = uploadBizDoc;
+    uploadBizDoc = async function (f) { await _ub(f); note(await verify()); };
+    let tried = '';
+    setInterval(async () => {
+      try {
+        const p = S && S.pro; if (!p || p.approval !== 'PENDING' || !p.biz_doc || !p.biz_no || tried === p.id + p.biz_doc + p.biz_no) return;
+        tried = p.id + p.biz_doc + p.biz_no;
+        const d = await verify(); if (d && d.approved) { await load('pro'); render(); note(d); }
+      } catch (_) {}
+    }, 4000);
+
+    const _av = adminView;
+    adminView = function () {
+      _av();
+      try {
+        if (!S.admin || document.getElementById('doc-unchecked')) return;
+        const h = [...document.querySelectorAll('#pview h2')].find(x => x.textContent.trim() === '기사 가입 승인'); if (!h) return;
+        const sec = h.closest('section') || h.parentElement;
+        const list = (S.adminPros || []).filter(p => p.approval === 'APPROVED' && p.biz_doc && !p.doc_checked_at);
+        const vt = v => v === 'ok' ? '<span class="font-bold text-cool">국세청 조회 통과</span>' : v === 'unchecked' ? '<span class="text-sea/60">국세청 조회 안 함</span>' : '';
+        sec.insertAdjacentHTML('beforebegin', `<section id="doc-unchecked" class="rounded-3xl border-2 border-sun bg-sun/10 p-6"><h2 class="text-xl font-bold">서류 미확인 기사 ${list.length}명</h2><p class="mt-1 text-sm text-sea/70">서류를 올리면 바로 승인된 분들이에요. 등록증을 열어 상호·대표자를 확인하고 <b>확인 완료</b>를 누르세요. 이상하면 <b>활동 정지</b>를 누르세요.</p>
+          ${list.map(p => `<div class="mt-3 rounded-2xl bg-white p-4"><p class="font-bold">${esc(p.name || '이름 없음')}</p><p class="mt-1 text-xs text-sea/70">${(p.areas || []).map(esc).join(', ')} · 사업자번호 ${p.biz_no ? esc(bizFmt(p.biz_no)) : '미입력'} · ${vt(p.biz_verify)}</p><p class="text-xs text-sea/50">서류 제출 ${fmtT(p.biz_doc_at)}</p><div class="mt-3 flex flex-wrap gap-2">${btn('pdoc', p.id, '사업자등록증 보기', 'p')}${btn('dcheck', p.id, '확인 완료', 'a')}${btn('preject', p.id, '활동 정지', 's')}</div></div>`).join('') || `<div class="mt-3">${empty('확인할 기사가 없어요.')}</div>`}</section>`);
+      } catch (_) {}
+    };
+    ACT.dcheck = (id, el) => adminSimple(el, 'admin_mark_doc_checked', { p_pro:id }, '확인 완료로 표시했어요.', ['adminPros']);
+  })();
+
 })();
