@@ -1360,4 +1360,37 @@
     new MutationObserver(() => { const i = document.getElementById('chat-in'); if (i && !i.dataset.kbfit) { i.dataset.kbfit = '1'; fit(); } }).observe(document.body, { childList: true, subtree: true });
   })();
 
+  /* ---------- 36) 채팅 사진: 새 창으로 나가지 않고 화면 안에서 크게 보기 + 닫기 버튼 ---------- */
+  (() => {
+    let box = null, pushed = false;
+    const close = (fromPop) => {
+      if (!box) return; box.remove(); box = null;
+      if (pushed && !fromPop) { pushed = false; try { history.back(); } catch (_) {} } else pushed = false;
+    };
+    const open = url => {
+      close();
+      box = document.createElement('div');
+      box.id = 'chat-photo-view';
+      box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', '사진 크게 보기');
+      box.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:3.5rem 0.5rem 1rem';
+      const img = document.createElement('img');
+      img.src = url; img.alt = '보낸 사진'; img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:8px';
+      const x = document.createElement('button');
+      x.type = 'button'; x.textContent = '✕ 닫기';
+      x.style.cssText = 'position:absolute;top:max(.75rem,env(safe-area-inset-top));right:.75rem;background:#fff;color:#0b2a3c;font-weight:800;font-size:15px;padding:.6rem 1rem;border-radius:999px;border:0;box-shadow:0 2px 8px rgba(0,0,0,.4)';
+      x.addEventListener('click', e => { e.stopPropagation(); close(); });
+      box.addEventListener('click', e => { if (e.target !== img) close(); });
+      box.appendChild(img); box.appendChild(x); document.body.appendChild(box);
+      try { history.pushState({ hyPhoto: 1 }, ''); pushed = true; } catch (_) {}
+      try { x.focus(); } catch (_) {}
+    };
+    document.addEventListener('click', e => {
+      const a = e.target && e.target.closest && e.target.closest('#chatbox a[href]'); if (!a) return;
+      const im = a.querySelector('img'); if (!im) return;
+      e.preventDefault(); e.stopPropagation(); open(a.getAttribute('href'));
+    }, true);
+    addEventListener('popstate', () => { if (box) close(true); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && box) { e.stopPropagation(); close(); } }, true);
+  })();
+
 })();
