@@ -1075,4 +1075,77 @@
     setTimeout(addBtn, 800); setTimeout(addBtn, 2500);
   })();
 
+  /* ---------- 26) 채팅을 보내면 상대방에게 카톡 알림 (서버가 5분에 한 번만 보내요) ---------- */
+  (() => {
+    const ping = tid => { try { if (sb && tid) sb.functions.invoke('alimtalk', { body:{ chat_thread:+tid } }).catch(() => {}); } catch (_) {} };
+    if (typeof csend === 'function') { const _cs = csend; csend = async function (el, tid) { const r = await _cs(el, tid); ping(tid); return r; }; }
+    if (typeof sendChatPhoto === 'function') { const _sp = sendChatPhoto; sendChatPhoto = async function (f) { const tid = (typeof chatCur !== 'undefined') ? chatCur : 0; const r = await _sp(f); ping(tid); return r; }; }
+  })();
+
+  /* ---------- 27) 하단 메뉴 '인테리어' → '채팅' (채팅 목록 + 안 읽은 채팅 숫자) ---------- */
+  (() => {
+    const $q = id => document.getElementById(id);
+    const mine = t => (t.u1 === me() ? t.u1_read_at : t.u2_read_at) || 0;
+    const IC = '<svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v8a2.5 2.5 0 01-2.5 2.5H10l-4.5 4v-4H6.5A2.5 2.5 0 014 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4"/></svg>';
+    let btn = null, info = { n:0, last:{}, cnt:{} }, busyC = false;
+
+    function swapTab() {
+      const b = document.querySelector('#mbar-c [data-act="qcat"][data-id="interior"]');
+      if (!b || b.dataset.chat) return;
+      b.dataset.chat = '1'; b.setAttribute('data-act', 'chatlist'); b.removeAttribute('data-id'); b.id = 'mbar-chat';
+      b.innerHTML = IC + '<span>채팅</span>'; btn = b; paint();
+    }
+    function paint() { if (btn) setBadge(btn, Math.min(info.n, 99)); }
+
+    /* 안 읽은 메시지 수 + 방마다 마지막 메시지를 한 번에 가져와요 */
+    async function refresh() {
+      if (busyC || !sb || !S.user) { info = { n:0, last:{}, cnt:{} }; paint(); return; }
+      busyC = true;
+      try {
+        await load('thr');
+        const ids = (S.thr || []).filter(t => t.u1 === me() || t.u2 === me()).map(t => t.id);
+        if (!ids.length) { info = { n:0, last:{}, cnt:{} }; return; }
+        const { data } = await sb.from('messages').select('id, thread_id, sender_id, kind, body, created_at')
+          .in('thread_id', ids).gte('created_at', new Date(Date.now() - 30 * 864e5).toISOString()).order('id', { ascending:false }).limit(800);
+        const last = {}, cnt = {}; let n = 0;
+        const rd = {}; (S.thr || []).forEach(t => { rd[t.id] = mine(t); });
+        for (const m of (data || [])) {
+          if (!last[m.thread_id]) last[m.thread_id] = m;
+          if (m.sender_id && m.sender_id !== me() && m.kind !== 'sys' && (!rd[m.thread_id] || T(m.created_at) > T(rd[m.thread_id]))) { cnt[m.thread_id] = (cnt[m.thread_id] || 0) + 1; n++; }
+        }
+        info = { n, last, cnt };
+      } catch (_) {} finally { busyC = false; paint(); }
+    }
+
+    const prev = m => !m ? '아직 대화가 없어요' : m.kind === 'photo' ? '📷 사진' : String(m.body || '').replace(/\s+/g, ' ').slice(0, 40);
+    async function openList() {
+      if (!S.user) { toast('로그인하면 기사님과의 채팅을 볼 수 있어요.'); return authModal('login', 'customer'); }
+      openM(head('기사님과 채팅') + '<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">불러오는 중...</p>');
+      await refresh();
+      const ts = (S.thr || []).filter(t => t.u1 === me() || t.u2 === me())
+        .sort((a, b) => T((info.last[b.id] || b).created_at || 0) - T((info.last[a.id] || a).created_at || 0));
+      const rows = ts.map(t => {
+        const other = t.u1 === me() ? thN(t, 'u2') : thN(t, 'u1'), m = info.last[t.id], c = info.cnt[t.id] || 0;
+        return `<button type="button" data-act="chatopen" data-id="${t.id}" class="mt-3 flex w-full items-center gap-3 rounded-2xl border border-mist p-4 text-left hover:bg-ice">
+          <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-50 text-lg font-black text-brand">${esc(String(other || '?').slice(0, 1))}</span>
+          <span class="min-w-0 flex-1"><b class="block truncate">${esc(other || '상대방')}</b><span class="block truncate text-sm ${c ? 'font-bold text-sea' : 'text-sea/60'}">${esc(prev(m))}</span></span>
+          <span class="shrink-0 text-right text-xs text-sea/50">${m ? fmtT(m.created_at) : ''}${c ? `<i class="mt-1 block min-w-[20px] rounded-full bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold not-italic text-white">${c}</i>` : ''}</span>
+        </button>`;
+      }).join('');
+      openM(head('기사님과 채팅') + (rows || empty('아직 채팅이 없어요. 견적을 요청하면 기사님과 이곳에서 대화할 수 있어요.')));
+    }
+    ACT.chatlist = () => { openList(); };
+    ACT.chatopen = id => { chatModal(+id).then(refresh); };
+
+    /* 새 메시지가 오면 숫자를 바로 올려요 / 채팅방을 닫거나 읽으면 다시 계산해요 */
+    const _onNew = onNewMessage;
+    onNewMessage = function (m) { _onNew(m); setTimeout(refresh, 400); };
+    const _mr = markRead;
+    markRead = function (t) { _mr(t); setTimeout(refresh, 1500); };
+    swapTab(); setTimeout(swapTab, 600); setTimeout(swapTab, 2000);
+    new MutationObserver(swapTab).observe(document.getElementById('mbar') || document.body, { childList:true, subtree:true });
+    setTimeout(refresh, 1500); setInterval(refresh, 60000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+  })();
+
 })();
