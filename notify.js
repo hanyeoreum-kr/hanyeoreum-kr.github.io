@@ -384,7 +384,7 @@
 
   /* ---------- 10) 관리자: 최종 금액 정정 (수수료 차액 자동 차감·환급) ---------- */
   const fixPct = c => { if (c.fee_pct != null && !isNaN(+c.fee_pct)) return +c.fee_pct; const base = c.final_price != null ? c.final_price : c.price; return base > 0 ? Math.round((c.fee - 3500) * 100 / base) : 5; };
-  const fixNew = (c, v) => (c.base_fee != null && +c.base_fee === 0) ? Math.max(1500, Math.round(v * fixPct(c) / 100)) : 3500 + Math.round(v * fixPct(c) / 100);
+  const fixNew = (c, v) => (c.base_fee != null && +c.base_fee === 0) ? 1500 + Math.round(v * fixPct(c) / 100) : 3500 + Math.round(v * fixPct(c) / 100);
   const _adminView10 = adminView;
   adminView = function () {
     _adminView10();
@@ -407,7 +407,7 @@
     menuCur = 'fix';
     const pre = () => { const c = S.con.find(x => x.id === +($('#fx-con') || {}).value), v = moneyVal('#fx-amt'), el = $('#fx-pre'); if (!el || !c) return;
       if (!v) { el.textContent = `지금: 확정 금액 ${won(c.final_price != null ? c.final_price : c.price)} · 수수료 ${won(c.fee)} (등급 ${fixPct(c)}%)`; return; }
-      const nf = fixNew(c, v), d = nf - c.fee; el.textContent = `새 수수료 ${won(nf)} (${fixPct(c)}%${(c.base_fee != null && +c.base_fee === 0) ? ', 최소 1,500원' : ' + 3,500원'}) → ${d > 0 ? '기사님 예치금에서 ' + won(d) + ' 추가 차감' : d < 0 ? '기사님께 ' + won(-d) + ' 돌려줌' : '차액 없음'}`; };
+      const nf = fixNew(c, v), d = nf - c.fee; el.textContent = `새 수수료 ${won(nf)} (${fixPct(c)}%${(c.base_fee != null && +c.base_fee === 0) ? ' + 1,500원' : ' + 3,500원'}) → ${d > 0 ? '기사님 예치금에서 ' + won(d) + ' 추가 차감' : d < 0 ? '기사님께 ' + won(-d) + ' 돌려줌' : '차액 없음'}`; };
     ['#fx-con', '#fx-amt'].forEach(sel => { const e = $(sel); if (e) { e.addEventListener('input', pre); e.addEventListener('change', pre); } }); pre();
   };
   ACT.fixgo = (id, el) => {
@@ -573,6 +573,7 @@
   proView = function () {
     _proView19();
     try {
+      return; // 공지 내림
       if (!KINDS.plumb || !S.pro || document.getElementById('note-plumb')) return;
       const has = proKinds(S.pro).includes('plumb');
       if (noteSeen()) return;   // 한 번 닫았으면 다시 안 떠요
@@ -594,6 +595,7 @@
   proView = function () {
     _proView192();
     try {
+      return; // 공지 내림
       if (!KINDS.interior || !S.pro || document.getElementById('note-interior')) return;
       let seen = false; try { seen = localStorage.getItem(IN_NOTE) === '1'; } catch (_) {}
       const has = proKinds(S.pro).includes('interior');
@@ -1290,6 +1292,52 @@
         setTimeout(() => { try { notifOn(); } catch (_) {} }, 300);
       } catch (_) {}
     }, true);
+  })();
+
+  /* ---------- 33) 기사님이 기사 화면을 열면 '수수료가 낮아졌어요' 안내 (한 번만) ---------- */
+  (() => {
+    const KEY = 'hy_fee_notice_20261124';
+    let shown = false;
+    const seen = () => { try { return localStorage.getItem(KEY) === '1'; } catch (_) { return false; } };
+    function show() {
+      try {
+        if (shown || seen() || !S || !S.user || !S.pro || S.mode !== 'pro') return;
+        return; // 팝업은 쓰지 않고 아래 공지 카드로 안내해요
+        if (typeof mmOpen === 'function' && mmOpen()) return;
+        shown = true; try { localStorage.setItem(KEY, '1'); } catch (_) {}
+        const row = (n, a, b) => `<div class="flex items-center justify-between rounded-xl bg-ice px-4 py-3 text-sm"><span class="font-bold">${n}</span><span><s class="text-sea/50">${a}</s> <b class="text-brand">→ ${b}</b></span></div>`;
+        openM(head('📢 수수료가 낮아졌어요') + `<p class="leading-relaxed text-sea/80">기사님들의 의견을 듣고 수수료를 낮췄어요. 견적은 지금처럼 무료이고, <b>거래가 확정될 때만</b> 아래 수수료가 예치금에서 차감돼요.</p>
+          <div class="mt-4 space-y-2">${row('🐣 새싹', '10%', '5%')}${row('🦅 우수', '7%', '4%')}${row('👑 베스트', '5%', '3%')}</div>
+          <ul class="mt-4 space-y-1 text-sm leading-relaxed text-sea/80"><li>✓ 정액이 3,500원에서 1,500원으로 낮아졌어요.</li><li>✓ 수수료 = 1,500원 + 최종 금액 × 등급 %</li><li>✓ 아직 확정 전인 거래부터 새 기준으로 계산돼요.</li></ul>
+          <button type="button" data-mclose class="mt-5 w-full rounded-2xl bg-sea py-4 font-bold text-white">확인했어요</button>`);
+      } catch (_) {}
+    }
+    const _r = render;
+    render = function () { _r.apply(this, arguments); setTimeout(show, 1200); };
+  })();
+
+  /* ---------- 34) 기사 화면 공지 카드: 수수료가 낮아졌어요 ---------- */
+  (() => {
+    const K = 'hy_fee_card_20261124';
+    const closed = () => { try { return localStorage.getItem(K) === '1'; } catch (_) { return false; } };
+    const _pv = proView;
+    proView = function () {
+      _pv();
+      try {
+        if (!S.pro || closed() || document.getElementById('note-fee')) return;
+        const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
+        top.insertAdjacentHTML('afterend', `<section id="note-fee" class="mt-6 rounded-3xl border-2 border-emerald-300 bg-emerald-50 p-4 sm:p-5">
+          <div class="flex items-start justify-between gap-3"><p class="text-xs font-black tracking-wide text-emerald-700">📢 한여름 공지 · NEW</p><button type="button" data-act="notefeex" aria-label="공지 닫기" class="-m-1 rounded-full px-2 text-lg leading-none text-sea/50">×</button></div>
+          <h2 class="mt-1 text-lg font-black lg:text-xl">💰 수수료가 낮아졌어요</h2>
+          <p class="mt-1 text-sm leading-relaxed text-sea/80">견적은 지금처럼 무료이고, <b>거래가 확정될 때만</b> 예치금에서 차감돼요.</p>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
+            <div class="rounded-xl bg-white px-2 py-3"><p class="font-bold">🐣 새싹</p><p><s class="text-sea/50">10%</s> <b class="text-brand">→ 5%</b></p></div>
+            <div class="rounded-xl bg-white px-2 py-3"><p class="font-bold">🦅 우수</p><p><s class="text-sea/50">7%</s> <b class="text-brand">→ 4%</b></p></div>
+            <div class="rounded-xl bg-white px-2 py-3"><p class="font-bold">👑 베스트</p><p><s class="text-sea/50">5%</s> <b class="text-brand">→ 3%</b></p></div></div>
+          <p class="mt-2 text-xs leading-relaxed text-sea/60">수수료 = 1,500원 + 최종 금액 × 등급 % · 정액이 3,500원 → 1,500원으로 낮아졌어요 · 확정 전인 거래부터 새 기준이에요.</p></section>`);
+      } catch (_) {}
+    };
+    ACT.notefeex = () => { try { localStorage.setItem(K, '1'); } catch (_) {} const n = document.getElementById('note-fee'); if (n) n.remove(); };
   })();
 
 })();
