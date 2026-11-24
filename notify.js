@@ -1394,4 +1394,27 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && box) { e.stopPropagation(); close(); } }, true);
   })();
 
+  /* ---------- 37) 채팅 사진 여러 장 한 번에 보내기 (앨범에서 최대 10장) ---------- */
+  (() => {
+    const MAX = 10; let sending = false;
+    const mark = () => { const i = document.getElementById('chat-photo'); if (i && !i.multiple) i.multiple = true; };
+    new MutationObserver(mark).observe(document.body, { childList: true, subtree: true }); mark();
+    document.addEventListener('change', async e => {
+      const el = e.target; if (!el || el.id !== 'chat-photo' || !el.files || el.files.length < 2) return;
+      e.stopImmediatePropagation(); e.stopPropagation();
+      if (sending) { el.value = ''; return; }
+      let fs = Array.from(el.files).filter(f => /^image\//.test(f.type || 'image/'));
+      el.value = '';
+      if (fs.length > MAX) { try { toast('사진은 한 번에 ' + MAX + '장까지 보낼 수 있어요. 앞의 ' + MAX + '장만 보내요.'); } catch (_) {} fs = fs.slice(0, MAX); }
+      sending = true;
+      try {
+        for (let n = 0; n < fs.length; n++) {
+          try { toast('사진을 보내는 중이에요... (' + (n + 1) + '/' + fs.length + ')'); } catch (_) {}
+          await sendChatPhoto(fs[n]);
+        }
+        try { toast('사진 ' + fs.length + '장을 보냈어요.'); } catch (_) {}
+      } catch (_) {} finally { sending = false; }
+    }, true);
+  })();
+
 })();
