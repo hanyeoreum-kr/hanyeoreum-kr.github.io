@@ -1129,11 +1129,9 @@
     }
 
     const prev = m => !m ? '아직 대화가 없어요' : m.kind === 'photo' ? '📷 사진' : String(m.body || '').replace(/\s+/g, ' ').slice(0, 40);
-    async function openList() {
-      if (!S.user) { toast('로그인하면 기사님과의 채팅을 볼 수 있어요.'); return authModal('login', 'customer'); }
+    let listSig = '';
+    function listHtml() {
       const T0 = (S.mode === 'customer' || !S.pro) ? '기사님과 채팅' : '손님과 채팅';
-      openM(head(T0) + '<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">불러오는 중...</p>');
-      await refresh();
       const ts = (S.thr || []).filter(t => t.u1 === me() || t.u2 === me())
         .sort((a, b) => T((info.last[b.id] || b).created_at || 0) - T((info.last[a.id] || a).created_at || 0));
       const rows = ts.map(t => {
@@ -1144,7 +1142,24 @@
           <span class="shrink-0 text-right text-xs text-sea/50">${m ? fmtT(m.created_at) : ''}${c ? `<i class="mt-1 block min-w-[20px] rounded-full bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold not-italic text-white">${c}</i>` : ''}</span>
         </button>`;
       }).join('');
-      openM(head(T0) + (rows || empty(T0 === '손님과 채팅' ? '아직 채팅이 없어요. 견적을 보내면 손님과 이곳에서 대화할 수 있어요.' : '아직 채팅이 없어요. 견적을 요청하면 기사님과 이곳에서 대화할 수 있어요.')));
+      return { sig: ts.map(t => t.id + ':' + ((info.last[t.id] || {}).id || 0) + ':' + (info.cnt[t.id] || 0)).join('|'),
+        html: head(T0) + (rows || empty(T0 === '손님과 채팅' ? '아직 채팅이 없어요. 견적을 보내면 손님과 이곳에서 대화할 수 있어요.' : '아직 채팅이 없어요. 견적을 요청하면 기사님과 이곳에서 대화할 수 있어요.')) };
+    }
+    async function openList() {
+      if (!S.user) { toast('로그인하면 기사님과의 채팅을 볼 수 있어요.'); return authModal('login', 'customer'); }
+      const T0 = (S.mode === 'customer' || !S.pro) ? '기사님과 채팅' : '손님과 채팅';
+      const cached = S.thr && S.thr.length && Object.keys(info.last || {}).length;
+      if (cached) {           // 이미 불러온 목록이 있으면 바로 보여주고, 뒤에서 조용히 새로고침 (화면이 깜빡이거나 튀지 않게)
+        const v0 = listHtml(); listSig = v0.sig; openM(v0.html);
+        await refresh();
+        if (menuCur === null && !chatCur && document.querySelector('#mm-body [data-act="chatopen"]')) {
+          const v1 = listHtml(); if (v1.sig !== listSig) { const bd = document.getElementById('mm-body'), st = bd ? bd.scrollTop : 0; listSig = v1.sig; openM(v1.html); if (bd) bd.scrollTop = st; }
+        }
+        return;
+      }
+      openM(head(T0) + '<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">불러오는 중...</p>');
+      await refresh();
+      const v = listHtml(); listSig = v.sig; openM(v.html);
     }
     ACT.chatlist = () => { openList(); };
     ACT.chatopen = id => { chatModal(+id).then(refresh); };
@@ -1398,7 +1413,7 @@
   (() => {
     const MAX = 10; let sending = false;
     const mark = () => { const i = document.getElementById('chat-photo'); if (i && !i.multiple) i.multiple = true; };
-    new MutationObserver(mark).observe(document.body, { childList: true, subtree: true }); mark();
+    let rq42 = 0; new MutationObserver(() => { if (rq42) return; rq42 = requestAnimationFrame(() => { rq42 = 0; mark(); }); }).observe(document.body, { childList: true, subtree: true }); mark();
     document.addEventListener('change', async e => {
       const el = e.target; if (!el || el.id !== 'chat-photo' || !el.files || el.files.length < 2) return;
       e.stopImmediatePropagation(); e.stopPropagation();
@@ -1437,7 +1452,7 @@
         });
       } catch (_) {}
     }
-    new MutationObserver(paint).observe(document.body, { childList: true, subtree: true });
+    let rq38 = 0; new MutationObserver(() => { if (rq38) return; rq38 = requestAnimationFrame(() => { rq38 = 0; paint(); }); }).observe(document.body, { childList: true, subtree: true });
     document.addEventListener('click', async e => {
       const b = e.target && e.target.closest && e.target.closest('[data-hydel]'); if (!b || !b.dataset.hydel) return;
       e.preventDefault(); e.stopPropagation();
@@ -1449,6 +1464,153 @@
         await loadMsgs(tid); chatModal(tid, true); toast('메시지를 삭제했어요.');
       } catch (_) { b.disabled = false; toast('삭제하지 못했어요. 잠시 뒤 다시 해 주세요.'); }
     }, true);
+  })();
+
+  /* ---------- 39) 예약 때 기사님 예치금이 부족하면: 막다른 안내 대신 친절한 안내 창 ---------- */
+  (() => {
+    let lowHit = false;
+    if (typeof rpc === 'function') {
+      const _rpc = rpc;
+      rpc = async function (name, args) { const r = await _rpc.apply(this, arguments); try { if (name === 'accept_quote' && r && r.ok === false) lowHit = true; } catch (_) {} return r; };
+    }
+    if (typeof pick === 'function') {
+      const _pick = pick;
+      pick = async function (el, qid) {
+        lowHit = false;
+        const r = await _pick.apply(this, arguments);
+        if (!lowHit) return r;
+        lowHit = false;
+        try {
+          const t = document.getElementById('toast'); if (t) t.classList.add('hidden');
+          const rid = (typeof cmpCur !== 'undefined') ? cmpCur : 0;
+          openM(head('기사님이 예약 준비 중이에요') + `
+            <p class="leading-relaxed">이 기사님은 지금 <b>예약을 바로 받을 수 없는 상태</b>예요. 기사님 쪽 준비가 끝나면 다시 예약할 수 있어요.</p>
+            <div class="mt-3 rounded-2xl bg-ice p-4 text-sm leading-relaxed">
+              <p class="font-bold">이렇게 해 보세요</p>
+              <ul class="mt-1 list-disc space-y-1 pl-5">
+                <li>다른 기사님의 견적을 골라 예약해 보세요.</li>
+                <li>이 기사님이 좋다면, 잠시 뒤에 <b>예약하기</b>를 다시 눌러 주세요.</li>
+              </ul>
+            </div>
+            <div class="mt-5 flex flex-col gap-2">
+              ${rid ? '<button type="button" data-hycmp="' + rid + '" class="w-full rounded-xl bg-sea py-3 font-bold text-white">다른 견적 보기</button>' : ''}
+              <button type="button" data-mclose class="w-full rounded-xl bg-ice py-3 font-bold">닫기</button>
+            </div>`);
+        } catch (_) {}
+        return r;
+      };
+    }
+    document.addEventListener('click', e => {
+      const b = e.target && e.target.closest && e.target.closest('[data-hycmp]'); if (!b) return;
+      e.preventDefault(); e.stopPropagation();
+      try { compare(+b.dataset.hycmp); } catch (_) {}
+    }, true);
+  })();
+
+  /* ---------- 40) 고객이 예약하려는데 예치금이 모자라면: 기사님께 '얼마 충전하세요' 안내 ---------- */
+  (() => {
+    const need = p => { const t = +(p && p.low_target) || 0, b = +(p && p.balance) || 0; return p && p.low && t > b ? t - b : 0; };
+    const up = n => Math.max(1000, Math.ceil(n / 1000) * 1000);
+    const W = n => (typeof won === 'function' ? won(n) : n.toLocaleString() + '원');
+    const _pv = proView;
+    proView = function () {
+      _pv.apply(this, arguments);
+      try {
+        const p = S.pro, n = need(p); const old = document.getElementById('note-low'); if (old) old.remove();
+        if (!p || !n) return;
+        const pv = document.getElementById('pview'), top = pv && (document.getElementById('req-top') || pv.firstElementChild); if (!top) return;
+        top.insertAdjacentHTML('afterend', `<section id="note-low" class="mt-4 rounded-3xl border-2 border-sun bg-sun/10 p-4 sm:p-5">
+          <p class="text-xs font-black tracking-wide text-sun">⚠️ 고객이 예약하려 했어요</p>
+          <h2 class="mt-1 text-lg font-black">예치금을 <span class="text-brand">${W(up(n))}</span> 이상 충전해 주세요</h2>
+          <p class="mt-1 text-sm leading-relaxed text-sea/80">고객이 기사님 견적으로 예약하려 했지만, 예치금이 부족해서 예약이 되지 않았어요. 충전하면 고객이 바로 예약할 수 있어요.</p>
+          <p class="mt-2 text-xs text-sea/60">예약이 막힌 거래의 수수료 ${W(+p.low_fee || 0)} · 현재 예치금 ${W(+p.balance || 0)} · 부족한 금액 ${W(n)}</p>
+          <button type="button" data-act="wallet" class="mt-3 rounded-xl bg-brand px-5 py-3 text-sm font-black text-white">충전하러 가기</button>
+        </section>`);
+      } catch (_) {}
+    };
+    if (typeof walletModal === 'function') {
+      const _w = walletModal;
+      walletModal = function () {
+        const r = _w.apply(this, arguments);
+        try {
+          const n = need(S.pro); if (!n) return r;
+          const goal = up(n), opts = Array.from(document.querySelectorAll('input[name="ch-amt"]'));
+          const pick = opts.find(o => +o.value >= goal) || opts[opts.length - 1];
+          if (pick) pick.checked = true;
+          const lg = document.querySelector('#mm-body fieldset legend');
+          if (lg && !document.getElementById('low-hint')) lg.insertAdjacentHTML('afterend', '<p id="low-hint" class="mt-1 rounded-lg bg-sun/15 px-3 py-2 text-xs font-bold text-sun">고객 예약을 위해 <b>' + W(goal) + ' 이상</b> 충전이 필요해요. (더 많이 충전해도 돼요)</p>');
+        } catch (_) {}
+        return r;
+      };
+    }
+  })();
+
+  /* ---------- 41) 채팅 목록 정리: 방마다 '어떤 거래인지' 보이고, 끝난 대화는 접어 둬요 ---------- */
+  (() => {
+    const label = c => {
+      if (!c) return '견적 문의 중';
+      const st = c.status === 'completed' ? '거래 완료' : c.status === 'pending' ? '고객 확인 대기' : '예약 확정';
+      let ttl = ''; try { ttl = conTitle(c); } catch (_) {}
+      let wd = ''; try { wd = c.work_date ? ' · ' + wdOf(c) + ' ' + esc(c.work_date) : ''; } catch (_) {}
+      return esc(String(ttl || '')) + wd + ' · ' + st;
+    };
+    function tidy() {
+      try {
+        const body = document.getElementById('mm-body'); if (!body) return;
+        const btns = Array.from(body.querySelectorAll('[data-act="chatopen"]')); if (!btns.length || body.dataset.hytidy === '1') return;
+        body.dataset.hytidy = '1';
+        const old = [];
+        btns.forEach(b => {
+          const t = (S.thr || []).find(x => x.id === +b.dataset.id); if (!t) return;
+          const c = t.contract_id ? (S.con || []).find(x => x.id === t.contract_id) : null;
+          const name = b.querySelector('b'); if (name && !b.querySelector('[data-hysub]')) name.insertAdjacentHTML('afterend', '<span data-hysub class="block truncate text-xs font-bold text-cool">' + label(c) + '</span>');
+          if (c && c.status === 'completed') old.push(b);
+        });
+        if (old.length && old.length < btns.length) {
+          const d = document.createElement('details'); d.className = 'mt-4';
+          d.innerHTML = '<summary class="cursor-pointer rounded-xl bg-ice px-4 py-3 text-sm font-bold text-sea/70">지난 대화 (거래 완료) ' + old.length + '개 펼치기</summary>';
+          old[0].parentNode.insertBefore(d, old[0]);
+          old.forEach(b => d.appendChild(b));
+        }
+      } catch (_) {}
+    }
+    let rq41 = 0; new MutationObserver(() => { if (rq41) return; rq41 = requestAnimationFrame(() => { rq41 = 0; const b = document.getElementById('mm-body'); if (b && !b.querySelector('[data-act="chatopen"]')) { delete b.dataset.hytidy; return; } tidy(); }); }).observe(document.body, { childList: true, subtree: true });
+  })();
+
+  /* ---------- 42) 고객이 작업 일정을 직접 바꾸기 (기사님께는 채팅으로 알려줘요) ---------- */
+  (() => {
+    const esc2 = x => String(x == null ? '' : x).replace(/[&<>"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[ch]));
+    function mark() {
+      try {
+        const tid = (typeof chatCur !== 'undefined') ? chatCur : 0; if (!tid) return;
+        const b = document.querySelector('#mm-body [data-act="qsched"]'); if (!b) return;
+        const t = (S.thr || []).find(x => x.id === tid); if (!t || t.u1 !== me() || !t.contract_id) return;
+        const c = (S.con || []).find(x => x.id === t.contract_id); if (!c || c.status === 'completed' || c.status === 'cancelled') return;
+        b.setAttribute('data-act', 'hysched'); b.setAttribute('data-id', c.id); b.dataset.tid = tid; b.textContent = '📅 일정 직접 변경';
+      } catch (_) {}
+    }
+    let rq42 = 0; new MutationObserver(() => { if (rq42) return; rq42 = requestAnimationFrame(() => { rq42 = 0; mark(); }); }).observe(document.body, { childList: true, subtree: true });
+    ACT.hysched = (id, el) => {
+      const c = (S.con || []).find(x => x.id === +id); if (!c) return;
+      const tid = +(el && el.dataset.tid) || 0;
+      openM(head('작업 일정 변경') + `<p class="text-sm leading-relaxed">${esc2(c.provider_name)} 기사님과 약속한 <b>작업 날짜</b>를 바꿔요.</p>
+        <p class="mt-2 rounded-xl bg-ice p-3 text-sm">현재 일정 <b>${esc2(c.work_date || '채팅으로 협의')}</b></p>
+        <label for="hy-wd" class="mt-4 block text-sm font-bold">바꿀 날짜</label>
+        <input id="hy-wd" type="date" min="${today()}" value="${esc2(/^\d{4}-\d{2}-\d{2}$/.test(c.work_date || '') ? c.work_date : '')}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+        <p class="mt-2 text-xs text-sea/60">바꾸면 기사님께 채팅으로 바로 알려요. 시간은 채팅에서 기사님과 정해 주세요.</p>${errBox()}
+        <div class="mt-4 flex gap-3"><button type="button" data-act="chatopen" data-id="${tid}" class="${B.s}">취소</button><button type="button" data-act="hysave" data-id="${c.id}" data-tid="${tid}" class="${B.p}">일정 바꾸기</button></div>`);
+    };
+    ACT.hysave = (id, el) => {
+      const d = (document.getElementById('hy-wd') || {}).value, tid = +(el && el.dataset.tid) || 0;
+      if (!d || d < today()) return setErr('오늘 이후의 날짜를 선택해 주세요.');
+      return busy(el, async () => {
+        const { error } = await sb.rpc('change_work_date', { p_contract: +id, p_date: d });
+        if (error) { setErr(/cannot|exception/i.test(error.message || '') ? '일정을 바꿀 수 없는 거래예요.' : (error.message || '일정을 바꾸지 못했어요.')); return; }
+        await Promise.all(['con', 'thr'].map(load));
+        if (tid) { try { await loadMsgs(tid); } catch (_) {} try { sb.functions.invoke('alimtalk', { body: { chat_thread: tid } }).catch(() => {}); } catch (_) {} chatModal(tid); }
+        toast('작업 일정을 ' + d + '(으)로 바꿨어요.');
+      });
+    };
   })();
 
 })();
