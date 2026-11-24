@@ -1089,13 +1089,21 @@
     const IC = '<svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v8a2.5 2.5 0 01-2.5 2.5H10l-4.5 4v-4H6.5A2.5 2.5 0 014 13.5z"/><path d="M8.5 8.5h7M8.5 11.5h4"/></svg>';
     let btn = null, info = { n:0, last:{}, cnt:{} }, busyC = false;
 
+    function swapPro() {
+      const p = document.querySelector('#mbar-p [data-act="cs"]');
+      if (!p || p.dataset.chat) return;
+      p.dataset.chat = '1'; p.setAttribute('data-act', 'chatlist'); p.id = 'mbar-pchat';
+      p.innerHTML = IC + '<span>채팅</span>';
+      try { window.__chatMark && window.__chatMark(); paint(); } catch (_) {}
+    }
     function swapTab() {
+      swapPro();
       const b = document.querySelector('#mbar-c [data-act="qcat"][data-id="interior"]');
       if (!b || b.dataset.chat) return;
       b.dataset.chat = '1'; b.setAttribute('data-act', 'chatlist'); b.removeAttribute('data-id'); b.id = 'mbar-chat';
       b.innerHTML = IC + '<span>채팅</span>'; btn = b; paint();
     }
-    function paint() { if (btn) setBadge(btn, Math.min(info.n, 99)); }
+    function paint() { window.__chatN = Math.min(info.n, 99); if (btn) setBadge(btn, window.__chatN); setBadge(document.getElementById('mbar-pchat'), window.__chatN); try { window.__chatMark && window.__chatMark(); } catch (_) {} }
 
     /* 안 읽은 메시지 수 + 방마다 마지막 메시지를 한 번에 가져와요 */
     async function refresh() {
@@ -1120,7 +1128,8 @@
     const prev = m => !m ? '아직 대화가 없어요' : m.kind === 'photo' ? '📷 사진' : String(m.body || '').replace(/\s+/g, ' ').slice(0, 40);
     async function openList() {
       if (!S.user) { toast('로그인하면 기사님과의 채팅을 볼 수 있어요.'); return authModal('login', 'customer'); }
-      openM(head('기사님과 채팅') + '<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">불러오는 중...</p>');
+      const T0 = (S.mode === 'customer' || !S.pro) ? '기사님과 채팅' : '손님과 채팅';
+      openM(head(T0) + '<p class="rounded-2xl bg-ice p-6 text-center text-sea/70">불러오는 중...</p>');
       await refresh();
       const ts = (S.thr || []).filter(t => t.u1 === me() || t.u2 === me())
         .sort((a, b) => T((info.last[b.id] || b).created_at || 0) - T((info.last[a.id] || a).created_at || 0));
@@ -1132,7 +1141,7 @@
           <span class="shrink-0 text-right text-xs text-sea/50">${m ? fmtT(m.created_at) : ''}${c ? `<i class="mt-1 block min-w-[20px] rounded-full bg-sun px-1.5 py-0.5 text-center text-[11px] font-bold not-italic text-white">${c}</i>` : ''}</span>
         </button>`;
       }).join('');
-      openM(head('기사님과 채팅') + (rows || empty('아직 채팅이 없어요. 견적을 요청하면 기사님과 이곳에서 대화할 수 있어요.')));
+      openM(head(T0) + (rows || empty(T0 === '손님과 채팅' ? '아직 채팅이 없어요. 견적을 보내면 손님과 이곳에서 대화할 수 있어요.' : '아직 채팅이 없어요. 견적을 요청하면 기사님과 이곳에서 대화할 수 있어요.')));
     }
     ACT.chatlist = () => { openList(); };
     ACT.chatopen = id => { chatModal(+id).then(refresh); };
@@ -1217,6 +1226,24 @@
       const op = document.querySelector('#svc option[value="interior_tile"]');
       if (op) op.insertAdjacentHTML('afterend', '<option value="interior_grout">줄눈 시공</option>');
     } catch (_) {}
+  })();
+
+  /* ---------- 31) 기사 화면: 안 읽은 채팅이 있으면 아래 메뉴 숫자 + '새 채팅' 표시 + 앱을 열면 안내 ---------- */
+  (() => {
+    let told = false;
+    const proN = () => S.con.filter(c => c.provider_id === me() && c.status !== 'completed').length;
+    function mark() {
+      try {
+        if (!S || !S.user || S.mode === 'customer' || S.mode === 'admin') return;
+        const cn = window.__chatN || 0;
+        const fab = document.getElementById('fab');
+        if (fab && cn && !fab.querySelector('[data-newchat]')) fab.insertAdjacentHTML('beforeend', ` <span data-newchat class="ml-1 rounded-full bg-white px-2 py-0.5 text-xs text-sea">새 채팅 ${cn}</span>`);
+        if (cn && !told) { told = true; toast(`새 채팅이 ${cn}개 있어요. 아래 채팅 탭에서 확인해 주세요.`); }
+      } catch (_) {}
+    }
+    window.__chatMark = mark;
+    const _r = render;
+    render = function () { _r.apply(this, arguments); mark(); };
   })();
 
 })();
