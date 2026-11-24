@@ -1340,4 +1340,24 @@
     ACT.notefeex = () => { try { localStorage.setItem(K, '1'); } catch (_) {} const n = document.getElementById('note-fee'); if (n) n.remove(); };
   })();
 
+  /* ---------- 35) 채팅창: 자판이 올라와도 입력칸이 가려지지 않게 ---------- */
+  (() => {
+    const mob = () => innerWidth < 640;
+    const fit = () => {
+      try {
+        const inp = document.getElementById('chat-in'); if (!inp || !mob()) return;
+        const v = window.visualViewport, box = document.getElementById('chatbox');
+        const kb = v ? Math.max(0, innerHeight - v.height - v.offsetTop) : 0;
+        const open = kb > 80;
+        if (box) { box.style.height = open ? Math.max(120, Math.round((v ? v.height : innerHeight) * 0.3)) + 'px' : ''; box.style.minHeight = open ? '0' : ''; if (open) box.scrollTop = box.scrollHeight; }
+        const row = inp.parentElement; if (row) row.style.cssText = 'position:sticky;bottom:-1.5rem;z-index:5;background:#fff;padding:.5rem 0 .75rem;margin-bottom:-1rem';
+        if (open) setTimeout(() => { try { inp.scrollIntoView({ block: 'end' }); } catch (_) {} }, 50);
+      } catch (_) {}
+    };
+    document.addEventListener('focusin', e => { if (e.target && e.target.id === 'chat-in') { setTimeout(fit, 120); setTimeout(fit, 400); setTimeout(fit, 800); } });
+    document.addEventListener('focusout', e => { if (e.target && e.target.id === 'chat-in') setTimeout(() => { const b = document.getElementById('chatbox'); if (b) { b.style.height = ''; b.style.minHeight = ''; } }, 150); });
+    if (window.visualViewport) { visualViewport.addEventListener('resize', fit); visualViewport.addEventListener('scroll', fit); }
+    new MutationObserver(() => { const i = document.getElementById('chat-in'); if (i && !i.dataset.kbfit) { i.dataset.kbfit = '1'; fit(); } }).observe(document.body, { childList: true, subtree: true });
+  })();
+
 })();
