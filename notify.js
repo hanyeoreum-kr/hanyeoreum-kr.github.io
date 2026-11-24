@@ -1385,8 +1385,9 @@
       try { x.focus(); } catch (_) {}
     };
     document.addEventListener('click', e => {
-      const a = e.target && e.target.closest && e.target.closest('#chatbox a[href]'); if (!a) return;
-      const im = a.querySelector('img'); if (!im) return;
+      const a = e.target && e.target.closest && e.target.closest('a[href]'); if (!a) return;
+      const im = a.querySelector('img'); if (!im || !/^https:\/\//.test(a.getAttribute('href') || '')) return;
+      if (a.closest('#chat-photo-view')) return;
       e.preventDefault(); e.stopPropagation(); open(a.getAttribute('href'));
     }, true);
     addEventListener('popstate', () => { if (box) close(true); });
