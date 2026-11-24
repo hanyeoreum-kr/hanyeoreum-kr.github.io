@@ -1199,4 +1199,24 @@
     ACT.dcheck = (id, el) => adminSimple(el, 'admin_mark_doc_checked', { p_pro:id }, '확인 완료로 표시했어요.', ['adminPros']);
   })();
 
+  /* ---------- 30) '줄눈 시공' 분야 추가 (인테리어 안에 새 항목) ---------- */
+  (() => {
+    try {
+      if (SVC.interior_grout) return;
+      SVC.interior_grout = '줄눈 시공';
+      const K = KINDS && KINDS.interior;
+      if (K) {
+        const i = K.svcs.indexOf('interior_tile'); K.svcs.splice(i < 0 ? K.svcs.length : i + 1, 0, 'interior_grout');
+        const j = (K.subs || []).indexOf('타일·욕실'); if (K.subs) K.subs.splice(j < 0 ? K.subs.length : j + 1, 0, '줄눈 시공');
+      }
+      const tile = document.querySelector('#qm-services input[value="interior_tile"]'), lab = tile && tile.closest('label');
+      if (lab && !document.querySelector('#qm-services input[value="interior_grout"]')) {
+        const c = lab.cloneNode(true), inp = c.querySelector('input');
+        inp.value = 'interior_grout'; inp.checked = false; c.querySelector('span').textContent = '줄눈 시공'; lab.after(c);
+      }
+      const op = document.querySelector('#svc option[value="interior_tile"]');
+      if (op) op.insertAdjacentHTML('afterend', '<option value="interior_grout">줄눈 시공</option>');
+    } catch (_) {}
+  })();
+
 })();
