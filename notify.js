@@ -1973,7 +1973,8 @@
         + '<div class="hy-ft"><p class="a">' + E(r.gu) + ' · ' + E(lab) + '</p><p class="b ' + stt[1] + '">' + stt[0] + '</p></div><span class="hy-fm">' + ago(r.created_at) + '</span></div>';
     };
     const draw = () => {
-      try { if (sessionStorage.getItem(KEY)) return; } catch (_) {}
+      const pc = window.matchMedia('(min-width:1024px)').matches;
+      try { if (!pc && sessionStorage.getItem(KEY)) return; } catch (_) {}
       const cats = document.getElementById('cats');
       if (!cats || document.getElementById('hy-feed') || !rows || !rows.length) return;
       const mv = rows.length >= 4, html = rows.map(row).join('');
@@ -1981,7 +1982,7 @@
       box.innerHTML = '<div class="hy-fh"><span class="hy-fdot"></span><b>지금 한여름</b><button type="button" class="hy-fx" aria-label="닫기">×</button></div>'
         + '<div class="hy-fv' + (mv ? ' mv' : '') + '" style="height:' + (Math.min(rows.length, 3) * 38) + 'px"><div class="hy-fl' + (mv ? ' mv' : '') + '" style="--d:' + (rows.length * 4) + 's">' + html + (mv ? html : '') + '</div></div>';
       if (window.matchMedia('(min-width:1024px)').matches) { box.classList.add('fx'); document.body.appendChild(box); } else cats.parentNode.insertBefore(box, cats);
-      box.querySelector('.hy-fx').onclick = () => { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} box.remove(); };
+      box.querySelector('.hy-fx').onclick = () => { if (!pc) { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} } box.remove(); };
     };
     const fetchF = async () => {
       if (busyF || (rows && Date.now() - last < 300000)) return; busyF = true;
