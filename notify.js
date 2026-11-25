@@ -1967,7 +1967,7 @@
     let rows = null, last = 0, busyF = false;
     const row = r => {
       const k = kOf(r.service), c = IC[k] || IC.home, qn = +r.qn || 0;
-      const stt = r.status === 'completed' ? ['상담 완료', 'ok'] : (r.status === 'confirmed' || r.status === 'matched') ? ['예약 확정', 'ok'] : qn > 0 ? ['견적 ' + qn + '건 도착', 'q'] : ['요청 접수', ''];
+      const stt = r.status === 'completed' ? ['작업 완료', 'ok'] : (r.status === 'confirmed' || r.status === 'matched') ? ['예약 확정', 'ok'] : qn > 0 ? ['상담 진행 중', 'q'] : ['요청 접수', ''];
       const lab = (typeof SVC !== 'undefined' && SVC[r.service]) || (typeof KINDS !== 'undefined' && KINDS[k] && KINDS[k].name) || '';
       return '<div class="hy-fr"><span class="hy-fi" style="background:' + c[0] + ';color:' + c[1] + '"><svg viewBox="0 0 24 24">' + c[2] + '</svg></span>'
         + '<div class="hy-ft"><p class="a">' + E(r.gu) + ' · ' + E(lab) + '</p><p class="b ' + stt[1] + '">' + stt[0] + '</p></div><span class="hy-fm">' + ago(r.created_at) + '</span></div>';
