@@ -1721,8 +1721,8 @@
     const inject = () => {
       const body = document.getElementById('mm-body'); if (!body || body.querySelector('[data-hyfindbox]')) return;
       const anchor = body.querySelector('[data-act="alogin"], [data-act="asignup"]'); if (!anchor || (S.user && !S.user.is_anonymous)) return;
-      const box = document.createElement('div'); box.dataset.hyfindbox = '1'; box.className = 'mt-4 rounded-2xl border border-cool/60 bg-ice p-4';
-      box.innerHTML = '<p class="text-[17px] font-bold leading-snug text-sea">컴퓨터로 견적을 요청하셨나요?</p><p class="mt-1 text-sm font-medium leading-relaxed text-sea/70">카톡 알림을 받고 폰으로 오셨다면, 여기서 내 견적을 찾을 수 있어요.</p><button type="button" data-act="hyfind" class="mt-3 w-full rounded-xl bg-cool px-4 py-3.5 text-[15px] font-bold text-white hover:opacity-90">내 견적 찾기</button>';
+      const box = document.createElement('button'); box.type = 'button'; box.dataset.hyfindbox = '1'; box.dataset.act = 'hyfind'; box.className = 'mt-3 flex w-full items-center justify-between gap-3 rounded-2xl border border-cool/60 bg-ice px-4 py-3 text-left hover:bg-white';
+      box.innerHTML = '<span class="text-[15px] font-bold leading-snug text-sea">📩 컴퓨터로 견적 요청하셨나요? <span class="text-cool">내 견적 찾기</span></span><span class="shrink-0 text-lg font-black text-cool" aria-hidden="true">›</span>';
       const tabs = body.querySelector('[data-act="atab"]'); const row = tabs && tabs.parentElement;
       if (row && row.parentElement === body) row.insertAdjacentElement('afterend', box); else body.appendChild(box);
     };
@@ -1897,6 +1897,34 @@
       } catch (_) {}
     };
     new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; apply(); }); }).observe(document.body, { childList: true, subtree: true });
+  })();
+
+
+  /* ---------- 53) 견적 요청 완료 화면: '가입하세요' 안내를 크고 눈에 띄게 ---------- */
+  (() => {
+    const T0 = '견적이 도착하면 확인할 수 있게 가입해 주세요';
+    const st = document.createElement('style');
+    st.textContent = '@keyframes hyglow{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}50%{box-shadow:0 0 0 10px rgba(37,99,235,0)}}'
+      + '.hy-gj{border:3px solid #2563eb!important;background:linear-gradient(180deg,#eff6ff,#fff)!important;padding:1.25rem!important;animation:hyglow 2s ease-in-out 3}'
+      + '.hy-gj .hy-gt{font-size:19px;line-height:1.35;font-weight:900;color:#0b1b3a}'
+      + '.hy-gj .hy-gs{margin-top:.5rem;font-size:14.5px;line-height:1.55;color:#33496b}'
+      + '.hy-gj .hy-gb{display:inline-block;margin-bottom:.5rem;border-radius:999px;background:#2563eb;color:#fff;font-size:12px;font-weight:800;padding:.2rem .7rem}'
+      + '.hy-gj button[data-act="guestjoin"]{padding-top:.95rem!important;padding-bottom:.95rem!important;font-size:16.5px!important}';
+    document.head.appendChild(st);
+    const run = () => {
+      try {
+        document.querySelectorAll('p.font-bold').forEach(p => {
+          if (!p.textContent.includes(T0)) return;
+          const box = p.parentElement; if (!box || box.classList.contains('hy-gj')) return;
+          box.classList.add('hy-gj');
+          p.className = 'hy-gt'; p.textContent = '내 견적, 잃어버리지 않게 가입해 두세요';
+          p.insertAdjacentHTML('beforebegin', '<span class="hy-gb">1분이면 끝</span><br>');
+          const s = p.nextElementSibling; if (s && s.tagName === 'P') { s.className = 'hy-gs'; s.innerHTML = '가입하면 <b>폰·컴퓨터 어디서든</b> 받은 견적과 채팅을 볼 수 있어요.<br>방금 보낸 요청은 그대로 이어져요.'; }
+        });
+      } catch (_) {}
+    };
+    let rq = 0; new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; run(); }); }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    run();
   })();
 
 })();
