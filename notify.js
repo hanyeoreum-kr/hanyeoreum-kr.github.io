@@ -1932,7 +1932,8 @@
     const KEY = 'hy_feed_off';
     const st = document.createElement('style');
     st.textContent = '.hy-fd{margin:14px 0;background:#fff;border:1px solid #d6dfeb;border-radius:14px;overflow:hidden}'
-      + '@media (min-width:1024px){.hy-fd{max-width:560px;margin:0 0 14px auto}}'
+      + '@keyframes hyin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}'
+      + '.hy-fd.fx{position:fixed;left:24px;bottom:24px;width:300px;margin:0;z-index:40;border:1px solid #d6dfeb;box-shadow:0 12px 32px rgba(15,23,42,.18);animation:hyin .5s ease-out}'
       + '.hy-fh{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid #e4eaf3;font-size:12px;color:#64748b}'
       + '.hy-fh b{font-weight:800;color:#0f172a}'
       + '.hy-fdot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:hyfp 2s infinite}'
@@ -1979,7 +1980,7 @@
       const box = document.createElement('div'); box.id = 'hy-feed'; box.className = 'hy-fd';
       box.innerHTML = '<div class="hy-fh"><span class="hy-fdot"></span><b>지금 한여름</b><button type="button" class="hy-fx" aria-label="닫기">×</button></div>'
         + '<div class="hy-fv' + (mv ? ' mv' : '') + '" style="height:' + (Math.min(rows.length, 3) * 38) + 'px"><div class="hy-fl' + (mv ? ' mv' : '') + '" style="--d:' + (rows.length * 4) + 's">' + html + (mv ? html : '') + '</div></div>';
-      if (window.matchMedia('(min-width:1024px)').matches) { box.style.marginTop = '18px'; cats.parentNode.insertBefore(box, cats.nextSibling); } else cats.parentNode.insertBefore(box, cats);
+      if (window.matchMedia('(min-width:1024px)').matches) { box.classList.add('fx'); document.body.appendChild(box); } else cats.parentNode.insertBefore(box, cats);
       box.querySelector('.hy-fx').onclick = () => { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} box.remove(); };
     };
     const fetchF = async () => {
