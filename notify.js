@@ -1758,4 +1758,40 @@
     })();
   })();
 
+
+  /* ---------- 47) 관리자: '숨김' 처리한 요청도 볼 수 있게 (요청 목록 필터 줄 옆에 '숨김 건 보기') ---------- */
+  (() => {
+    const E = x => String(x == null ? '' : x).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const code = id => { try { return reqCode(id); } catch (_) { return 'REQ-' + String(id).padStart(5, '0'); } };
+    const when = t => { try { return fmtT(t); } catch (_) { return String(t || '').slice(0, 16).replace('T', ' '); } };
+    const stTxt = r => r.status === 'matched' ? '예약 확정' : r.status === 'open' ? '진행' : '마감·취소';
+    let HID = [];
+    const view = () => openM(head('숨긴 요청') + `<p class="text-sm text-sea/70">관리자 목록에서 숨긴 요청이에요. 총 <b>${HID.length}</b>건 (최근 100건까지)</p>
+      <div class="mt-3 max-h-[60vh] overflow-y-auto">${HID.map(r => `<div class="flex items-center justify-between gap-3 border-b border-mist py-3 text-sm"><div class="min-w-0"><b>${E(code(r.id))}</b> <span class="rounded-full bg-ice px-2 py-0.5 text-xs font-bold">${E(stTxt(r))}</span>
+        <p class="mt-1 truncate text-xs text-sea/70">${E((typeof SVC !== 'undefined' && SVC[r.service]) || r.service)} · ${E(r.gu || '')} · 희망일 ${E(r.wish_date || '-')} · 접수 ${E(when(r.created_at))}</p></div>
+        <button type="button" data-act="hyunhide" data-id="${r.id}" class="shrink-0 rounded-full border border-mist px-3 py-1.5 text-xs font-bold hover:bg-ice">목록에 다시 보이기</button></div>`).join('') || '<p class="mt-4 text-sm text-sea/60">숨긴 요청이 없어요.</p>'}</div>
+      ${errBox()}<div class="mt-4"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
+    ACT.hyhidden = async el => {
+      const { data, error } = await sb.from('requests').select('id, service, gu, wish_date, status, created_at, admin_hidden').eq('admin_hidden', true).order('created_at', { ascending: false }).limit(100);
+      if (error) { try { toast('숨긴 요청을 불러오지 못했어요.'); } catch (_) {} return; }
+      HID = data || []; view();
+    };
+    ACT.hyunhide = (id, el) => busy(el, async () => {
+      const { error } = await sb.from('requests').update({ admin_hidden: false }).eq('id', +id);
+      if (error) return setErr('다시 보이게 하지 못했어요. (' + (error.message || '권한') + ')');
+      HID = HID.filter(r => r.id !== +id); try { await load('adminReq'); } catch (_) {} view(); toast('목록에 다시 보이게 했어요.');
+    });
+    const inject = () => {
+      if (typeof S === 'undefined' || !S.admin) return;
+      const g = document.querySelector('[role="group"][aria-label="요청 상태 필터"]'); if (!g || g.dataset.hyHid) return;
+      g.dataset.hyHid = '1';
+      g.insertAdjacentHTML('beforeend', '<button type="button" data-act="hyhidden" class="rounded-full border border-dashed border-mist px-3 py-1.5 text-sm font-bold text-sea/70 hover:bg-ice">숨김 건 보기</button>');
+    };
+    (async () => {
+      for (let n = 0; n < 60 && !(typeof S !== 'undefined' && sb); n++) await sleep(150);
+      let rq = 0; new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; try { inject(); } catch (_) {} }); }).observe(document.body, { childList: true, subtree: true });
+    })();
+  })();
+
 })();
