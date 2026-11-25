@@ -1871,4 +1871,32 @@
     qm.addEventListener('click', e => { try { if (e.target.closest('#qm-next') && typeof qstep !== 'undefined' && qstep === 3 && on('phone')) mark('qsubmit'); } catch (_) {} }, true);
   })();
 
+
+  /* ---------- 52) 관리자 통계 '어디서 멈출까요?': 3단계 이후 세 줄(사진·요청 / 전화번호 / 보내기 누름) 추가 ---------- */
+  (() => {
+    let LATE = null, asked = false, rq = 0;
+    const num = li => { const b = li && li.querySelector('b'); return b ? (parseInt(String(b.textContent).replace(/[^0-9]/g, ''), 10) || 0) : 0; };
+    const find = (ul, t) => [...ul.children].find(li => li.textContent.includes(t));
+    const row = (t, v, prev, top) => {
+      const drop = prev ? Math.round((1 - v / prev) * 100) : 0, w = Math.max(Math.round(v / Math.max(1, top) * 100), v ? 2 : 0);
+      return '<li data-late="1" class="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1"><span class="text-sm">' + t + '</span><b class="text-sm tabular-nums">' + v + '명' + (drop > 0 ? ' <span class="text-xs font-normal text-sun">(-' + drop + '%)</span>' : '') + '</b><span class="col-span-2 h-2 rounded-full bg-ice"><span class="block h-2 rounded-full bg-cool" style="width:' + w + '%"></span></span></li>';
+    };
+    const apply = () => {
+      try {
+        if (typeof S === 'undefined' || !S.admin) return;
+        const h = [...document.querySelectorAll('h3')].find(x => x.textContent.includes('어디서 멈출까요')); if (!h) return;
+        const ul = h.parentElement.querySelector('ul'); if (!ul || ul.querySelector('[data-late]')) return;
+        if (!LATE) { if (!asked) { asked = true; sb.rpc('admin_funnel_late', { p_days: 7 }).then(r => { LATE = r && r.data && !r.error ? r.data : {}; apply(); }, () => { LATE = {}; }); } return; }
+        if (!('qdetails' in LATE) && !('qphone' in LATE) && !('qsubmit' in LATE)) return;
+        const l3 = find(ul, '3단계로'), done = find(ul, '견적 요청 완료'), top = num(ul.children[0]); if (!l3 || !done) return;
+        const a = LATE.qdetails || 0, b = LATE.qphone || 0, c = LATE.qsubmit || 0, v3 = num(l3);
+        done.insertAdjacentHTML('beforebegin', row('사진·요청 입력 화면', a, v3, top) + row('전화번호 입력 화면', b, a, top) + row('보내기 누름', c, b, top));
+        const dn = num(done), d = c ? Math.round((1 - dn / c) * 100) : 0, bb = done.querySelector('b');
+        if (bb) bb.innerHTML = dn + '명' + (d > 0 ? ' <span class="text-xs font-normal text-sun">(-' + d + '%)</span>' : '');
+        const lg = find(ul, '로그인 요구'); if (lg && num(lg) === 0) lg.remove();
+      } catch (_) {}
+    };
+    new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; apply(); }); }).observe(document.body, { childList: true, subtree: true });
+  })();
+
 })();
