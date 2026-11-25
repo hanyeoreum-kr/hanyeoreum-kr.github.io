@@ -1732,4 +1732,30 @@
     })();
   })();
 
+
+  /* ---------- 46) 관리자 '총 회원가입': 가입 없이 견적만 보낸 임시 손님(비회원)은 빼고 진짜 가입자만 세요 ---------- */
+  (() => {
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    let cache = null, at = 0, loading = false;
+    const fmt = n => Number(n).toLocaleString('ko-KR');
+    const paint = () => {
+      const box = document.getElementById('mem-stat'); if (!box || !cache || box.dataset.hyStat === String(at)) return;
+      const pros = (S.adminPros || []).length, tot = Math.max(cache.total, pros);
+      box.dataset.hyStat = String(at);
+      box.innerHTML = `<p class="text-sm text-sea/70">총 회원가입</p><p class="font-display text-2xl sm:text-3xl mt-1">${fmt(tot)}명</p><p class="mt-1 text-xs text-sea/60">고객 ${fmt(Math.max(0, tot - pros))} · 기사님 ${fmt(pros)}${cache.today ? ` · <b class="text-cool">오늘 +${fmt(cache.today)}</b>` : ''}</p><p class="mt-1 text-xs text-sea/50">비회원 ${fmt(cache.guests)}명은 뺐어요</p>`;
+      let g = document.getElementById('mem-stat-guest');
+      if (!g) { g = document.createElement('div'); g.id = 'mem-stat-guest'; g.className = 'rounded-2xl bg-white border-2 border-sun/40 p-4'; box.insertAdjacentElement('afterend', g); }
+      g.innerHTML = `<p class="text-sm text-sea/70">비회원 유입 (가입 전)</p><p class="font-display text-2xl sm:text-3xl mt-1">${fmt(cache.guests)}명</p><p class="mt-1 text-xs text-sea/60">견적 요청한 비회원 <b>${fmt(cache.guests_req || 0)}</b> · 방문만 ${fmt(Math.max(0, cache.guests - (cache.guests_req || 0)))}${cache.guests_today ? ` · <b class="text-cool">오늘 +${fmt(cache.guests_today)}</b>` : ''}</p><p class="mt-1 text-xs text-sea/50">최근 7일 +${fmt(cache.guests_7d || 0)} · 가입으로 바뀐 사람은 회원에 들어가요</p>`;
+    };
+    const load = async () => {
+      if (loading || Date.now() - at < 60000) return; loading = true;
+      try { const { data, error } = await sb.rpc('admin_member_stats'); if (!error && data && typeof data.total === 'number') { cache = data; at = Date.now(); } } catch (_) {} finally { loading = false; }
+      paint();
+    };
+    (async () => {
+      for (let n = 0; n < 60 && !(typeof S !== 'undefined' && sb); n++) await sleep(150);
+      let rq = 0; new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; try { if (document.getElementById('mem-stat') && S.admin) { paint(); load(); } } catch (_) {} }); }).observe(document.body, { childList: true, subtree: true });
+    })();
+  })();
+
 })();
