@@ -1794,4 +1794,29 @@
     })();
   })();
 
+
+  /* ---------- 48) 인테리어 분야 줄이기: 조명·전기 / 목공·가구·붙박이 / 종합 리모델링 빼기 (옛 요청 이름은 그대로 보이게 유지) ---------- */
+  (() => {
+    const DROP_C = ['interior_light', 'interior_wood', 'interior_full'], DROP_S = ['조명·전기', '목공·가구·붙박이', '종합 리모델링'];
+    const apply = () => {
+      try {
+        const K = typeof KINDS !== 'undefined' && KINDS.interior; if (!K) return;
+        if (SVC.interior_full) SVC.interior_full = '기타 인테리어';
+        for (let i = K.svcs.length - 1; i >= 0; i--) if (DROP_C.includes(K.svcs[i])) K.svcs.splice(i, 1);
+        for (let i = (K.subs || []).length - 1; i >= 0; i--) if (DROP_S.includes(K.subs[i])) K.subs.splice(i, 1);
+        K.desc = '도배·장판 · 타일·욕실 · 줄눈 · 도장 · 샷시 · 철거·폐기물';
+        K.title = '도배·타일·욕실·도장 인테리어';
+        DROP_C.forEach(c => {
+          document.querySelectorAll('#qm-services input[value="' + c + '"]').forEach(i => { const l = i.closest('label'); if (l) l.remove(); });
+          document.querySelectorAll('#svc option[value="' + c + '"]').forEach(o => o.remove());
+        });
+        const n = document.getElementById('note-interior');
+        if (n) n.querySelectorAll('p').forEach(p => { if (p.textContent.includes('종합 리모델링')) p.innerHTML = '도배·장판, 타일·욕실, 줄눈, 도장·페인트, 샷시·창호, 철거·폐기물, 기타 인테리어 요청을 받을 수 있어요. 작업 사진이 있는 프로필이 선택을 많이 받아요.'; });
+        document.querySelectorAll('button[data-act$="sub"]').forEach(b => { if (DROP_S.includes(b.dataset.id)) b.remove(); });
+      } catch (_) {}
+    };
+    apply(); let rq = 0;
+    new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; apply(); }); }).observe(document.body, { childList: true, subtree: true });
+  })();
+
 })();
