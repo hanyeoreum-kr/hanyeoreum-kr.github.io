@@ -1932,6 +1932,7 @@
     const KEY = 'hy_feed_off';
     const st = document.createElement('style');
     st.textContent = '.hy-fd{margin:14px 0;background:#fff;border:1px solid #d6dfeb;border-radius:14px;overflow:hidden}'
+      + '@media (min-width:1024px){.hy-fd{max-width:560px;margin:0 auto 14px}}'
       + '.hy-fh{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid #e4eaf3;font-size:12px;color:#64748b}'
       + '.hy-fh b{font-weight:800;color:#0f172a}'
       + '.hy-fdot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:hyfp 2s infinite}'
