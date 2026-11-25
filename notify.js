@@ -1841,4 +1841,34 @@
     });
   })();
 
+
+  /* ---------- 50) 수수료 미리 계산: 모든 분야를 고를 수 있게 (공식은 전부 같고, 중고장터 매입·매도만 0원) ---------- */
+  (() => {
+    try {
+      const sel = document.getElementById('fc-svc'); if (!sel || sel.dataset.allsvc) return; sel.dataset.allsvc = '1';
+      const L = [['aircon_install', '에어컨 설치·수리·청소'], ['heat_repair', '보일러 수리·교체·청소'], ['plumb_drain', '배관·하수구·누수'], ['clean_home', '입주·이사·상가 청소'], ['home_repair', '생활가전 수리·설치·청소'], ['kitchen_repair', '주방설비·후드·덕트'], ['cold_repair', '냉장·냉동 수리'], ['freezer_removal', '냉장·냉동고 철거'], ['interior_paint', '인테리어 (도배·타일·도장·샷시·철거 등)'], ['freezer_stock', '중고장터 판매 (재고 매도) · 0원'], ['freezer_sale', '중고장터 매입 · 0원']];
+      sel.innerHTML = L.map(([v, t]) => '<option value="' + v + '">' + t + '</option>').join('');
+      sel.value = 'aircon_install'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+  })();
+
+
+  /* ---------- 51) 견적 요청 이탈 기록: 3단계 이후(사진·요청 → 전화번호 → 보내기) 어디서 멈추는지 세기 ---------- */
+  (() => {
+    const qm = document.getElementById('qm'); if (!qm) return;
+    const seen = new Set();
+    const mark = k => { try { if (seen.has(k)) return; seen.add(k); if (typeof track === 'function') track(k); } catch (_) {} };
+    const on = k => { const el = qm.querySelector('[data-qp="' + k + '"]'); return !!el && !el.classList.contains('qp-off'); };
+    let rq = 0;
+    const scan = () => {
+      try {
+        if (qm.classList.contains('hidden') || typeof qstep === 'undefined' || qstep !== 3) return;
+        if (on('details')) mark('qdetails');
+        if (on('phone')) mark('qphone');
+      } catch (_) {}
+    };
+    new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; scan(); }); }).observe(qm, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
+    qm.addEventListener('click', e => { try { if (e.target.closest('#qm-next') && typeof qstep !== 'undefined' && qstep === 3 && on('phone')) mark('qsubmit'); } catch (_) {} }, true);
+  })();
+
 })();
