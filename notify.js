@@ -1721,9 +1721,10 @@
     const inject = () => {
       const body = document.getElementById('mm-body'); if (!body || body.querySelector('[data-hyfindbox]')) return;
       const anchor = body.querySelector('[data-act="alogin"], [data-act="asignup"]'); if (!anchor || (S.user && !S.user.is_anonymous)) return;
-      const box = document.createElement('div'); box.dataset.hyfindbox = '1'; box.className = 'mt-5 rounded-xl border border-mist p-3 text-sm';
-      box.innerHTML = '<b>컴퓨터에서 보낸 견적이 안 보이나요?</b><p class="mt-1 text-xs text-sea/70">요청할 때 적은 전화번호와 카톡 알림의 요청번호로 찾을 수 있어요.</p><button type="button" data-act="hyfind" class="mt-2 font-bold text-cool underline">내 요청 찾기</button>';
-      body.appendChild(box);
+      const box = document.createElement('div'); box.dataset.hyfindbox = '1'; box.className = 'mt-4 rounded-2xl border-2 border-cool bg-ice p-4';
+      box.innerHTML = '<p class="text-lg font-black leading-snug text-sea">컴퓨터로 견적을 요청하셨나요?</p><p class="mt-1 text-[15px] font-bold leading-snug text-sea/80">카톡 알림을 받고 폰으로 오셨다면, 여기서 내 견적을 찾을 수 있어요.</p><button type="button" data-act="hyfind" class="mt-3 w-full rounded-xl bg-cool px-4 py-3.5 text-base font-black text-white hover:opacity-90">내 견적 찾기</button>';
+      const tabs = body.querySelector('[data-act="atab"]'); const row = tabs && tabs.parentElement;
+      if (row && row.parentElement === body) row.insertAdjacentElement('afterend', box); else body.appendChild(box);
     };
     (async () => {
       for (let n = 0; n < 60 && !(typeof S !== 'undefined' && sb); n++) await sleep(150);
