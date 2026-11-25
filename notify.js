@@ -1819,4 +1819,26 @@
     new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; apply(); }); }).observe(document.body, { childList: true, subtree: true });
   })();
 
+
+  /* ---------- 49) 폰 자판이 올라와도 로그인·견적 창의 입력칸이 가려지지 않게 (누른 칸을 자동으로 화면 가운데로) ---------- */
+  (() => {
+    const mob = () => innerWidth < 640;
+    const inSheet = el => !!(el && el.closest && el.closest('#mm-body, #qm-box'));
+    const show = el => {
+      try {
+        if (!el || !document.contains(el) || document.activeElement !== el) return;
+        const v = window.visualViewport; if (!v) { el.scrollIntoView({ block: 'center' }); return; }
+        const r = el.getBoundingClientRect(), top = v.offsetTop + 8, bottom = v.offsetTop + v.height - 12;
+        if (r.top < top || r.bottom > bottom) el.scrollIntoView({ block: 'center', behavior: 'auto' });
+      } catch (_) {}
+    };
+    document.addEventListener('focusin', e => {
+      const el = e.target; if (!mob() || !el || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || !inSheet(el)) return;
+      [150, 400, 800].forEach(ms => setTimeout(() => show(el), ms));
+    });
+    if (window.visualViewport) visualViewport.addEventListener('resize', () => {
+      const el = document.activeElement; if (mob() && el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) && inSheet(el)) setTimeout(() => show(el), 120);
+    });
+  })();
+
 })();
