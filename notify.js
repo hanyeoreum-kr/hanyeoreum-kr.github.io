@@ -1690,19 +1690,19 @@
   (() => {
     const E = x => String(x == null ? '' : x).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
     const sleep = ms => new Promise(r => setTimeout(r, ms));
-    const form = () => head('내 견적 요청 찾기') + `<p class="text-sm leading-relaxed text-sea/80">컴퓨터 등 다른 곳에서 견적을 요청하셨나요? <b>요청할 때 적은 전화번호</b>와 <b>카톡 알림에 적힌 요청번호</b>(예: REQ-00036)를 넣어 주세요.</p>
+    const form = () => head('내 견적 요청 찾기') + `<p class="text-sm leading-relaxed text-sea/80">컴퓨터 등 다른 곳에서 견적을 요청하셨나요? <b>요청할 때 적은 전화번호</b>와 <b>카톡 알림에 적힌 요청번호</b>를 넣어 주세요.</p>
       <label for="hy-fp" class="mt-4 block text-sm font-bold">전화번호</label>
       <input id="hy-fp" type="tel" inputmode="numeric" autocomplete="tel" placeholder="01012345678" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
       <label for="hy-fr" class="mt-3 block text-sm font-bold">요청번호</label>
-      <input id="hy-fr" type="text" inputmode="text" autocomplete="off" placeholder="REQ-00036" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
-      <p class="mt-2 text-xs text-sea/60">요청번호는 카카오톡 알림 안에 적혀 있어요. 찾은 뒤 가입하시면 어느 기기에서든 보여요.</p>${errBox()}
+      <div class="mt-2 flex items-center gap-2"><span class="shrink-0 rounded-xl bg-mist px-3 py-3.5 font-black text-sea">REQ-</span><input id="hy-fr" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="00036" class="min-w-0 flex-1 rounded-xl bg-ice px-4 py-3.5"></div>
+      <p class="mt-2 text-xs text-sea/60">카톡 알림에 <b>REQ-00036</b>처럼 적혀 있다면 <b>REQ-</b>는 이미 붙어 있으니 <b>00036</b>만 넣어 주세요. (앞의 0도 그대로 넣어 주세요)</p>${errBox()}
       <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button><button type="button" data-act="hyfindgo" class="${B.p}">내 요청 찾기</button></div>`;
     ACT.hyfind = () => openM(form());
     ACT.hyfindgo = el => {
       const ph = String((document.getElementById('hy-fp') || {}).value || '').replace(/\D/g, '');
       const mm = /(\d{1,12})\s*$/.exec(String((document.getElementById('hy-fr') || {}).value || '').trim());
       if (!/^01[016789]\d{7,8}$/.test(ph)) return setErr('전화번호를 숫자만 정확히 넣어 주세요.');
-      if (!mm) return setErr('요청번호를 확인해 주세요. (예: REQ-00036)');
+      if (!mm) return setErr('요청번호의 숫자를 넣어 주세요. (예: 00036)');
       const rid = +mm[1];
       return busy(el, async () => {
         if (!S.user) { try { await sb.auth.signInAnonymously(); } catch (_) {} for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150); }
