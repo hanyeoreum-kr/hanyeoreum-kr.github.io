@@ -1685,4 +1685,50 @@
     })();
   })();
 
+
+  /* ---------- 45) 컴퓨터로 요청 → 폰에서 알림톡 보고 가입/로그인: '전화번호 + 요청번호(REQ-xxxxx)'로 내 요청 찾기 ---------- */
+  (() => {
+    const E = x => String(x == null ? '' : x).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const form = () => head('내 견적 요청 찾기') + `<p class="text-sm leading-relaxed text-sea/80">컴퓨터 등 다른 곳에서 견적을 요청하셨나요? <b>요청할 때 적은 전화번호</b>와 <b>카톡 알림에 적힌 요청번호</b>(예: REQ-00036)를 넣어 주세요.</p>
+      <label for="hy-fp" class="mt-4 block text-sm font-bold">전화번호</label>
+      <input id="hy-fp" type="tel" inputmode="numeric" autocomplete="tel" placeholder="01012345678" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+      <label for="hy-fr" class="mt-3 block text-sm font-bold">요청번호</label>
+      <input id="hy-fr" type="text" inputmode="text" autocomplete="off" placeholder="REQ-00036" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+      <p class="mt-2 text-xs text-sea/60">요청번호는 카카오톡 알림 안에 적혀 있어요. 찾은 뒤 가입하시면 어느 기기에서든 보여요.</p>${errBox()}
+      <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">닫기</button><button type="button" data-act="hyfindgo" class="${B.p}">내 요청 찾기</button></div>`;
+    ACT.hyfind = () => openM(form());
+    ACT.hyfindgo = el => {
+      const ph = String((document.getElementById('hy-fp') || {}).value || '').replace(/\D/g, '');
+      const mm = /(\d{1,12})\s*$/.exec(String((document.getElementById('hy-fr') || {}).value || '').trim());
+      if (!/^01[016789]\d{7,8}$/.test(ph)) return setErr('전화번호를 숫자만 정확히 넣어 주세요.');
+      if (!mm) return setErr('요청번호를 확인해 주세요. (예: REQ-00036)');
+      const rid = +mm[1];
+      return busy(el, async () => {
+        if (!S.user) { try { await sb.auth.signInAnonymously(); } catch (_) {} for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150); }
+        if (!S.user) return setErr('잠시 뒤 다시 눌러 주세요.');
+        const { data, error } = await sb.rpc('claim_by_phone', { p_phone: ph, p_request: rid });
+        if (error || !data || !data.ok) {
+          const why = data && data.reason;
+          return setErr(why === 'MEMBER' ? '이미 가입한 계정의 요청이에요. 가입한 이메일이나 소셜 계정으로 로그인해 주세요.' : why === 'TOO_MANY' ? '시도가 너무 많아요. 한 시간 뒤 다시 해 주세요.' : why === 'NOT_FOUND' ? '일치하는 요청을 찾지 못했어요. 전화번호와 요청번호를 다시 확인해 주세요.' : '찾지 못했어요. 잠시 뒤 다시 해 주세요.');
+        }
+        await Promise.all(['req', 'quo', 'con', 'thr'].map(load)); closeM(); render();
+        toast('내 견적을 불러왔어요. 가입해 두시면 어디서든 볼 수 있어요.');
+        setTimeout(() => { try { compare(rid); } catch (_) {} }, 400);
+      });
+    };
+    // 로그인/가입 창 맨 아래에 '내 요청 찾기' 안내를 붙여요
+    const inject = () => {
+      const body = document.getElementById('mm-body'); if (!body || body.querySelector('[data-hyfindbox]')) return;
+      const anchor = body.querySelector('[data-act="alogin"], [data-act="asignup"]'); if (!anchor || (S.user && !S.user.is_anonymous)) return;
+      const box = document.createElement('div'); box.dataset.hyfindbox = '1'; box.className = 'mt-5 rounded-xl border border-mist p-3 text-sm';
+      box.innerHTML = '<b>컴퓨터에서 보낸 견적이 안 보이나요?</b><p class="mt-1 text-xs text-sea/70">요청할 때 적은 전화번호와 카톡 알림의 요청번호로 찾을 수 있어요.</p><button type="button" data-act="hyfind" class="mt-2 font-bold text-cool underline">내 요청 찾기</button>';
+      body.appendChild(box);
+    };
+    (async () => {
+      for (let n = 0; n < 60 && !(typeof S !== 'undefined' && sb); n++) await sleep(150);
+      let rq = 0; new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; try { inject(); } catch (_) {} }); }).observe(document.body, { childList: true, subtree: true });
+    })();
+  })();
+
 })();
