@@ -1927,4 +1927,68 @@
     run();
   })();
 
+  /* ---------- 54) 홈 화면 '지금 한여름' 실시간 현황판 (구·분야·상태만, 이름·번호 없음) ---------- */
+  (() => {
+    const KEY = 'hy_feed_off';
+    const st = document.createElement('style');
+    st.textContent = '.hy-fd{margin:14px 0;background:#fff;border:1px solid #d6dfeb;border-radius:14px;overflow:hidden}'
+      + '.hy-fh{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid #e4eaf3;font-size:12px;color:#64748b}'
+      + '.hy-fh b{font-weight:800;color:#0f172a}'
+      + '.hy-fdot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:hyfp 2s infinite}'
+      + '@keyframes hyfp{0%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}70%,100%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}'
+      + '.hy-fx{margin-left:auto;border:0;background:none;color:#94a3b8;font-size:16px;line-height:1;padding:2px 4px;cursor:pointer}'
+      + '.hy-fv{overflow:hidden}.hy-fv.mv{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 16%,#000 84%,transparent)}'
+      + '.hy-fl.mv{animation:hyfup var(--d,24s) linear infinite}.hy-fv:hover .hy-fl.mv,.hy-fv:active .hy-fl.mv{animation-play-state:paused}'
+      + '@keyframes hyfup{to{transform:translateY(-50%)}}'
+      + '@media (prefers-reduced-motion:reduce){.hy-fl.mv{animation:none}}'
+      + '.hy-fr{height:38px;display:flex;align-items:center;gap:9px;padding:0 12px;font-size:13px;color:#334155}'
+      + '.hy-fi{width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none}'
+      + '.hy-fi svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}'
+      + '.hy-ft{flex:1;min-width:0;line-height:1.25}.hy-ft p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '.hy-ft .a{color:#0f172a;font-weight:600}.hy-ft .b{font-size:11.5px;color:#64748b}.hy-ft .b.ok{color:#15803d;font-weight:700}.hy-ft .b.q{color:#1d4ed8;font-weight:700}'
+      + '.hy-fm{font-size:11px;color:#94a3b8;flex:none}';
+    document.head.appendChild(st);
+    const IC = {
+      aircon:['#e0f2fe','#0369a1','<path d="M12 2v20M4.9 7l14.2 10M19.1 7L4.9 17"/>'],
+      cold:['#e0f2fe','#0369a1','<path d="M12 2v20M4.9 7l14.2 10M19.1 7L4.9 17"/>'],
+      heat:['#ffedd5','#c2410c','<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'],
+      plumb:['#dbeafe','#1d4ed8','<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>'],
+      clean:['#dcfce7','#15803d','<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'],
+      interior:['#ede9fe','#6d28d9','<path d="M14 4l6 6-3 3-6-6zM12 9l-8 8 3 3 8-8"/>'],
+      kitchen:['#fef3c7','#b45309','<path d="M6 3v8M10 3v8M8 11v10M17 3c-2 2-2 6 0 8v10"/>'],
+      home:['#f1f5f9','#334155','<path d="M4 11l8-7 8 7v9H4z"/>'],
+      truck:['#f1f5f9','#334155','<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/>']
+    };
+    const kOf = c => { c = String(c || ''); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c.startsWith('plumb') ? 'plumb' : c.startsWith('interior') ? 'interior' : c === 'truck' ? 'truck' : 'cold'; };
+    const ago = t => { const m = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 60000)); return m < 3 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : m < 2880 ? '어제' : Math.floor(m / 1440) + '일 전'; };
+    const E = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    let rows = null, last = 0, busyF = false;
+    const row = r => {
+      const k = kOf(r.service), c = IC[k] || IC.home, qn = +r.qn || 0;
+      const stt = r.status === 'completed' ? ['상담 완료', 'ok'] : (r.status === 'confirmed' || r.status === 'matched') ? ['예약 확정', 'ok'] : qn > 0 ? ['견적 ' + qn + '건 도착', 'q'] : ['요청 접수', ''];
+      const lab = (typeof SVC !== 'undefined' && SVC[r.service]) || (typeof KINDS !== 'undefined' && KINDS[k] && KINDS[k].name) || '';
+      return '<div class="hy-fr"><span class="hy-fi" style="background:' + c[0] + ';color:' + c[1] + '"><svg viewBox="0 0 24 24">' + c[2] + '</svg></span>'
+        + '<div class="hy-ft"><p class="a">' + E(r.gu) + ' · ' + E(lab) + '</p><p class="b ' + stt[1] + '">' + stt[0] + '</p></div><span class="hy-fm">' + ago(r.created_at) + '</span></div>';
+    };
+    const draw = () => {
+      try { if (sessionStorage.getItem(KEY)) return; } catch (_) {}
+      const cats = document.getElementById('cats');
+      if (!cats || document.getElementById('hy-feed') || !rows || !rows.length) return;
+      const mv = rows.length >= 4, html = rows.map(row).join('');
+      const box = document.createElement('div'); box.id = 'hy-feed'; box.className = 'hy-fd';
+      box.innerHTML = '<div class="hy-fh"><span class="hy-fdot"></span><b>지금 한여름</b><button type="button" class="hy-fx" aria-label="닫기">×</button></div>'
+        + '<div class="hy-fv' + (mv ? ' mv' : '') + '" style="height:' + (Math.min(rows.length, 3) * 38) + 'px"><div class="hy-fl' + (mv ? ' mv' : '') + '" style="--d:' + (rows.length * 4) + 's">' + html + (mv ? html : '') + '</div></div>';
+      cats.parentNode.insertBefore(box, cats);
+      box.querySelector('.hy-fx').onclick = () => { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} box.remove(); };
+    };
+    const fetchF = async () => {
+      if (busyF || (rows && Date.now() - last < 300000)) return; busyF = true;
+      try { const { data, error } = await sb.rpc('live_feed', { p_limit: 12 }); if (!error && Array.isArray(data)) { rows = data; last = Date.now(); } } catch (_) {}
+      busyF = false; draw();
+    };
+    let rq = 0;
+    new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; if (document.getElementById('cats') && !document.getElementById('hy-feed')) (rows ? draw() : fetchF()); }); }).observe(document.body, { childList: true, subtree: true });
+    if (document.getElementById('cats')) fetchF();
+  })();
+
 })();
