@@ -1983,11 +1983,7 @@
       const box = document.createElement('div'); box.id = 'hy-feed'; box.className = 'hy-fd';
       box.innerHTML = '<div class="hy-fh"><span class="hy-fdot"></span><b>지금 한여름</b><button type="button" class="hy-fx" aria-label="닫기">×</button></div>'
         + '<div class="hy-fv' + (mv ? ' mv' : '') + '" style="height:' + (Math.min(rows.length, 3) * 38) + 'px"><div class="hy-fl' + (mv ? ' mv' : '') + '" style="--d:' + (rows.length * 4) + 's">' + html + (mv ? html : '') + '</div></div>';
-      if (pc) {
-        const fw = Math.min(300, Math.floor((window.innerWidth - 1152) / 2) - 32);
-        if (fw >= 220) { box.classList.add('fx'); box.style.width = fw + 'px'; document.body.appendChild(box); }
-        else { box.classList.add('in'); cats.parentNode.insertBefore(box, cats.nextSibling); }
-      } else cats.parentNode.insertBefore(box, cats);
+      if (pc) { box.classList.add('fx'); document.body.appendChild(box); } else cats.parentNode.insertBefore(box, cats);
       box.querySelector('.hy-fx').onclick = () => { shut = true; if (!pc) { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} } box.remove(); };
     };
     const fetchF = async () => {
