@@ -4,7 +4,7 @@
 <meta name="apple-itunes-app" content="app-id=6834314201">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2563EB">
+<meta name="theme-color" content="#0C2D48">
 <meta name="color-scheme" content="light">
 <meta name="darkreader-lock">
 <meta name="supported-color-schemes" content="light">
@@ -40,30 +40,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<style>
-/* 첫 화면 분야 버튼: 눌러 보고 싶게 입체감 (버튼 아래 두께 + 그림자, 누르면 쑥 들어가요) */
-#cats>button{background:#fff;border:1px solid #e3e9f2;box-shadow:0 1px 2px rgba(15,23,42,.05),0 8px 20px -8px rgba(37,99,235,.16);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;-webkit-tap-highlight-color:transparent}
-#cats>button:active{transform:scale(.97)}
-@media (hover:hover){#cats>button:hover{transform:translateY(-2px);border-color:#bfd4fe;box-shadow:0 10px 24px rgba(37,99,235,.12)}}
-#cats>button>span.grid{box-shadow:none}
-#cats{padding-bottom:6px;row-gap:10px}
-/* 기사 작업 가능 분야 선택: 홈 분야 버튼처럼 입체감, 선택하면 쑥 눌린 모양 */
-.kp{position:relative;background:linear-gradient(180deg,#fff 0%,#f4f7fc 100%);border:1px solid #e3e9f2;box-shadow:0 4px 0 #d6dfeb,0 8px 14px rgba(15,23,42,.10);transform:translateY(0);transition:transform .12s ease,box-shadow .12s ease;-webkit-tap-highlight-color:transparent}
-.kp:active{transform:translateY(3px);box-shadow:0 1px 0 #d6dfeb,0 2px 5px rgba(15,23,42,.10)}
-.kp[aria-pressed=true]{border-color:#2563EB;background:linear-gradient(180deg,#f7faff 0%,#e4eeff 100%);box-shadow:0 1px 0 #1d4ed8,0 0 0 2px #bfd4fe;transform:translateY(3px)}
-.kp .ki{box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(15,23,42,.07),0 3px 8px rgba(15,23,42,.10)}
-.kp b{text-shadow:0 1px 0 #fff}
-</style>
+
 <style>.hidden{display:none}@media (hover:hover) and (pointer:fine){.cam-only{display:none!important}}</style>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 if (window.tailwind) tailwind.config = {
   theme: { extend: {
-    /* 새 디자인: 브랜드 파랑 #2563EB · 진한 글자 · 따뜻한 주황 강조 (예전 이름은 그대로 두고 색만 바꿨어요) */
-    colors: { sea:'#0F172A', ice:'#F8FAFC', mist:'#E2E8F0', cool:'#2563EB', sun:'#F97316', sub:'#64748B',
-              brand:{ DEFAULT:'#2563EB', 50:'#EFF5FF', 100:'#DBE7FE', 200:'#BFD4FE', 700:'#1D4ED8', 800:'#1E40AF' } },
+    /* 새 디자인: 남색 하늘 · 한여름 태양 주황 · 시원한 청록 · 따뜻한 종이색 (예전 이름은 그대로 두고 색만 바꿨어요) */
+    colors: { sea:'#0C2D48', ice:'#F4F0E6', mist:'#E6DFD0', cool:'#0B6E8E', sun:'#F97316', sub:'#5D6B78', paper:'#F6F2EA',
+              brand:{ DEFAULT:'#0B6E8E', 50:'#E7F4F8', 100:'#CFE9F1', 200:'#A5D5E4', 700:'#08566F', 800:'#064258' } },
     fontFamily: { display:['"Pretendard Variable"','Pretendard','"Noto Sans KR"','sans-serif'], logo:['"Black Han Sans"','"Noto Sans KR"','sans-serif'], sans:['"Pretendard Variable"','Pretendard','"Noto Sans KR"','-apple-system','"Apple SD Gothic Neo"','"Malgun Gothic"','sans-serif'] },
-    boxShadow: { card:'0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06)' }
+    boxShadow: { card:'0 1px 0 rgba(12,45,72,.03), 0 14px 30px -16px rgba(12,45,72,.22)' }
   } }
 }
 </script>
@@ -76,7 +63,7 @@ if (window.tailwind) tailwind.config = {
   .font-display { font-weight: 900; letter-spacing: -.02em; }
   body { letter-spacing: -.01em; } h1,h2,h3,.font-black { letter-spacing: -.025em; }
   .no-sb::-webkit-scrollbar { display: none; } .no-sb { scrollbar-width: none; }
-  :focus-visible { outline: 3px solid #93B4FB; outline-offset: 2px; }
+  :focus-visible { outline: 3px solid #5BC0D9; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   input, select, textarea { font-size: 16px; }
   button, a { -webkit-tap-highlight-color: transparent; }
@@ -89,19 +76,114 @@ if (window.tailwind) tailwind.config = {
   }
   header { padding-top: env(safe-area-inset-top); }
   @media (max-width: 767px) { #subnav { display: none !important; } }
-  .tab[aria-current="page"] { color: #2563EB; }
+  
   .dnav[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 10px; }
   .dnav[aria-current="page"] { color: #0F172A; }
   .tab[aria-current="page"] svg { stroke-width: 2.4; }
 </style>
+<style id="hy-theme">
+/* ===== 한여름 새 디자인: 남색 하늘 · 한여름 태양(주황) · 시원한 청록 · 따뜻한 종이색 ===== */
+:root{--ink:#0C2D48;--ink2:#091F33;--sun:#F97316;--sun2:#FF8A3D;--teal:#0B6E8E;--cyan:#1AA7C7;--paper:#F6F2EA;--line:#E6DFD0;--sub:#5D6B78}
+body{background:var(--paper)}
+/* 제목: 로고와 같은 굵은 한글체로 개성 주기 */
+#cview h2,#cview .hy-h1,#cview #pro h2{font-family:"Black Han Sans","Pretendard Variable","Noto Sans KR",sans-serif;font-weight:400;letter-spacing:-.01em}
+#cview main>section:not(#pro) h2{color:var(--ink)}
+#cview h2{line-height:1.25}
+/* 작은 영문 라벨: 주황 + 짧은 막대 */
+#cview p.tracking-wide{color:var(--sun)!important;letter-spacing:.16em;font-size:11px}
+#cview p.tracking-wide::before{content:"";display:inline-block;width:20px;height:3px;border-radius:2px;background:currentColor;margin-right:8px;vertical-align:middle}
+/* 카드: 따뜻한 종이 위의 흰 카드 + 얇은 테두리 */
+#cview .shadow-card{border:1px solid #EBE4D4;box-shadow:0 1px 0 rgba(12,45,72,.03),0 14px 30px -16px rgba(12,45,72,.22)}
+
+/* ---------- 히어로 ---------- */
+.hy-hero{background:radial-gradient(900px 480px at 92% -12%,rgba(249,115,22,.30),transparent 62%),radial-gradient(760px 520px at -8% 112%,rgba(26,167,199,.28),transparent 62%),linear-gradient(165deg,#0E3553 0%,#0A2640 55%,#081C30 100%)}
+.hy-sun{position:absolute;right:-52px;top:-72px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 34% 32%,#FFD58A 0%,#FF9A4A 42%,#F97316 72%);box-shadow:0 0 0 22px rgba(249,115,22,.12),0 0 0 50px rgba(249,115,22,.07),0 0 0 86px rgba(249,115,22,.04);animation:hySun 7s ease-in-out infinite alternate}
+.hy-water{position:absolute;left:-120px;bottom:-140px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(26,167,199,.35),transparent 68%)}
+.hy-grid{position:absolute;inset:0;opacity:.5;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 78%);mask-image:linear-gradient(180deg,#000 0%,transparent 78%)}
+@keyframes hySun{from{transform:scale(1)}to{transform:scale(1.045)}}
+@media(min-width:1024px){
+  .hy-sun{right:-110px;top:-150px;width:470px;height:470px;box-shadow:0 0 0 40px rgba(249,115,22,.12),0 0 0 92px rgba(249,115,22,.07),0 0 0 150px rgba(249,115,22,.04)}
+  .hy-hero::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:44px;background:var(--paper);clip-path:ellipse(58% 100% at 50% 100%)}
+}
+#services{position:relative;z-index:5}
+.hy-eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);padding:5px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.02em;backdrop-filter:blur(4px)}
+.hy-eyebrow i{width:7px;height:7px;border-radius:50%;background:#FFB547;box-shadow:0 0 0 4px rgba(255,181,71,.25)}
+.hy-h1{margin:14px 0 0;font-size:clamp(1.7rem,8.2vw,2.05rem);line-height:1.28;color:#fff}
+@media(min-width:1024px){.hy-h1{font-size:3.5rem;line-height:1.16;margin-top:22px}.hy-eyebrow{font-size:13px}}
+.hy-mark{position:relative;display:inline-block;z-index:0;white-space:nowrap}
+.hy-mark::before{content:"";position:absolute;left:-.12em;right:-.12em;bottom:-.04em;height:.36em;background:var(--sun);border-radius:4px;transform:skewX(-6deg);z-index:-1}
+.hy-chip{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.07);color:#fff;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.hy-trust{gap:0;border-top:1px solid rgba(255,255,255,.16);padding-top:22px;max-width:560px}
+.hy-trust li{display:flex;gap:10px;align-items:flex-start;padding-right:20px;margin-right:20px;border-right:1px solid rgba(255,255,255,.16);color:#FFB547}
+.hy-trust li:last-child{border:0;margin:0;padding:0}
+.hy-trust b{display:block;color:#fff;font-size:15px;font-weight:900;line-height:1.3}
+.hy-trust span{display:block;color:rgba(255,255,255,.65);font-size:12px;margin-top:2px}
+.hy-rise{animation:hyRise .7s cubic-bezier(.2,.7,.2,1) both}.hy-rise2{animation:hyRise .8s .12s cubic-bezier(.2,.7,.2,1) both}
+@keyframes hyRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.hy-rise,.hy-rise2,.hy-sun{animation:none}}
+
+/* 견적서 카드 */
+.hy-ticket{position:relative;background:#FFFDF8;color:var(--ink);border-radius:26px;padding:20px 16px 16px;box-shadow:0 2px 0 rgba(255,255,255,.7) inset,0 30px 60px -22px rgba(2,12,27,.65);border:1px solid rgba(255,255,255,.6)}
+@media(min-width:1024px){.hy-ticket{padding:26px 26px 22px}}
+.hy-stamp{position:absolute;right:14px;top:-20px;display:grid;place-items:center;width:62px;height:62px;border-radius:50%;background:#fff;color:var(--sun);border:2.5px solid var(--sun);font-family:"Black Han Sans",sans-serif;font-size:15px;line-height:1.1;text-align:center;transform:rotate(-9deg);box-shadow:0 8px 18px -6px rgba(249,115,22,.5)}
+.hy-stamp::after{content:"";position:absolute;inset:3px;border-radius:50%;border:1px dashed rgba(249,115,22,.6)}
+.hy-tk-head{display:flex;align-items:baseline;gap:8px;margin:0 0 12px;font-size:13px;font-weight:900;color:var(--sub);letter-spacing:.04em}
+.hy-tk-head span{font-size:10px;letter-spacing:.2em;color:#B9AF9B}
+.hy-cta{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;border:0;border-radius:18px;padding:17px 18px;color:#fff;cursor:pointer;font-family:"Black Han Sans","Pretendard Variable",sans-serif;font-size:21px;letter-spacing:-.01em;background:linear-gradient(180deg,#FF9144 0%,#F97316 100%);box-shadow:0 6px 0 #C2570C,0 16px 26px -8px rgba(249,115,22,.55);transition:transform .1s,box-shadow .1s}
+.hy-cta:active{transform:translateY(5px);box-shadow:0 1px 0 #C2570C,0 6px 12px -4px rgba(249,115,22,.5)}
+@media(hover:hover){.hy-cta:hover{filter:brightness(1.04)}}
+.hy-cta-sub{margin:14px 0 0;text-align:center;font-size:12.5px;font-weight:700;color:var(--sub)}
+.hy-steps{list-style:none;margin:14px 0 0;padding:12px 4px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px dashed #E3D9C4}
+.hy-steps li{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;position:relative}
+.hy-steps li+li::before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:2px;margin-top:-1px;background:#D9CFBA}
+.hy-steps b{display:grid;place-items:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--ink);color:#fff;font-size:12px}
+.hy-steps em{font-style:normal;margin-left:4px;color:var(--sun)}
+.hy-perf{position:relative;margin:16px 0 12px;text-align:center;border-top:2px dashed #E3D9C4;height:0}
+.hy-perf span{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);background:#FFFDF8;padding:0 10px;font-size:12px;font-weight:800;color:var(--sub);white-space:nowrap}
+.hy-field{background:#F5F0E4;border-radius:16px}
+.hy-go{border:0;border-radius:16px;background:var(--ink);color:#fff;cursor:pointer}.hy-go:hover{background:#12456D}
+.hy-open{background:#F5F0E4;border:1px dashed #D9CFBA;border-radius:16px}.hy-open:hover{background:#EFE8D8}
+
+/* ---------- 분야 버튼 ---------- */
+#cats>button{background:#fff;border:1px solid #EBE4D4;box-shadow:0 1px 0 rgba(12,45,72,.03),0 14px 26px -16px rgba(12,45,72,.28);transition:transform .12s,box-shadow .12s,border-color .12s;-webkit-tap-highlight-color:transparent}
+#cats>button:active{transform:scale(.97)}
+@media(hover:hover){#cats>button:hover{transform:translateY(-3px);border-color:var(--sun);box-shadow:0 16px 28px -14px rgba(249,115,22,.4)}}
+#cats>button>span.grid{box-shadow:none}#cats{padding-bottom:6px;row-gap:10px}
+.kp{position:relative;background:linear-gradient(180deg,#fff 0%,#F6F2EA 100%);border:1px solid var(--line);box-shadow:0 4px 0 #DDD3BE,0 8px 14px rgba(12,45,72,.10);transform:translateY(0);transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
+.kp:active{transform:translateY(3px);box-shadow:0 1px 0 #DDD3BE,0 2px 5px rgba(12,45,72,.10)}
+.kp[aria-pressed=true]{border-color:var(--teal);background:linear-gradient(180deg,#F2FAFC 0%,#DDF0F6 100%);box-shadow:0 1px 0 #08566F,0 0 0 2px #A5D5E4;transform:translateY(3px)}
+.kp .ki{box-shadow:inset 0 2px 0 rgba(255,255,255,.9),inset 0 -3px 0 rgba(12,45,72,.07),0 3px 8px rgba(12,45,72,.10)}.kp b{text-shadow:0 1px 0 #fff}
+
+/* ---------- 본문 섹션 ---------- */
+.hy-ico{display:inline-grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#FFF0E2;color:var(--sun)}
+.hy-ico svg{width:24px;height:24px}
+.hy-ico-s{width:30px;height:30px;border-radius:9px;margin-right:8px;vertical-align:-9px}.hy-ico-s svg{width:17px;height:17px}
+#detail h3.font-black{color:var(--ink)}
+.hy-safe{border:1px solid rgba(255,255,255,.08);background:linear-gradient(100deg,#0C2D48 0%,#123B5C 100%)}
+.hy-safe .hy-14{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--sun);color:#fff;font-family:"Black Han Sans",sans-serif;font-size:20px;box-shadow:0 4px 0 #C2570C}
+.hy-step{position:relative}
+.hy-step .hy-n{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:50%;background:var(--ink);color:#fff;font-family:"Black Han Sans",sans-serif;font-size:16px;box-shadow:0 0 0 4px #E9DFCB}
+@media(min-width:1024px){.hy-step .hy-n{width:46px;height:46px;font-size:21px}.hy-step:not(:last-child)::after{content:"";position:absolute;top:44px;left:calc(100% - 4px);width:28px;height:2px;background:repeating-linear-gradient(90deg,#CDBF9F 0 6px,transparent 6px 11px)}}
+#faq details{border:1px solid #EBE4D4;transition:border-color .15s}#faq details[open]{border-color:var(--sun)}
+#faq summary{list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}#faq summary::-webkit-details-marker{display:none}
+#faq summary::after{content:"+";flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#F5F0E4;color:var(--sun);font-weight:900;font-size:18px;line-height:1}
+#faq details[open] summary::after{content:"–";background:var(--sun);color:#fff}
+#pro{background:linear-gradient(170deg,#0C2D48 0%,#091F33 100%)}
+/* 홈의 '지금 한여름' 실시간 현황판(notify.js)도 새 색으로 */
+#hy-feed{background:#FFFDF8;border-color:#EBE4D4;border-radius:18px;box-shadow:0 14px 30px -16px rgba(12,45,72,.28)}
+#hy-feed.fx{box-shadow:0 18px 40px -12px rgba(12,45,72,.38)}
+#hy-feed .hy-fh{border-bottom-color:#EFE8D8;color:#5D6B78}#hy-feed .hy-fh b,#hy-feed .hy-ft .a{color:#0C2D48}
+#hy-feed .hy-ft .b.q{color:#0B6E8E}#hy-feed .hy-fx{color:#A89F8B}
+.tab[aria-current="page"]{color:var(--teal)}
+</style>
 </head>
-<body class="bg-slate-50 text-sea font-sans antialiased">
+<body class="bg-paper text-sea font-sans antialiased">
 
 <header class="sticky top-0 z-30 border-b border-mist bg-white/90 backdrop-blur">
   <div class="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:px-5 lg:h-[72px] lg:px-8">
     <a href="#" data-act="home" class="flex shrink-0 items-center gap-1.5" aria-label="한여름 홈">
       <img src="logo-han.png" alt="" width="32" height="32" class="h-8 w-8 rounded-[10px]">
-      <span class="font-logo text-[22px] leading-none tracking-tight text-[#0C2D48] max-[370px]:hidden">한여름<span class="text-[#1AA7C7]">.</span></span></a>
+      <span class="font-logo text-[22px] leading-none tracking-tight text-[#0C2D48] max-[370px]:hidden">한여름<span class="text-sun">.</span></span></a>
     <nav id="nav" class="hidden items-center gap-8 text-[15px] font-bold text-slate-500 lg:flex" aria-label="주 메뉴">
       <a href="#" data-act="home" data-nav="main" class="dnav hover:text-sea">홈</a>
       <a href="#quote" class="dnav hover:text-sea">견적요청</a>
@@ -116,7 +198,7 @@ if (window.tailwind) tailwind.config = {
       <button id="hdr-bal" type="button" data-act="wallet" style="display:none" class="hidden sm:inline-block rounded-full bg-mist px-3 py-1.5 text-xs sm:text-sm font-bold whitespace-nowrap"></button>
       <button id="hdr-search" type="button" data-act="pros" aria-label="기사님 찾기" class="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-mist lg:hidden"><svg viewBox="0 0 24 24" class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></button>
       <button id="hdr-noti" type="button" data-act="noti" aria-label="알림" class="relative grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-mist"><svg viewBox="0 0 24 24" class="h-[22px] w-[22px]" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 003.4 0"/></svg><span id="noti-badge" style="display:none" class="absolute right-0.5 top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-sun px-1 text-[10px] font-bold text-white"></span></button>
-      <a id="hdr-quote" href="#quote" class="hidden lg:inline-block rounded-full bg-cool px-5 py-2.5 text-sm font-bold text-white hover:bg-brand-700 whitespace-nowrap">무료 견적 요청</a>
+      <a id="hdr-quote" href="#quote" class="hidden lg:inline-block rounded-full bg-sun px-5 py-2.5 text-sm font-black text-white shadow-[0_3px_0_#C2570C] hover:brightness-105 whitespace-nowrap">1분 무료견적</a>
       <span id="hdr-user" style="display:none" class="hidden lg:inline text-sm font-bold"></span>
       <button id="hdr-auth" type="button" data-act="auth" class="md:inline-block shrink-0 rounded-full border border-mist bg-white px-4 py-2 text-sm font-bold hover:bg-ice whitespace-nowrap">로그인</button>
       <button id="hdr-menu" type="button" data-act="navmenu" aria-label="전체 메뉴" class="md:hidden grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-mist"><svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -130,32 +212,40 @@ if (window.tailwind) tailwind.config = {
 
 <div id="cview">
 <main>
-<!-- 히어로: 파란 상단 + 흰 카드 (큰 버튼 하나 + 동네·분야 빠른 견적) -->
-<section class="relative overflow-hidden bg-brand text-white lg:bg-gradient-to-br lg:from-brand lg:to-brand-700">
-  <div aria-hidden="true" class="pointer-events-none absolute -right-24 -top-24 hidden h-[28rem] w-[28rem] rounded-full bg-white/10 blur-3xl lg:block"></div><div aria-hidden="true" class="pointer-events-none absolute -bottom-40 left-1/4 hidden h-[26rem] w-[26rem] rounded-full bg-sky-300/20 blur-3xl lg:block"></div><div aria-hidden="true" class="pointer-events-none absolute inset-0 hidden opacity-[.07] lg:block" style="background-image:radial-gradient(#fff 1px,transparent 1px);background-size:22px 22px"></div>
-  <div class="relative mx-auto max-w-6xl px-4 pb-0 pt-6 lg:grid lg:grid-cols-[1.15fr_.85fr] lg:items-center lg:gap-14 lg:px-8 lg:pb-24 lg:pt-14">
-    <div class="px-1 lg:px-0">
-      <span class="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-bold lg:text-sm">서울·경기 · 견적 요청 무료</span>
-      <h1 class="mt-3 text-[1.75rem] font-black leading-[1.28] lg:mt-5 lg:text-[3.1rem] lg:leading-[1.15]">필요한 기사님,<br><span class="text-amber-300">한 번에 비교</span>하세요</h1>
-      <p class="mt-2 text-sm text-white/85 lg:hidden">요청 한 번이면 검증된 기사님 견적이 도착해요.</p>
-      <div class="mt-6 hidden flex-wrap gap-2 lg:flex"><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">에어컨</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">보일러</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">배관·하수구</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">주방·덕트</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">인테리어</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">입주·상가청소</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">세탁기·생활가전</span><span class="rounded-full bg-white/95 px-3.5 py-1.5 text-sm font-black text-brand shadow-sm">중고 냉장·냉동고</span></div>
-      <p class="mt-3 hidden text-lg text-white/85 lg:block">검증된 기사님을 바로 연결해 드려요.</p>
-      <div class="mt-8 hidden gap-3 lg:grid lg:grid-cols-3">
-        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><p class="mt-2 text-[15px] font-black">검증된 기사님</p><p class="mt-0.5 text-xs text-white/75">가입 심사를 거친 분만</p></div>
-        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z"/></svg><p class="mt-2 text-[15px] font-black">실거래 후기만</p><p class="mt-0.5 text-xs text-white/75">작업 완료 후 작성</p></div>
-        <div class="rounded-2xl bg-white/12 p-4 ring-1 ring-white/25 backdrop-blur-sm"><svg class="h-6 w-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><p class="mt-2 text-[15px] font-black">번호 비공개 채팅</p><p class="mt-0.5 text-xs text-white/75">안심하고 상담</p></div>
-      </div>
+<!-- 히어로: 남색 하늘 + 한여름 태양 + 견적서 카드 ('1분 무료견적'이 주인공) -->
+<section class="hy-hero relative overflow-hidden text-white">
+  <div aria-hidden="true" class="hy-sun"></div><div aria-hidden="true" class="hy-water"></div><div aria-hidden="true" class="hy-grid"></div>
+  <div class="relative mx-auto max-w-6xl px-4 pb-0 pt-7 lg:grid lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:gap-14 lg:px-8 lg:pb-28 lg:pt-16">
+    <div class="hy-rise px-1 lg:px-0">
+      <span class="hy-eyebrow"><i aria-hidden="true"></i>서울·경기 · 견적 요청 무료</span>
+      <h1 class="hy-h1">필요한 기사님,<br><span class="hy-mark">한 번에 비교</span>하세요</h1>
+      <p class="mt-3 text-[15px] leading-relaxed text-white/80 lg:hidden">요청 한 번이면 사업자등록을 확인한 기사님 견적이 도착해요.</p>
+      <p class="mt-5 hidden max-w-md text-lg leading-relaxed text-white/80 lg:block">필요한 작업과 동네만 남겨 주세요. 사업자등록을 확인한 동네 기사님들이 견적을 직접 보내드려요.</p>
+      <div class="mt-6 hidden flex-wrap gap-2 lg:flex"><span class="hy-chip">에어컨</span><span class="hy-chip">보일러</span><span class="hy-chip">배관·하수구</span><span class="hy-chip">주방·덕트</span><span class="hy-chip">인테리어</span><span class="hy-chip">입주·상가청소</span><span class="hy-chip">세탁기·생활가전</span><span class="hy-chip">중고 냉장·냉동고</span></div>
+      <ul class="hy-trust mt-9 hidden lg:flex">
+        <li><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg><div><b>검증된 기사님</b><span>가입 심사를 거친 분만</span></div></li>
+        <li><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z"/></svg><div><b>실거래 후기만</b><span>작업 완료 후 작성</span></div></li>
+        <li><svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>번호 비공개 채팅</b><span>안심하고 상담</span></div></li>
+      </ul>
       <button type="button" id="hero-inst" data-act="install" class="hidden mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-white/85 underline underline-offset-4 md:!hidden"><svg class="h-4 w-4 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11m0 0l-4-4m4 4l4-4"/><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/></svg> 홈 화면에 한여름 앱 추가하기</button>
       <form id="quick" class="hidden" aria-hidden="true"><select id="svc"></select><select id="gu"></select></form>
     </div>
-    <div id="hwrap" class="mt-6 lg:mt-0">
+    <div id="hwrap" class="hy-rise2 mt-7 lg:mt-0">
       <div class="relative">
-        <div aria-hidden="true" class="absolute bottom-0 left-1/2 h-1/3 w-screen -translate-x-1/2 bg-slate-50 lg:hidden"></div>
-        <div class="relative rounded-3xl bg-white p-3.5 text-sea shadow-card ring-1 ring-slate-200/70 lg:p-6 lg:shadow-[0_30px_60px_-15px_rgba(15,40,120,.55)]">
-          <button type="button" data-act="qopen0" class="w-full rounded-2xl bg-sun px-5 py-4 text-lg font-black text-white shadow-md hover:brightness-95">1분 무료 견적 받기</button>
-          <p class="mt-3.5 text-center text-xs font-bold text-sub">또는 동네와 분야로 바로 찾기</p>
-          <form id="hfind" class="mt-2.5" aria-label="동네와 필요한 서비스로 견적 요청">
-            <div class="flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-0.5 lg:py-1">
+        <div aria-hidden="true" class="absolute bottom-0 left-1/2 h-1/3 w-screen -translate-x-1/2 bg-paper lg:hidden"></div>
+        <div class="hy-ticket">
+          <span class="hy-stamp" aria-hidden="true">무료<br>0원</span>
+          <p class="hy-tk-head">견적 요청서<span>QUOTE</span></p>
+          <button type="button" data-act="qopen0" class="hy-cta"><svg class="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 1.5M9.5 3h5M12 3v3"/></svg>1분 무료 견적 받기</button>
+          <p class="hy-cta-sub">가입 없이 시작 · 사진은 선택 · 24시간 접수</p>
+          <ol class="hy-steps" aria-label="견적 받는 순서">
+            <li><b>1</b><span>요청<em>1분</em></span></li>
+            <li><b>2</b><span>견적 도착</span></li>
+            <li><b>3</b><span>비교·선택</span></li>
+          </ol>
+          <div class="hy-perf"><span>또는 동네와 분야로 바로 찾기</span></div>
+          <form id="hfind" aria-label="동네와 필요한 서비스로 견적 요청">
+            <div class="hy-field flex items-center gap-2 px-3 py-0.5 lg:py-1">
               <svg class="h-5 w-5 text-cool inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><label for="hgu" class="sr-only">우리 동네</label>
               <select id="hgu" class="min-w-0 flex-1 bg-transparent py-2.5 text-[16px] font-black outline-none lg:text-lg"></select>
               <span id="hgu-n" class="hidden shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"></span>
@@ -163,13 +253,13 @@ if (window.tailwind) tailwind.config = {
             <div class="relative mt-2 flex gap-2 lg:mt-2.5">
               <label for="hkind" class="sr-only">필요한 분야</label>
               <div id="hsug" role="listbox" aria-label="추천 서비스" class="absolute inset-x-0 top-full z-30 mt-2 hidden max-h-80 overflow-y-auto rounded-2xl border border-mist bg-white p-1.5 text-sea shadow-2xl"></div>
-              <select id="hkind" aria-label="필요한 분야" class="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-3 text-[15px] font-bold outline-none focus:ring-2 focus:ring-brand/30 lg:py-3.5"><option value="">필요한 분야 선택</option></select>
-              <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" tabindex="-1" aria-hidden="true" class="hidden min-w-0 flex-1 rounded-2xl bg-slate-50 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
-              <button type="submit" class="shrink-0 whitespace-nowrap rounded-2xl bg-cool px-4 text-[15px] font-black text-white hover:bg-brand-700 lg:px-6 lg:text-base">견적 받기</button>
+              <select id="hkind" aria-label="필요한 분야" class="hy-field min-w-0 flex-1 px-3 py-3 text-[15px] font-bold outline-none focus:ring-2 focus:ring-brand/30 lg:py-3.5"><option value="">필요한 분야 선택</option></select>
+              <input id="hq" type="search" enterkeyhint="search" autocomplete="off" role="combobox" aria-controls="hsug" aria-expanded="false" placeholder="세탁기, 보일러 에러, 입주청소…" tabindex="-1" aria-hidden="true" class="hy-field hidden min-w-0 flex-1 px-4 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-brand/30">
+              <button type="submit" class="hy-go shrink-0 whitespace-nowrap px-4 text-[15px] font-black lg:px-6 lg:text-base">견적 받기</button>
             </div>
             <p class="mt-2.5 hidden text-xs text-sub lg:block">견적 요청 무료 · 전화번호 비공개 안심 채팅 · 실거래 후기만</p>
           </form>
-          <button type="button" data-act="pkopen" class="mt-3 flex w-full items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3.5 py-3 text-left text-sea hover:bg-brand-50"><span><span class="block text-[14px] font-black lg:text-base"><svg class="h-4 w-4 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg> 가게 오픈 준비 중이세요?</span><span class="block text-xs font-bold text-sub">에어컨 · 냉장고 · 청소 견적을 한 번에 요청</span></span><span class="shrink-0 rounded-full bg-sun px-3 py-1.5 text-xs font-black text-white">원큐 견적</span></button>
+          <button type="button" data-act="pkopen" class="hy-open mt-3 flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left text-sea"><span><span class="block text-[14px] font-black lg:text-base"><svg class="h-4 w-4 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg> 가게 오픈 준비 중이세요?</span><span class="block text-xs font-bold text-sub">에어컨 · 냉장고 · 청소 견적을 한 번에 요청</span></span><span class="shrink-0 rounded-full bg-sun px-3 py-1.5 text-xs font-black text-white">원큐 견적</span></button>
         </div>
       </div>
     </div>
@@ -183,8 +273,8 @@ if (window.tailwind) tailwind.config = {
 
 <!-- 14일 보장 -->
 <section id="safety" class="mx-auto mt-4 max-w-6xl px-4 lg:mt-8 lg:px-8">
-  <button type="button" data-act="guarantee" class="flex w-full items-center gap-3 rounded-2xl bg-sea px-4 py-3.5 text-left text-white lg:px-6 lg:py-4">
-    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-lg font-black">14</span>
+  <button type="button" data-act="guarantee" class="hy-safe flex w-full items-center gap-3.5 rounded-2xl px-4 py-3.5 text-left text-white lg:px-6 lg:py-4">
+    <span class="hy-14 shrink-0">14</span>
     <span class="flex-1"><b class="block text-[15px] lg:text-lg">14일 재점검 안심 보장</b><span class="text-xs text-white/70 lg:text-sm">같은 증상 재발 시 담당 기사님 재점검 (청소는 3일, 명백한 하자 한정)</span></span>
     <span class="text-white/40" aria-hidden="true">›</span></button>
 </section>
@@ -193,18 +283,18 @@ if (window.tailwind) tailwind.config = {
 <section id="about" class="mx-auto mt-8 max-w-6xl px-4 lg:mt-14 lg:px-8">
   <p class="text-xs font-black tracking-wide text-brand">SERVICE</p><h2 class="text-lg font-black lg:text-2xl">한여름 서비스 안내</h2>
   <div class="mt-3 grid gap-3 lg:grid-cols-2 lg:gap-5">
-    <div class="rounded-3xl bg-gradient-to-br from-brand to-brand-700 p-5 text-white shadow-card lg:p-7">
-      <p class="text-sm font-bold text-white/80">🙋 고객님</p>
-      <p class="mt-1 text-3xl font-black lg:text-4xl">완전 무료 <span class="text-xl lg:text-2xl">0원</span></p>
+    <div class="rounded-3xl bg-gradient-to-br from-[#0E3553] to-[#0A2238] p-5 text-white shadow-card lg:p-7">
+      <p class="text-sm font-bold text-white/80">고객님</p>
+      <p class="mt-1 text-3xl font-black lg:text-4xl">완전 무료 <span class="text-xl text-[#FFB547] lg:text-2xl">0원</span></p>
       <ul class="mt-3 space-y-1 text-sm text-white/90 lg:text-[15px]">
         <li>✓ 견적 요청 · 견적 비교 무료</li>
         <li>✓ 기사님과 안심 채팅 무료 (번호 비공개)</li>
         <li>✓ 작업비는 기사님께 직접 결제</li>
       </ul>
-      <a href="#quote" class="mt-4 inline-block rounded-full bg-white px-5 py-2.5 text-sm font-black text-brand">무료 견적 받기 ›</a>
+      <a href="#quote" class="mt-4 inline-block rounded-full bg-sun px-5 py-2.5 text-sm font-black text-white shadow-[0_3px_0_#C2570C]">1분 무료견적 ›</a>
     </div>
-    <div class="rounded-3xl border-2 border-sea/10 bg-white p-5 shadow-card lg:p-7">
-      <p class="text-sm font-bold text-sub">🛠 기사님</p>
+    <div class="rounded-3xl bg-white p-5 shadow-card lg:p-7">
+      <p class="text-sm font-bold text-sub">기사님</p>
       <p class="mt-1 text-2xl font-black text-sea lg:text-3xl">거래 확정 시에만 <span class="text-brand">1,500원 + 등급별 3~5%</span></p>
       <ul class="mt-3 space-y-1 text-sm text-sub lg:text-[15px]">
         <li>✓ 가입비 · 월 이용료 · 견적 발송 0원</li>
@@ -230,11 +320,11 @@ if (window.tailwind) tailwind.config = {
 
 <section id="process" class="mx-auto mt-8 max-w-6xl px-5 lg:mt-16 lg:px-8">
   <p class="text-xs font-black tracking-wide text-brand">HOW IT WORKS</p><h2 class="text-lg font-black lg:text-2xl">이용 방법</h2>
-  <ol class="mt-3 grid gap-2 lg:mt-6 lg:grid-cols-4 lg:gap-6">
-    <li class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-3 lg:rounded-3xl lg:p-6"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white lg:h-10 lg:w-10 lg:text-base">1</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">요청</b><span class="text-sm text-sub">서비스와 지역, 날짜를 골라요</span></li>
-    <li class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-3 lg:rounded-3xl lg:p-6"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white lg:h-10 lg:w-10 lg:text-base">2</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">비교</b><span class="text-sm text-sub">기사님들의 견적을 한 번에 받아요</span></li>
-    <li class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-3 lg:rounded-3xl lg:p-6"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white lg:h-10 lg:w-10 lg:text-base">3</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">매칭</b><span class="text-sm text-sub">후기와 자격을 보고 직접 골라요</span></li>
-    <li class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-3 lg:rounded-3xl lg:p-6"><span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white lg:h-10 lg:w-10 lg:text-base">4</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">안심</b><span class="text-sm text-sub">완료 확인 후 14일 재점검 보장</span></li>
+  <ol class="mt-3 grid gap-2 lg:mt-6 lg:grid-cols-4 lg:gap-8">
+    <li class="hy-step flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-4 lg:rounded-3xl lg:p-6"><span class="hy-n">1</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">요청</b><span class="text-sm text-sub">서비스와 지역, 날짜를 골라요</span></li>
+    <li class="hy-step flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-4 lg:rounded-3xl lg:p-6"><span class="hy-n">2</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">비교</b><span class="text-sm text-sub">기사님들의 견적을 한 번에 받아요</span></li>
+    <li class="hy-step flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-4 lg:rounded-3xl lg:p-6"><span class="hy-n">3</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">매칭</b><span class="text-sm text-sub">후기와 자격을 보고 직접 골라요</span></li>
+    <li class="hy-step flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-card lg:flex-col lg:items-start lg:gap-4 lg:rounded-3xl lg:p-6"><span class="hy-n">4</span><b class="w-10 shrink-0 text-sm lg:w-auto lg:text-lg">안심</b><span class="text-sm text-sub">완료 확인 후 14일 재점검 보장</span></li>
   </ol>
 </section>
 
@@ -242,9 +332,9 @@ if (window.tailwind) tailwind.config = {
 <section id="detail" class="mx-auto mt-8 max-w-6xl px-5 lg:mt-16 lg:px-8">
   <p class="text-xs font-black tracking-wide text-brand">WHAT WE DO</p><h2 class="text-lg font-black lg:text-2xl">한여름에서 이렇게 해결해요</h2>
   <p class="mt-1 text-sm text-sub">요청부터 예약 · 작업 확인 · 사후 보증까지 한여름 안에서 진행돼요.</p>
-  <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-3 lg:gap-6"><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">📝</p><h3 class="mt-2 font-black lg:text-lg">견적 요청서</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 분야 · 작업 지역(서울 25개 구 · 경기) · 희망일 · 사진 최대 5장 · 요청사항을 한 번에 접수</li><li>· 냉장·냉동고 철거는 층수 · 엘리베이터 · 사다리차 · 주차 여부를 필수로 받아 정확한 견적을 받아요</li><li>· 분야마다 "기타(직접 입력)"로 목록에 없는 작업도 요청 가능</li><li>· 24시간 언제든 접수 · 지정 기사님에게만 보내는 1:1 견적 요청</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🪪</p><h3 class="mt-2 font-black lg:text-lg">기사님 검증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 사업자등록증을 제출하고 관리자 승인을 받은 기사님만 견적 제출</li><li>· 자격증 · 보유 장비 배지(예: 공조냉동기계기능사, 고압 세척 장비)</li><li>· 활동 지역 · 전문 분야 · 영업중/휴무 상태 공개</li><li>· 실거래 후기 수가 많은 기사님이 먼저 보여요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">⚖️</p><h3 class="mt-2 font-black lg:text-lg">견적 비교 · 예약</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 도착한 견적의 금액 · 작업 가능일 · 후기 · 자격을 한 화면에서 비교</li><li>· 마음에 드는 견적으로 예약하면 예약 번호가 발급돼요</li><li>· 작업 대금은 고객과 기사님이 직접 주고받고, 고객은 수수료 0원</li><li>· 작업 완료 요청 후 고객 확인(또는 정해진 시간 경과)으로 거래 확정</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-cool" aria-hidden="true"><svg class="h-7 w-7 inline-block shrink-0 align-[-3px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4C7 4 3.5 7 3.5 10.8c0 2.4 1.5 4.5 3.8 5.7L6.5 20l4-2.4c.5.1 1 .1 1.5.1 5 0 8.5-3 8.5-6.9S17 4 12 4z"/></svg></p><h3 class="mt-2 font-black lg:text-lg">안심 채팅</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 전화번호를 공개하지 않고 기사님과 대화</li><li>· 현장 사진 보내기 · 일정 변경 요청 · 읽음 표시</li><li>· 채팅에서 합의한 내용으로 바로 예약 등록</li><li>· 🚨 분쟁·재점검 신고 버튼으로 고객센터에 바로 접수</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🧾</p><h3 class="mt-2 font-black lg:text-lg">작업 내역서 · 보증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 거래가 확정되면 전자 작업 내역서와 무상 A/S 보증서 발급</li><li>· 설비 작업은 14일 안에 같은 증상이 생기면 담당 기사님 재점검 연결</li><li>· 입주·이사·상가 청소는 3일 안에 명백한 하자(파손·누수 등)가 있을 때만 재점검</li><li>· 확정된 거래만 후기를 남길 수 있어 후기를 믿을 수 있어요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><p class="text-2xl" aria-hidden="true">🧊</p><h3 class="mt-2 font-black lg:text-lg">중고 설비 장터</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 업소용 냉장고 · 제빙기 · 에어컨 · 보일러 · 주방설비 중고를 사고팔기</li><li>· 상태 등급(A/B/C) · 사용 연수 · 매장 위치 · 엘리베이터 · 사다리차 정보 표시</li><li>· 개인 직거래와 업체 매입 제안을 함께 받아요</li><li>· 폐업·리뉴얼 매장의 여러 설비를 한 번에 올리는 일괄 판매</li></ul></div></div>
+  <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-3 lg:gap-6"><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/><path d="M14 3.5V8h4M9 12h6M9 15.5h6"/></svg></span><h3 class="mt-2 font-black lg:text-lg">견적 요청서</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 분야 · 작업 지역(서울 25개 구 · 경기) · 희망일 · 사진 최대 5장 · 요청사항을 한 번에 접수</li><li>· 냉장·냉동고 철거는 층수 · 엘리베이터 · 사다리차 · 주차 여부를 필수로 받아 정확한 견적을 받아요</li><li>· 분야마다 "기타(직접 입력)"로 목록에 없는 작업도 요청 가능</li><li>· 24시간 언제든 접수 · 지정 기사님에게만 보내는 1:1 견적 요청</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg></span><h3 class="mt-2 font-black lg:text-lg">기사님 검증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 사업자등록증을 제출하고 관리자 승인을 받은 기사님만 견적 제출</li><li>· 자격증 · 보유 장비 배지(예: 공조냉동기계기능사, 고압 세척 장비)</li><li>· 활동 지역 · 전문 분야 · 영업중/휴무 상태 공개</li><li>· 실거래 후기 수가 많은 기사님이 먼저 보여요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7M3 20h18"/></svg></span><h3 class="mt-2 font-black lg:text-lg">견적 비교 · 예약</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 도착한 견적의 금액 · 작업 가능일 · 후기 · 자격을 한 화면에서 비교</li><li>· 마음에 드는 견적으로 예약하면 예약 번호가 발급돼요</li><li>· 작업 대금은 고객과 기사님이 직접 주고받고, 고객은 수수료 0원</li><li>· 작업 완료 요청 후 고객 확인(또는 정해진 시간 경과)으로 거래 확정</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4C7 4 3.5 7 3.5 10.8c0 2.4 1.5 4.5 3.8 5.7L6.5 20l4-2.4c.5.1 1 .1 1.5.1 5 0 8.5-3 8.5-6.9S17 4 12 4z"/></svg></span><h3 class="mt-2 font-black lg:text-lg">안심 채팅</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 전화번호를 공개하지 않고 기사님과 대화</li><li>· 현장 사진 보내기 · 일정 변경 요청 · 읽음 표시</li><li>· 채팅에서 합의한 내용으로 바로 예약 등록</li><li>· 🚨 분쟁·재점검 신고 버튼으로 고객센터에 바로 접수</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg></span><h3 class="mt-2 font-black lg:text-lg">작업 내역서 · 보증</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 거래가 확정되면 전자 작업 내역서와 무상 A/S 보증서 발급</li><li>· 설비 작업은 14일 안에 같은 증상이 생기면 담당 기사님 재점검 연결</li><li>· 입주·이사·상가 청소는 3일 안에 명백한 하자(파손·누수 등)가 있을 때만 재점검</li><li>· 확정된 거래만 후기를 남길 수 있어 후기를 믿을 수 있어요</li></ul></div><div class="rounded-3xl bg-white p-5 shadow-card lg:p-6"><span class="hy-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/></svg></span><h3 class="mt-2 font-black lg:text-lg">중고 설비 장터</h3><ul class="mt-2 space-y-1.5 text-sm leading-relaxed text-sub"><li>· 업소용 냉장고 · 제빙기 · 에어컨 · 보일러 · 주방설비 중고를 사고팔기</li><li>· 상태 등급(A/B/C) · 사용 연수 · 매장 위치 · 엘리베이터 · 사다리차 정보 표시</li><li>· 개인 직거래와 업체 매입 제안을 함께 받아요</li><li>· 폐업·리뉴얼 매장의 여러 설비를 한 번에 올리는 일괄 판매</li></ul></div></div>
   <h3 class="mt-8 font-black lg:text-xl">맡길 수 있는 작업</h3>
-  <dl class="mt-3 grid gap-2 lg:grid-cols-2 lg:gap-4"><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">❄️ 에어컨</dt><dd class="mt-1 text-sm leading-relaxed text-sub">벽걸이 · 스탠드 · 천장형(시스템) 에어컨 분해청소, 냉방·난방 불량 수리, 가스 충전, 신규 설치 · 이전 설치, 냉난방 점검</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🔥 보일러·난방</dt><dd class="mt-1 text-sm leading-relaxed text-sub">가스·기름 보일러 고장 수리 · 에러 점검, 보일러 교체 · 설치, 난방배관 청소, 온수기 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🚰 배관·하수구</dt><dd class="mt-1 text-sm leading-relaxed text-sub">하수구 · 싱크대 · 변기 막힘 뚫음, 겨울철 수도 동파 · 배관 해빙, 누수 탐지 · 수리, 배관 교체 · 용접, 수전 · 싱크대 · 세면대 연결, 하수관 고압 세척</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧊 업소용 냉장·냉동</dt><dd class="mt-1 text-sm leading-relaxed text-sub">업소용 냉장고 · 냉동고 · 제빙기 · 쇼케이스 · 저온창고 수리, 폐업·리뉴얼 매장 설비 철거 · 매입</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🍳 업소용 주방설비</dt><dd class="mt-1 text-sm leading-relaxed text-sub">식기세척기 수리, 후드 · 덕트 청소, 가스레인지 · 오븐 등 주방설비 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🧹 청소</dt><dd class="mt-1 text-sm leading-relaxed text-sub">입주청소 · 이사(퇴거)청소 · 거주 중 청소 · 상가 · 사무실 청소</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black">🫧 생활가전</dt><dd class="mt-1 text-sm leading-relaxed text-sub">세탁기 · 건조기 분해청소, 가정용 냉장고 · 식기세척기 · 정수기 수리, 생활가전 설치 · 이전</dd></div></dl>
+  <dl class="mt-3 grid gap-2 lg:grid-cols-2 lg:gap-4"><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg></span>에어컨</dt><dd class="mt-1 text-sm leading-relaxed text-sub">벽걸이 · 스탠드 · 천장형(시스템) 에어컨 분해청소, 냉방·난방 불량 수리, 가스 충전, 신규 설치 · 이전 설치, 냉난방 점검</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2 0-3-1-5 1-8z"/></svg></span>보일러·난방</dt><dd class="mt-1 text-sm leading-relaxed text-sub">가스·기름 보일러 고장 수리 · 에러 점검, 보일러 교체 · 설치, 난방배관 청소, 온수기 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5s6 6.2 6 10.3a6 6 0 0 1-12 0C6 9.7 12 3.5 12 3.5z"/></svg></span>배관·하수구</dt><dd class="mt-1 text-sm leading-relaxed text-sub">하수구 · 싱크대 · 변기 막힘 뚫음, 겨울철 수도 동파 · 배관 해빙, 누수 탐지 · 수리, 배관 교체 · 용접, 수전 · 싱크대 · 세면대 연결, 하수관 고압 세척</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 11h12M9 7v1.5M9 14v3"/></svg></span>업소용 냉장·냉동</dt><dd class="mt-1 text-sm leading-relaxed text-sub">업소용 냉장고 · 냉동고 · 제빙기 · 쇼케이스 · 저온창고 수리, 폐업·리뉴얼 매장 설비 철거 · 매입</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M11 3v8M7 7h4"/><path d="M17 3c-2 2-2.5 5-2.5 8H17v10"/></svg></span>업소용 주방설비</dt><dd class="mt-1 text-sm leading-relaxed text-sub">식기세척기 수리, 후드 · 덕트 청소, 가스레인지 · 오븐 등 주방설비 수리</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span>청소</dt><dd class="mt-1 text-sm leading-relaxed text-sub">입주청소 · 이사(퇴거)청소 · 거주 중 청소 · 상가 · 사무실 청소</dd></div><div class="rounded-2xl bg-white px-4 py-3 shadow-card"><dt class="font-black"><span class="hy-ico hy-ico-s" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="3" width="15" height="18" rx="2"/><circle cx="12" cy="13.5" r="4"/><path d="M8 6.5h2"/></svg></span>생활가전</dt><dd class="mt-1 text-sm leading-relaxed text-sub">세탁기 · 건조기 분해청소, 가정용 냉장고 · 식기세척기 · 정수기 수리, 생활가전 설치 · 이전</dd></div></dl>
 </section>
 
 <!-- 기사님 몰아보기 미리보기 -->
@@ -281,12 +371,12 @@ if (window.tailwind) tailwind.config = {
     </div>
 
     <ul class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sun/20 text-lg" aria-hidden="true">🆓</span><h3 class="mt-3 font-bold">견적은 몇 번이든 무료</h3><p class="mt-1 text-sm leading-relaxed text-white/65">예약이 안 돼도 비용이 없어요. 부담 없이 여러 요청에 견적을 내 보세요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-lg" aria-hidden="true">🎯</span><h3 class="mt-3 font-bold">내 분야 요청만 쏙</h3><p class="mt-1 text-sm leading-relaxed text-white/65">에어컨 · 보일러 · 냉장냉동 · 주방설비 중 내 분야 요청만 보여요. 내 활동 지역 요청이 먼저 떠요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-300/20 text-lg" aria-hidden="true">⭐</span><h3 class="mt-3 font-bold">나를 지정한 요청</h3><p class="mt-1 text-sm leading-relaxed text-white/65">기사님 몰아보기에서 고객이 직접 골라 요청하면 나만 보고 견적을 낼 수 있어요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-300/20 text-lg" aria-hidden="true">🔔</span><h3 class="mt-3 font-bold">새 요청 바로 알림</h3><p class="mt-1 text-sm leading-relaxed text-white/65">휴대폰 홈 화면에 앱으로 설치하면 새 요청과 메시지를 알림으로 받아요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-lg" aria-hidden="true">🧾</span><h3 class="mt-3 font-bold">차감 내역이 투명해요</h3><p class="mt-1 text-sm leading-relaxed text-white/65">충전 · 차감 내역이 건별로 남고, 잔액은 언제든 확인할 수 있어요.</p></li>
-      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sun/20 text-lg" aria-hidden="true">⏱️</span><h3 class="mt-3 font-bold">확정이 늦어지지 않아요</h3><p class="mt-1 text-sm leading-relaxed text-white/65">작업 완료 요청 후 고객 응답이 없으면 정해진 시간 뒤 자동 확정돼요. 실거래 후기는 프로필에 쌓여요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sun/20 text-sun" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z"/><circle cx="8" cy="8" r="1.3"/></svg></span><h3 class="mt-3 font-bold">견적은 몇 번이든 무료</h3><p class="mt-1 text-sm leading-relaxed text-white/65">예약이 안 돼도 비용이 없어요. 부담 없이 여러 요청에 견적을 내 보세요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-sky-300" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8"/></svg></span><h3 class="mt-3 font-bold">내 분야 요청만 쏙</h3><p class="mt-1 text-sm leading-relaxed text-white/65">에어컨 · 보일러 · 냉장냉동 · 주방설비 중 내 분야 요청만 보여요. 내 활동 지역 요청이 먼저 떠요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-amber-300/20 text-amber-300" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.7l5.9-.9z"/></svg></span><h3 class="mt-3 font-bold">나를 지정한 요청</h3><p class="mt-1 text-sm leading-relaxed text-white/65">기사님 몰아보기에서 고객이 직접 골라 요청하면 나만 보고 견적을 낼 수 있어요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-300/20 text-emerald-300" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 003.4 0"/></svg></span><h3 class="mt-3 font-bold">새 요청 바로 알림</h3><p class="mt-1 text-sm leading-relaxed text-white/65">휴대폰 홈 화면에 앱으로 설치하면 새 요청과 메시지를 알림으로 받아요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sky-400/20 text-sky-300" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg></span><h3 class="mt-3 font-bold">차감 내역이 투명해요</h3><p class="mt-1 text-sm leading-relaxed text-white/65">충전 · 차감 내역이 건별로 남고, 잔액은 언제든 확인할 수 있어요.</p></li>
+      <li class="rounded-3xl bg-white/[.07] p-5"><span class="grid h-10 w-10 place-items-center rounded-xl bg-sun/20 text-sun" aria-hidden="true"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><h3 class="mt-3 font-bold">확정이 늦어지지 않아요</h3><p class="mt-1 text-sm leading-relaxed text-white/65">작업 완료 요청 후 고객 응답이 없으면 정해진 시간 뒤 자동 확정돼요. 실거래 후기는 프로필에 쌓여요.</p></li>
     </ul>
 
     <div class="mt-8 grid gap-4 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
