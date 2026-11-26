@@ -643,7 +643,7 @@
     PA.busy = false;
     if (typeof render === 'function' && S.pro) proView();
   }
-  const paLater = () => { try { return Date.now() - +(localStorage.getItem(PA_LATER) || 0) < 7 * 864e5; } catch (_) { return false; } };
+  const paLater = () => { try { return Date.now() - +(localStorage.getItem(PA_LATER) || 0) < 864e5; } catch (_) { return false; } };
   const paBox = () => {
     if (PA.off) return '';   // 서버 준비(SQL) 전에는 신청 칸을 안 보여요
     const on = PA.row && PA.row.kakao_on;
@@ -1334,7 +1334,7 @@
   /* ---------- 34) 기사 화면 공지 카드: 수수료가 낮아졌어요 ---------- */
   (() => {
     const K = 'hy_fee_card_20261124';
-    const closed = () => { try { return localStorage.getItem(K) === '1'; } catch (_) { return false; } };
+    const closed = () => { try { return Date.now() - (+localStorage.getItem(K) || 0) < 864e5; } catch (_) { return false; } };
     const _pv = proView;
     proView = function () {
       _pv();
@@ -1352,7 +1352,7 @@
           <p class="mt-2 text-xs leading-relaxed text-sea/60">수수료 = 1,500원 + 최종 금액 × 등급 % · 정액이 3,500원 → 1,500원으로 낮아졌어요 · 확정 전인 거래부터 새 기준이에요.</p></section>`);
       } catch (_) {}
     };
-    ACT.notefeex = () => { try { localStorage.setItem(K, '1'); } catch (_) {} const n = document.getElementById('note-fee'); if (n) n.remove(); };
+    ACT.notefeex = () => { try { localStorage.setItem(K, String(Date.now())); } catch (_) {} const n = document.getElementById('note-fee'); if (n) n.remove(); };
   })();
 
   /* ---------- 35) 채팅창: 자판이 올라와도 입력칸이 가려지지 않게 ---------- */

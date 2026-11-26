@@ -1310,7 +1310,7 @@ function qShow(n) {
   if (n === 3) {
     const lab = document.querySelector('label[for="qm-details"]'), d = $('#qm-details'), room = 500 - qPrefix().length;
     lab.innerHTML = qform.buy ? '어떤 제품을 찾으세요? <span class="text-sun">(필수)</span>' : qform.etc ? '어떤 작업이 필요한지 적어 주세요 <span class="text-sun">(필수)</span>' : '세부 요청사항 · 특이사항';
-    d.placeholder = qform.buy ? '예) 4도어 업소용 냉장고 2대 / 45박스 냉동고 / 쇼케이스 · 예산 · 설치 필요 여부' : qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.';
+    d.placeholder = qform.buy ? '예) 4도어 업소용 냉장고 2대 / 45박스 냉동고 / 쇼케이스 · 예산 · 설치 필요 여부' : qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : (qExOf(qform.service) ? qExOf(qform.service)[0] : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.');
     d.maxLength = room; if (d.value.length > room) d.value = d.value.slice(0, room); $('#qm-count').textContent = `${d.value.length} / ${room}`;
     /* 필수 입력 화면 이탈 줄이기: 사진은 선택임을 분명히 하고, 한 번 눌러 채우는 예시 버튼을 보여줘요 */
     const s3 = document.querySelector('#qm [data-step="3"]');
@@ -1318,7 +1318,7 @@ function qShow(n) {
     if (pl) { if (!pl.dataset.qpl) pl.dataset.qpl = pl.innerHTML; pl.innerHTML = (qform.etc || qform.buy) ? '사진 <span class="font-normal text-sea/60">· 선택이에요. 없어도 괜찮아요</span>' : pl.dataset.qpl; }
     let ch = $('#qm-chips');
     if (!ch) { ch = document.createElement('div'); ch.id = 'qm-chips'; ch.className = 'mt-2 flex flex-wrap gap-2'; d.before(ch); ch.addEventListener('click', e => { const b = e.target.closest('button[data-chip]'); if (!b) return; const cur = d.value.trim(); const add = b.dataset.chip; if (cur.includes(add)) return; d.value = (cur ? cur + ', ' : '') + add; d.value = d.value.slice(0, d.maxLength > 0 ? d.maxLength : 500); d.dispatchEvent(new Event('input', { bubbles: true })); d.focus(); }); }
-    const tips = qform.buy ? ['4도어 업소용 냉장고', '45박스 냉동고', '쇼케이스'] : qform.etc ? ['에어컨 배관 연장', '줄눈 시공', '실외기 앵글 교체'] : [];
+    const tips = qform.buy ? ['4도어 업소용 냉장고', '45박스 냉동고', '쇼케이스'] : qform.etc ? ['에어컨 배관 연장', '줄눈 시공', '실외기 앵글 교체'] : (qExOf(qform.service) ? qExOf(qform.service)[1] : []);
     ch.innerHTML = tips.map(t => `<button type="button" data-chip="${t}" class="rounded-full border border-mist bg-white px-3 py-1.5 text-sm font-bold text-sea hover:bg-ice">+ ${t}</button>`).join('');
     ch.classList.toggle('hidden', !tips.length);
   }
@@ -1327,6 +1327,46 @@ function qShow(n) {
   $('#qm-next').disabled = false;
   qm.querySelector('.overflow-y-auto').scrollTop = 0;
 }
+/* 3단계 예시 문구·누르면 채워지는 칩: 고른 서비스에 맞게 달라져요 */
+const QEX = {
+  aircon_repair:['예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 실내기에서 물이 떨어져요.',['냉방이 약해요','실내기 물 떨어져요','에러코드가 떠요']],
+  aircon_clean:['예) 스탠드형 1대, 벽걸이 2대 청소하고 싶어요. 냄새가 나요.',['벽걸이 1대','스탠드형 1대','냄새·곰팡이']],
+  aircon_install:['예) 벽걸이 에어컨 1대 신규 설치예요. 제품은 이미 구매했어요.',['신규 설치','이전 설치(철거 포함)','실외기 위치 협의']],
+  aircon_check:['예) 천장형 시스템에어컨 4대 점검이 필요해요. 가스 충전도 봐 주세요.',['천장형 점검','가스 충전','정기 점검']],
+  heat_repair:['예) 보일러에서 온수가 안 나와요. 에러코드가 떠요.',['온수가 안 나와요','난방이 안 돼요','소음이 나요']],
+  heat_install:['예) 10년 된 가스보일러를 콘덴싱으로 교체하고 싶어요.',['콘덴싱 교체','가스보일러','기름보일러']],
+  heat_clean:['예) 바닥이 미지근해요. 난방 배관 청소 견적이 궁금해요.',['바닥이 미지근해요','분배기 점검','배관 청소']],
+  cold_repair:['예) 4도어 업소용 냉장고가 냉기가 약해요. 성에가 껴요.',['냉기가 약해요','성에가 껴요','소음이 나요']],
+  freezer_removal:['예) 폐업해서 4도어 냉장고 2대와 냉동고 1대를 철거하고 싶어요.',['4도어 냉장고','냉동고','쇼케이스']],
+  freezer_sale:['예) 사용하던 45박스 냉동고를 팔고 싶어요. 2021년식이에요.',['45박스 냉동고','4도어 냉장고','제빙기']],
+  freezer_stock:['예) 재고로 가지고 있는 업소용 냉장고를 매도하고 싶어요.',['업소용 냉장고','냉동고','쇼케이스']],
+  kitchen_repair:['예) 가스레인지 화구 하나가 불이 안 붙어요. 업소용이에요.',['화구 점화 불량','식기세척기 고장','튀김기 수리']],
+  kitchen_clean:['예) 식당 후드와 덕트 청소가 필요해요. 1년 넘게 안 했어요.',['후드 청소','덕트 청소','기름때 제거']],
+  clean_movein:['예) 신축 아파트 32평 입주청소예요. 입주일은 정해졌어요.',['32평 신축','구축 입주','새집증후군 케어']],
+  clean_moveout:['예) 25평 빌라 이사청소예요. 이삿짐은 모두 뺐어요.',['25평 빌라','원룸·투룸','베란다 포함']],
+  clean_home:['예) 거주 중인 아파트 대청소예요. 주방과 욕실 위주로 봐 주세요.',['주방·욕실 위주','전체 대청소','베란다·창틀']],
+  clean_store:['예) 40평 사무실 입주 전 청소예요. 바닥 왁싱도 필요해요.',['사무실','상가·매장','준공 청소']],
+  home_repair:['예) 드럼세탁기가 탈수가 안 돼요. 에러코드가 떠요.',['세탁기 고장','냉장고 고장','식기세척기 고장']],
+  home_clean:['예) 드럼세탁기 통세척이 필요해요. 냄새가 나요.',['드럼세탁기 분해 청소','건조기 청소','냄새·곰팡이']],
+  home_install:['예) 새로 산 건조기를 설치하고 싶어요. 세탁기 위에 올릴 거예요.',['건조기 설치','세탁기 설치','가전 이전 설치']],
+  plumb_drain:['예) 주방 싱크대가 막혀서 물이 역류해요.',['싱크대 막힘','욕실 배수구 막힘','하수구 냄새']],
+  plumb_toilet:['예) 변기가 막혀서 물이 안 내려가요. 교체도 생각 중이에요.',['변기 막힘','변기 교체','물이 계속 새요']],
+  plumb_thaw:['예) 베란다 수도가 얼어서 물이 안 나와요.',['수도가 얼었어요','계량기 동파','배관 해빙']],
+  plumb_leak:['예) 아랫집 천장에서 물이 새요. 원인을 찾고 싶어요.',['아랫집 누수','천장 물샘','배관 누수 탐지']],
+  plumb_pipe:['예) 오래된 급수 배관을 교체하고 싶어요. 녹물이 나와요.',['급수관 교체','배수관 교체','녹물이 나와요']],
+  plumb_fixture:['예) 주방 수전과 세면대 수전을 새로 달고 싶어요. 제품은 구매했어요.',['주방 수전','세면대 수전','싱크대 연결']],
+  plumb_jet:['예) 건물 하수관이 자주 막혀요. 고압 세척이 필요해요.',['하수관 고압세척','정화조 배관','상가 하수구']],
+  interior_wallpaper:['예) 거실과 방 2개 도배·장판 교체를 하고 싶어요. 28평이에요.',['도배','장판 교체','28평']],
+  interior_tile:['예) 욕실 타일을 전체 교체하고 싶어요. 곰팡이가 심해요.',['욕실 타일 교체','곰팡이 시공','바닥 타일']],
+  interior_grout:['예) 욕실 줄눈 시공이 필요해요. 바닥과 벽 모두요.',['욕실 줄눈','주방 줄눈','현관 줄눈']],
+  interior_paint:['예) 실내 전체 도장이 필요해요. 벽지 위에 칠하려고 해요.',['실내 도장','외벽 도장','방문·문틀 도장']],
+  interior_wood:['예) 붙박이장과 신발장을 맞춤 제작하고 싶어요.',['붙박이장','신발장','주방 가구']],
+  interior_light:['예) 거실 조명을 LED로 교체하고 싶어요. 스위치도 바꿀 거예요.',['조명 교체','콘센트·스위치','전기 증설']],
+  interior_window:['예) 오래된 샷시를 교체하고 싶어요. 베란다 창 2개예요.',['샷시 교체','방충망','단열 보강']],
+  interior_demo:['예) 상가 내부 철거와 폐기물 처리가 필요해요. 30평이에요.',['내부 철거','폐기물 처리','원상복구']],
+  interior_full:['예) 20년 된 30평 아파트 전체 리모델링을 생각 중이에요. 예산은 상담 후 정하려고요.',['전체 리모델링','주방·욕실 위주','예산 상담']]
+};
+const qExOf = sv => QEX[sv] || null;
 const qPrefix = () => [qform.etc ? (qform.buy ? BUY_TAG : ETC_TAG) : '', qform.site ? `${SITE_TAG} ${qform.site}` : '', qform.tbd ? '[희망일 미정 · 상담 후 조율]' : ''].filter(Boolean).join(' ');
 /* 날짜 빠른 선택: 오늘 · 내일 · 이번 주말 · 날짜 미정 (한 번 눌러서 끝) */
 const qIso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
