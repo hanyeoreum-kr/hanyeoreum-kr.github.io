@@ -1932,6 +1932,7 @@
     const KEY = 'hy_feed_off';
     const st = document.createElement('style');
     st.textContent = '.hy-fd{margin:14px 0;background:#fff;border:1px solid #d6dfeb;border-radius:14px;overflow:hidden}'
+      + '.hy-fd.in{max-width:560px;margin:18px 0 14px 0}'
       + '@keyframes hyin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}'
       + '.hy-fd.fx{position:fixed;left:24px;bottom:24px;width:300px;margin:0;z-index:40;border:1px solid #d6dfeb;box-shadow:0 12px 32px rgba(15,23,42,.18);animation:hyin .5s ease-out}'
       + '.hy-fh{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid #e4eaf3;font-size:12px;color:#64748b}'
@@ -1964,7 +1965,7 @@
     const kOf = c => { c = String(c || ''); return c.startsWith('home') ? 'home' : c.startsWith('clean') ? 'clean' : c.startsWith('aircon') ? 'aircon' : c.startsWith('heat') ? 'heat' : c.startsWith('kitchen') ? 'kitchen' : c.startsWith('plumb') ? 'plumb' : c.startsWith('interior') ? 'interior' : c === 'truck' ? 'truck' : 'cold'; };
     const ago = t => { const m = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 60000)); return m < 3 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : m < 2880 ? '어제' : Math.floor(m / 1440) + '일 전'; };
     const E = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    let rows = null, last = 0, busyF = false;
+    let rows = null, last = 0, busyF = false, shut = false;
     const row = r => {
       const k = kOf(r.service), c = IC[k] || IC.home, qn = +r.qn || 0;
       const stt = r.status === 'completed' ? ['작업 완료', 'ok'] : (r.status === 'confirmed' || r.status === 'matched') ? ['예약 확정', 'ok'] : qn > 0 ? ['상담 진행 중', 'q'] : ['요청 접수', ''];
@@ -1973,6 +1974,7 @@
         + '<div class="hy-ft"><p class="a">' + E(r.gu) + ' · ' + E(lab) + '</p><p class="b ' + stt[1] + '">' + stt[0] + '</p></div><span class="hy-fm">' + ago(r.created_at) + '</span></div>';
     };
     const draw = () => {
+      if (shut) return;
       const pc = window.matchMedia('(min-width:1024px)').matches;
       try { if (!pc && sessionStorage.getItem(KEY)) return; } catch (_) {}
       const cats = document.getElementById('cats');
@@ -1981,8 +1983,12 @@
       const box = document.createElement('div'); box.id = 'hy-feed'; box.className = 'hy-fd';
       box.innerHTML = '<div class="hy-fh"><span class="hy-fdot"></span><b>지금 한여름</b><button type="button" class="hy-fx" aria-label="닫기">×</button></div>'
         + '<div class="hy-fv' + (mv ? ' mv' : '') + '" style="height:' + (Math.min(rows.length, 3) * 38) + 'px"><div class="hy-fl' + (mv ? ' mv' : '') + '" style="--d:' + (rows.length * 4) + 's">' + html + (mv ? html : '') + '</div></div>';
-      if (window.matchMedia('(min-width:1024px)').matches) { box.classList.add('fx'); document.body.appendChild(box); } else cats.parentNode.insertBefore(box, cats);
-      box.querySelector('.hy-fx').onclick = () => { if (!pc) { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} } box.remove(); };
+      if (pc) {
+        const fw = Math.min(300, Math.floor((window.innerWidth - 1152) / 2) - 32);
+        if (fw >= 220) { box.classList.add('fx'); box.style.width = fw + 'px'; document.body.appendChild(box); }
+        else { box.classList.add('in'); cats.parentNode.insertBefore(box, cats.nextSibling); }
+      } else cats.parentNode.insertBefore(box, cats);
+      box.querySelector('.hy-fx').onclick = () => { shut = true; if (!pc) { try { sessionStorage.setItem(KEY, '1'); } catch (_) {} } box.remove(); };
     };
     const fetchF = async () => {
       if (busyF || (rows && Date.now() - last < 300000)) return; busyF = true;
