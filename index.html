@@ -169,6 +169,9 @@ body{background:var(--paper)}
 #faq summary::after{content:"+";flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#F5F0E4;color:var(--sun);font-weight:900;font-size:18px;line-height:1}
 #faq details[open] summary::after{content:"–";background:var(--sun);color:#fff}
 #pro{background:linear-gradient(170deg,#0C2D48 0%,#091F33 100%)}
+/* 폰에서 화면이 옆으로 밀리거나 확대되는 것 막기: 글자 16px 미만 입력칸은 아이폰이 자동 확대해요 */
+html,body{max-width:100%;overflow-x:clip}
+@media(max-width:1023px){input,select,textarea{font-size:16px!important}}
 /* 홈의 '지금 한여름' 실시간 현황판(notify.js)도 새 색으로 */
 #hy-feed{background:#FFFDF8;border-color:#EBE4D4;border-radius:18px;box-shadow:0 14px 30px -16px rgba(12,45,72,.28)}
 #hy-feed.fx{box-shadow:0 18px 40px -12px rgba(12,45,72,.38)}
