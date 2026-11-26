@@ -571,7 +571,7 @@ async function alogin(el) {
   if (!emailOk(email)) return setErr('이메일을 확인해 주세요.');
   if (!pw) return setErr('비밀번호를 입력해 주세요.');
   await busy(el, async () => {
-    const { error } = await sb.auth.signInWithPassword({ email, password:pw });
+    const { error } = await sb.auth.signInWithPassword({ email, password:pw, options:{ captchaToken: await window.hyCaptcha() } });
     if (error) return setErr(/confirm/i.test(error.message) ? '이메일 인증이 아직 안 됐어요. 가입할 때 받은 메일의 링크를 눌러 주세요.' : /invalid/i.test(error.message) ? '이메일 또는 비밀번호가 맞지 않아요.' : errMsg(error));
     au.v = {}; closeM(); toast('로그인했어요.');
   });
@@ -596,8 +596,8 @@ async function asignup(el) {
       openM(head('거의 다 됐어요') + `<p class="leading-relaxed"><b>${esc(email)}</b>로 확인 메일을 보냈어요. 메일의 링크를 누르면 가입이 끝나고, 보내 둔 견적 요청이 그대로 이어져요.</p><p class="mt-2 text-sm text-sea/60">메일이 안 보이면 스팸함도 확인해 주세요.</p>` + `<button type="button" data-mclose class="mt-5 w-full rounded-xl bg-brand py-3 font-bold text-white">확인</button>`);
       return;
     }
-    let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
-    if (error && pro && !['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(data.kind) && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
+    let { data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data, captchaToken: await window.hyCaptcha(), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } });
+    if (error && pro && !['aircon', 'heat', 'cold', 'kitchen', 'truck'].includes(data.kind) && /database|saving/i.test(error.message)) ({ data:res, error } = await sb.auth.signUp({ email, password:pw, options:{ data:Object.assign({}, data, { kind:'aircon' }), captchaToken: await window.hyCaptcha(), emailRedirectTo:C.SITE_URL || location.href.split('#')[0] } }));
     if (error) { if (pro) await pendDoc.clear(); return setErr(/registered|exists/i.test(error.message) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : errMsg(error)); }
     track('signup'); auDoc = null;
     au = { tab:'login', type:'customer', v:{ email }, areas:new Set(), certs:new Set(), free:false, agree:false, kind:'', kinds:new Set(), subs:new Set(), ton:'', lift:false };
@@ -624,7 +624,7 @@ async function resetSend(el) {
   const email = ($('#rs-email').value || '').trim().toLowerCase();
   if (!emailOk(email)) return setErr('이메일 형식을 확인해 주세요.');
   await busy(el, async () => {
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:C.SITE_URL || location.href.split('#')[0] });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:C.SITE_URL || location.href.split('#')[0], captchaToken: await window.hyCaptcha() });
     if (error) throw error;
     openM(head('메일을 보냈어요') + `<p class="leading-relaxed">가입된 이메일이라면 <b>${esc(email)}</b>로 재설정 링크가 도착해요. 링크를 누르면 이 사이트에서 새 비밀번호를 정할 수 있어요.</p><div class="mt-4"><button type="button" data-mclose class="${B.s}">닫기</button></div>`);
   });
@@ -1394,7 +1394,7 @@ async function qNext() {
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
   if (!S.user) {   // 가입 없이 보내기: 임시 손님 계정을 만들고, 안 되면 예전처럼 로그인 창을 보여줘요
     track('qguest'); const b0 = $('#qm-next'); b0.disabled = true; b0.textContent = '준비하는 중...';
-    let ok = false; try { const { data, error } = await sb.auth.signInAnonymously(); ok = !error && !!(data && data.session); } catch (_) {}
+    let ok = false; try { const { data, error } = await sb.auth.signInAnonymously({ options:{ captchaToken: await window.hyCaptcha() } }); ok = !error && !!(data && data.session); } catch (_) {}
     for (let i = 0; ok && i < 40 && !S.user; i++) await sleepMs(100);
     b0.disabled = false; b0.textContent = '견적 요청 보내기';
     if (!ok || !S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }

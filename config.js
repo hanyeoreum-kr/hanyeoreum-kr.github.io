@@ -40,5 +40,34 @@ window.HY_CONFIG = {
 
   // 이용약관·개인정보처리방침 페이지 주소 (만들면 넣어 주세요)
   TERMS_URL: 'terms.html',
-  PRIVACY_URL: 'privacy.html'
+  PRIVACY_URL: 'privacy.html',
+
+  // 봇 차단(Cloudflare Turnstile) 사이트 키 — 공개돼도 되는 키예요. (비밀키는 Supabase에만)
+  TURNSTILE_SITEKEY: '0x4AAAAAAGT4kEErhaEbwz5I'
 };
+
+/* 봇 차단 토큰 받기 — 로그인·가입·익명 시작 전에 부르면 돼요. 실패해도 빈 값을 돌려줘서 사이트가 멈추지 않아요. */
+window.hyCaptcha = function () {
+  return new Promise(function (resolve) {
+    var done = false, key = window.HY_CONFIG && window.HY_CONFIG.TURNSTILE_SITEKEY;
+    function fin(t) { if (!done) { done = true; try { box.remove(); } catch (_) {} resolve(t || undefined); } }
+    if (!key) return resolve(undefined);
+    var box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000';
+    document.body.appendChild(box);
+    function go() {
+      try {
+        window.turnstile.render(box, { sitekey: key, appearance: 'interaction-only', callback: fin, 'error-callback': function () { fin(); }, 'timeout-callback': function () { fin(); } });
+      } catch (_) { fin(); }
+    }
+    if (window.turnstile) go();
+    else {
+      var sc = document.createElement('script');
+      sc.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      sc.async = true; sc.onload = go; sc.onerror = function () { fin(); };
+      document.head.appendChild(sc);
+    }
+    setTimeout(function () { fin(); }, 20000);
+  });
+};
+

@@ -891,7 +891,7 @@
     const fail = m => { pkBusy = false; btnGo.disabled = false; btnGo.textContent = '고른 분야 견적 한 번에 요청하기'; pkErr(m); };
     try {
       if (!S.user) {   // 가입 없이 보내기: 임시 손님 계정을 만들고, 안 되면 로그인 창을 보여줘요
-        let ok = false; try { const { data, error } = await sb.auth.signInAnonymously(); ok = !error && !!(data && data.session); } catch (_) {}
+        let ok = false; try { const { data, error } = await sb.auth.signInAnonymously({ options:{ captchaToken: await window.hyCaptcha() } }); ok = !error && !!(data && data.session); } catch (_) {}
         for (let i = 0; ok && i < 40 && !S.user; i++) await sleepMs(100);
         if (!ok || !S.user) { fail(''); closeM(); toast('견적 요청은 로그인 후 보낼 수 있어요.'); return authModal('login'); }
       }
@@ -1626,7 +1626,7 @@
         await sleep(1200);
         if (!sb) return;
         if (!S.user) {   // 이 기기에 로그인 정보가 없으면 임시 계정을 만들어 그 위로 요청을 옮겨요
-          try { await sb.auth.signInAnonymously(); } catch (_) {}
+          try { await sb.auth.signInAnonymously({ options:{ captchaToken: await window.hyCaptcha() } }); } catch (_) {}
           for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150);
         }
         if (!S.user) { toast('로그인한 뒤 알림톡 링크를 다시 눌러 주세요.'); return; }
@@ -1705,7 +1705,7 @@
       if (!mm) return setErr('요청번호의 숫자를 넣어 주세요. (예: 00036)');
       const rid = +mm[1];
       return busy(el, async () => {
-        if (!S.user) { try { await sb.auth.signInAnonymously(); } catch (_) {} for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150); }
+        if (!S.user) { try { await sb.auth.signInAnonymously({ options:{ captchaToken: await window.hyCaptcha() } }); } catch (_) {} for (let n = 0; n < 40 && !(S.user && S.user.id); n++) await sleep(150); }
         if (!S.user) return setErr('잠시 뒤 다시 눌러 주세요.');
         const { data, error } = await sb.rpc('claim_by_phone', { p_phone: ph, p_request: rid });
         if (error || !data || !data.ok) {
