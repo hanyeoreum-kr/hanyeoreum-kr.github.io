@@ -1312,6 +1312,15 @@ function qShow(n) {
     lab.innerHTML = qform.buy ? '어떤 제품을 찾으세요? <span class="text-sun">(필수)</span>' : qform.etc ? '어떤 작업이 필요한지 적어 주세요 <span class="text-sun">(필수)</span>' : '세부 요청사항 · 특이사항';
     d.placeholder = qform.buy ? '예) 4도어 업소용 냉장고 2대 / 45박스 냉동고 / 쇼케이스 · 예산 · 설치 필요 여부' : qform.etc ? '예) 에어컨 배관 연장이 필요해요 / 줄눈 시공도 같이 원해요 / 실외기 앵글 교체' : '예) 2019년식 벽걸이 에어컨이고 냉방이 약해요. 주차는 건물 앞에 가능해요.';
     d.maxLength = room; if (d.value.length > room) d.value = d.value.slice(0, room); $('#qm-count').textContent = `${d.value.length} / ${room}`;
+    /* 필수 입력 화면 이탈 줄이기: 사진은 선택임을 분명히 하고, 한 번 눌러 채우는 예시 버튼을 보여줘요 */
+    const s3 = document.querySelector('#qm [data-step="3"]');
+    const pl = [...s3.querySelectorAll('p')].find(x => x.dataset.qpl || /^사진(\s|·|$)/.test(x.textContent.trim()));
+    if (pl) { if (!pl.dataset.qpl) pl.dataset.qpl = pl.innerHTML; pl.innerHTML = (qform.etc || qform.buy) ? '사진 <span class="font-normal text-sea/60">· 선택이에요. 없어도 괜찮아요</span>' : pl.dataset.qpl; }
+    let ch = $('#qm-chips');
+    if (!ch) { ch = document.createElement('div'); ch.id = 'qm-chips'; ch.className = 'mt-2 flex flex-wrap gap-2'; d.before(ch); ch.addEventListener('click', e => { const b = e.target.closest('button[data-chip]'); if (!b) return; const cur = d.value.trim(); const add = b.dataset.chip; if (cur.includes(add)) return; d.value = (cur ? cur + ', ' : '') + add; d.value = d.value.slice(0, d.maxLength > 0 ? d.maxLength : 500); d.dispatchEvent(new Event('input', { bubbles: true })); d.focus(); }); }
+    const tips = qform.buy ? ['4도어 업소용 냉장고', '45박스 냉동고', '쇼케이스'] : qform.etc ? ['에어컨 배관 연장', '줄눈 시공', '실외기 앵글 교체'] : [];
+    ch.innerHTML = tips.map(t => `<button type="button" data-chip="${t}" class="rounded-full border border-mist bg-white px-3 py-1.5 text-sm font-bold text-sea hover:bg-ice">+ ${t}</button>`).join('');
+    ch.classList.toggle('hidden', !tips.length);
   }
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
   $('#qm-next').textContent = n === 3 ? '견적 요청 보내기' : n === 4 ? '닫기' : '다음';

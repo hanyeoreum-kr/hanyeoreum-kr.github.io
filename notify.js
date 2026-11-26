@@ -990,7 +990,7 @@
       head.classList.toggle('hidden', !showHead);
       if (showHead) {
         let sub = TXT[QP.k][1];
-        if (QP.k === 'details' && qform.etc) sub = qform.buy ? '찾으시는 제품을 꼭 적어 주세요.' : '어떤 작업이 필요한지 꼭 적어 주세요.';
+        if (QP.k === 'details' && qform.etc) sub = qform.buy ? '찾으시는 제품을 한 줄만 적어 주세요. 사진은 없어도 돼요.' : '어떤 작업이 필요한지 한 줄만 적어 주세요. 사진은 없어도 돼요.';
         $q('qp-h').textContent = TXT[QP.k][0]; $q('qp-s').textContent = sub; $q('qp-s').classList.toggle('hidden', !sub);
       }
       const all = allPages(), idx = n === 4 ? all.length : Math.max(0, all.findIndex(x => x.s === n && x.k === QP.k));
