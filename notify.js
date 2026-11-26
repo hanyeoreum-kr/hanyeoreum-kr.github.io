@@ -1722,7 +1722,7 @@
       const body = document.getElementById('mm-body'); if (!body || body.querySelector('[data-hyfindbox]')) return;
       const anchor = body.querySelector('[data-act="alogin"], [data-act="asignup"]'); if (!anchor || (S.user && !S.user.is_anonymous)) return;
       const box = document.createElement('button'); box.type = 'button'; box.dataset.hyfindbox = '1'; box.dataset.act = 'hyfind'; box.className = 'mt-3 flex w-full items-center justify-between gap-3 rounded-2xl border border-cool/60 bg-ice px-4 py-3 text-left hover:bg-white';
-      box.innerHTML = '<span class="text-[15px] font-bold leading-snug text-sea">📩 컴퓨터로 견적 요청하셨나요? <span class="text-cool">내 견적 찾기</span></span><span class="shrink-0 text-lg font-black text-cool" aria-hidden="true">›</span>';
+      box.innerHTML = '<span class="text-[15px] font-bold leading-snug text-sea">📩 비회원으로 요청하셨나요? <span class="text-cool">내 견적 찾기</span></span><span class="shrink-0 text-lg font-black text-cool" aria-hidden="true">›</span>';
       const tabs = body.querySelector('[data-act="atab"]'); const row = tabs && tabs.parentElement;
       if (row && row.parentElement === body) row.insertAdjacentElement('afterend', box); else body.appendChild(box);
     };
