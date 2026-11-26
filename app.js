@@ -383,7 +383,7 @@ async function onSession(session) {
   await loadAll();
   if (S.mode === 'pro' && !S.pro) S.mode = 'customer';
   if (prevId !== me()) subscribe();
-  if (S.user) rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); rpc('expire_requests').then(n => { if (n) queueLoad('req'); }).catch(() => {});
+  if (S.user) { rpc('run_housekeeping').then(n => { if (n) queueLoad('con'); }).catch(() => {}); rpc('expire_requests').then(n => { if (n) queueLoad('req'); }).catch(() => {}); }   // 로그인한 사람만 (로그아웃 상태에서 부르면 권한 오류가 로그에 쌓여요)
   if (S.user) handleTossReturn();
   if (S.user) setTimeout(welcomeCheck, 1200);
   if (S.user) setTimeout(async () => {

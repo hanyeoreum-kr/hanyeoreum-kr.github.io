@@ -1996,4 +1996,47 @@
     if (document.getElementById('cats')) fetchF();
   })();
 
+  /* =====================================================================
+     55) 로그인하러 갔다 와도 견적 요청 입력 내용 이어주기
+     - 견적 요청을 보내려다 로그인 창이 뜨면 입력한 내용을 이 기기에 30분만 잠깐 저장해요.
+     - 카카오·네이버처럼 다른 사이트로 갔다 돌아와 화면이 새로 열려도, 돌아오면 3단계(마지막 단계)로 바로 이어져요.
+     - 보낸 뒤에는 지우고, 사진은 저장하지 않아요(다시 올려 주세요).
+     ===================================================================== */
+  (function () {
+    if (typeof authModal !== 'function' || typeof openQuote !== 'function' || typeof qShow !== 'function') return;
+    const KEY = 'hy_qdraft', MAXAGE = 30 * 60 * 1000;
+    const el = id => document.getElementById(id);
+    const val = id => { const e = el(id); return e ? (e.type === 'checkbox' ? e.checked : e.value) : ''; };
+    const clear = () => { try { localStorage.removeItem(KEY); } catch (_) {} };
+    const save = () => {
+      try {
+        const m = el('qm'); if (!m || m.classList.contains('hidden')) return;
+        const r = document.querySelector('input[name="qm-svc"]:checked'); if (!r) return;
+        localStorage.setItem(KEY, JSON.stringify({ t:Date.now(), svc:r.value, gu:val('qm-gu'), date:val('qm-date'), details:val('qm-details'),
+          floor:val('qm-floor'), elev:val('qm-elev'), ladder:val('qm-ladder'), park:val('qm-park'), to:val('qm-to'), ton:val('qm-ton'), lift:val('qm-lift'), phone:val('qm-phone') }));
+      } catch (_) {}
+    };
+    const setv = (id, v) => { const e = el(id); if (!e || v === undefined || v === null || v === '') return; if (e.type === 'checkbox') e.checked = !!v; else e.value = v; e.dispatchEvent(new Event('input', { bubbles:true })); e.dispatchEvent(new Event('change', { bubbles:true })); };
+    const oa = window.authModal; window.authModal = function () { save(); return oa.apply(this, arguments); };
+    const oq = window.qShow; window.qShow = function (n) { if (n === 4) clear(); return oq.apply(this, arguments); };   // 요청을 보내면 저장본 삭제
+
+    const restore = async () => {
+      let d = null; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) {}
+      clear();
+      if (!d || !d.svc || Date.now() - d.t > MAXAGE || d.svc === 'freezer_sale') return;
+      try {
+        openQuote({ service:d.svc });
+        ['gu:qm-gu', 'date:qm-date', 'details:qm-details', 'floor:qm-floor', 'elev:qm-elev', 'ladder:qm-ladder', 'park:qm-park', 'to:qm-to', 'ton:qm-ton', 'lift:qm-lift']
+          .forEach(p => { const [k, id] = p.split(':'); setv(id, d[k]); });
+        if (!d.svc.startsWith('etc_') && qstep === 2 && d.gu && d.date) await qNext();   // 2단계 → 3단계
+        if (d.details) setv('qm-details', d.details);
+        if (d.phone) setTimeout(() => setv('qm-phone', d.phone), 150);
+        toast('작성하시던 견적 요청을 불러왔어요. 사진이 있었다면 다시 올려 주세요.');
+      } catch (_) {}
+    };
+    let has = false; try { has = !!localStorage.getItem(KEY); } catch (_) {}
+    if (!has) return;
+    let tries = 0; const iv = setInterval(() => { tries++; if (S.user || tries > 14) { clearInterval(iv); setTimeout(restore, 1800); } }, 400);
+  })();
+
 })();
