@@ -20,10 +20,11 @@
   const step3 = document.querySelector('#qm [data-step="3"]');
   if (step3 && !document.getElementById('qm-phone')) {
     step3.insertAdjacentHTML('beforeend', `
-      <div id="qm-phonebox" class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
-        <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로</span> 알려드려요</p>
+      <div id="qm-phonebox" class="mt-6 rounded-2xl p-4" style="background:#FFF6D6;border:3px solid #F97316;box-shadow:0 6px 18px rgba(249,115,22,.18)">
+        <p style="font-size:21px;font-weight:900;line-height:1.3;color:#0C2D48">💬 견적이 도착하면<br><span style="background:linear-gradient(transparent 58%,#FFD54A 58%)">카카오톡으로 바로 알려드려요</span></p>
         <div id="qm-phone-in" class="mt-1">
-        <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>💬 기사님과는 한여름 안심채팅으로만 대화해요</li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
+        <p style="margin-top:12px;display:flex;align-items:center;gap:8px;border-radius:12px;background:#0C2D48;color:#fff;padding:11px 13px;font-size:15px;font-weight:900;line-height:1.35"><span style="font-size:20px">🔒</span><span>내 번호는 기사님께 <span style="color:#FFB84D">절대 공개되지 않아요</span></span></p>
+        <ul class="mt-2 space-y-1 text-sm font-bold text-sea/80"><li>💬 기사님과는 한여름 안심채팅으로만 대화해요</li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
         <label for="qm-phone" class="mt-3 block text-sm font-bold">📱 휴대폰 번호</label>
         <input id="qm-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-2 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
         <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="qm-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
@@ -80,9 +81,10 @@
       const old = document.getElementById('qm-phone-later'); if (old) old.remove();
       const sum = document.getElementById('qm-summary'); if (!sum) return;
       if (NP.saved && NP.saved.phone && NP.saved.notify_ok) return;
-      sum.insertAdjacentHTML('beforebegin', `<div id="qm-phone-later" class="mt-5 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4 text-left">
-        <p class="font-black">💬 견적이 오면 카톡으로 알려 드릴까요? <span class="text-sm font-bold text-sea/60">(선택)</span></p>
-        <p class="mt-1 text-xs leading-relaxed text-sea/70">번호는 기사님께 공개되지 않아요. 안 받아도 '내 요청'에서 견적을 볼 수 있어요.</p>
+      sum.insertAdjacentHTML('beforebegin', `<div id="qm-phone-later" class="mt-5 rounded-2xl p-4 text-left" style="background:#FFF6D6;border:3px solid #F97316">
+        <p style="font-size:18px;font-weight:900;line-height:1.3;color:#0C2D48">💬 견적이 도착하면 카톡으로 알려드릴까요? <span style="font-size:13px;font-weight:700;opacity:.6">(선택)</span></p>
+        <p style="margin-top:8px;border-radius:12px;background:#0C2D48;color:#fff;padding:9px 12px;font-size:14px;font-weight:900">🔒 내 번호는 기사님께 <span style="color:#FFB84D">절대 공개되지 않아요</span></p>
+        <p class="mt-2 text-xs leading-relaxed text-sea/70">안 받아도 '내 요청'에서 견적을 볼 수 있어요.</p>
         <input id="pl-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-3 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
         <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="pl-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand"><span>견적 도착 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <a href="privacy.html" target="_blank" rel="noopener" class="text-xs font-bold text-cool underline">내용 보기</a></span></label>
         <p id="pl-err" role="alert" class="mt-2 text-sm font-bold text-red-600"></p>

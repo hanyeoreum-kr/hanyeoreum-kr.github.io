@@ -138,6 +138,7 @@ body{background:var(--paper)}
 .hy-steps li+li::before{content:"";position:absolute;left:-8px;top:50%;width:10px;height:2px;margin-top:-1px;background:#D9CFBA}
 .hy-steps b{display:grid;place-items:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--ink);color:#fff;font-size:12px}
 .hy-steps em{font-style:normal;margin-left:4px;color:var(--sun)}
+@media (max-width:1023px){.hy-steps{display:none}}
 .hy-perf{position:relative;margin:16px 0 12px;text-align:center;border-top:2px dashed #E3D9C4;height:0}
 .hy-perf span{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);background:#FFFDF8;padding:0 10px;font-size:12px;font-weight:800;color:var(--sub);white-space:nowrap}
 .hy-field{background:#F5F0E4;border-radius:16px}
@@ -592,7 +593,7 @@ html,body{max-width:100%;overflow-x:clip}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=20"></script>
 <script src="app.js?v=128"></script>
-<script src="notify.js?v=2611280"></script>
+<script src="notify.js?v=2611281"></script>
 <script>
 (function(){
   var box=document.getElementById('qm-services'),jump=document.getElementById('qm-jump');
