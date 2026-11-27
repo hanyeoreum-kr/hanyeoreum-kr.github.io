@@ -1916,7 +1916,7 @@
   /* ---------- 52) 관리자 통계 '어디서 멈출까요?': 3단계 이후 세 줄(사진·요청 / 전화번호 / 보내기 누름) 추가 ---------- */
   (() => {
     let LATE = null, asked = false, rq = 0;
-    const num = li => { const b = li && li.querySelector('b'); return b ? (parseInt(String(b.textContent).replace(/[^0-9]/g, ''), 10) || 0) : 0; };
+    const num = li => { const b = li && li.querySelector('b'); const m = b && String(b.textContent).match(/\d[\d,]*/); return m ? (parseInt(m[0].replace(/,/g, ''), 10) || 0) : 0; };
     const find = (ul, t) => [...ul.children].find(li => li.textContent.includes(t));
     const row = (t, v, prev, top) => {
       const drop = prev ? Math.round((1 - v / prev) * 100) : 0, w = Math.max(Math.round(v / Math.max(1, top) * 100), v ? 2 : 0);
