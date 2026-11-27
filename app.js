@@ -1409,10 +1409,12 @@ function qReset() {
 }
 /* 견적 1단계: 특정 분야만 보여주기 ('' = 전체) */
 function qCat(k) { document.querySelectorAll('#qm-services fieldset').forEach(f => f.classList.toggle('hidden', !!k && f.dataset.cat !== k)); const a = $('#qm-allcat'); if (a) a.classList.toggle('hidden', !k); }
+/* 요청을 보낸 뒤에는 홈 검색창에 남은 이전 분야·검색어를 비워요 (다시 누르면 이전 업종으로 열리던 문제) */
+function hqClear() { try { const q = $('#hq'); if (q) q.value = ''; const k = $('#hkind'); if (k) k.value = ''; hsugShow(false); } catch (_) {} }
 function openQuote(pre = {}, trigger) {
   if (pre.service === 'freezer_sale') return sellOpen();
   if (S.mode !== 'customer') setMode('customer');
-  if (qstep === 4) qReset();
+  if (qstep === 4) { qReset(); hqClear(); }
   qopener = trigger || document.activeElement;
   if (pre.service) { qform.etc = null; qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
   if (pre.district) { qform.district = pre.district; $('#qm-gu').value = pre.district; }
@@ -1424,7 +1426,7 @@ function openQuote(pre = {}, trigger) {
   qShow(qform.service ? 2 : 1);
   track('qopen');
 }
-function closeQuote() { qm.classList.add('hidden'); if (!mmOpen()) document.body.classList.remove('overflow-hidden'); if (qstep === 4) { qReset(); qstep = 1; } if (qopener && qopener.focus) qopener.focus(); }
+function closeQuote() { qm.classList.add('hidden'); if (!mmOpen()) document.body.classList.remove('overflow-hidden'); if (qstep === 4) { qReset(); hqClear(); qstep = 1; } if (qopener && qopener.focus) qopener.focus(); }
 function qThumbs() { $('#qm-thumbs').innerHTML = qphotos.map((p, i) => `<li class="relative aspect-square"><img src="${p.url}" alt="첨부 사진 ${i + 1}" class="h-full w-full rounded-xl object-cover"><button type="button" data-rm="${i}" aria-label="사진 ${i + 1} 삭제" class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full bg-sea text-white text-sm leading-none">&times;</button></li>`).join(''); }
 async function qNext() {
   if (qstep === 4) return closeQuote();

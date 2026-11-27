@@ -221,8 +221,7 @@
   /* 배관·하수구: 대수 대신 '어디가 / 어떤 건물 / 얼마나 급한지'를 눌러서 골라요 */
   const PL = {
     where:{ t:'문제가 생긴 곳', multi:true, items:['싱크대', '화장실 변기', '세면대', '욕실 바닥 배수구', '베란다 배수구', '세탁기 배수', '수도 계량기', '외부 하수구·맨홀', '천장·벽(누수)', '식당 주방 배관'] },
-    bld:{ t:'건물 종류', items:['아파트', '빌라·주택', '오피스텔', '상가·식당', '사무실·공장'] },
-    hurry:{ t:'얼마나 급한가요?', items:['오늘 바로', '1~2일 안에', '이번 주 안에', '날짜 맞춰서'] }
+    bld:{ t:'건물 종류', items:['아파트', '빌라·주택', '오피스텔', '상가·식당', '사무실·공장'] }
   };
   const PV = { where:[], bld:'', hurry:'' };
   const plLine = () => { const p = []; if (PV.where.length) p.push('위치: ' + PV.where.join('·')); if (PV.bld) p.push('건물: ' + PV.bld); if (PV.hurry) p.push('급함: ' + PV.hurry); return p.length ? '[상황] ' + p.join(' / ') : ''; };
