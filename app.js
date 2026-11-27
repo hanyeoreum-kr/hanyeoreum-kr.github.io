@@ -2210,14 +2210,56 @@ async function inqDel(el, id) {
 let AF = 'ALL', AIP = 0;
 const slaOver = i => { const t = Date.now(), c = T(i.created_at); return (i.status === 'RECEIVED' && t - c > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - c > SLA_ANS); };
 /* 관리자: 방문 통계 카드 */
-let VS = null, vsAt = 0, FN = null, FC = null;
+let VS = null, vsAt = 0, FN = null, FC = null, AD = null;
 function loadVisits(force) {
   if (!S.admin || (!force && Date.now() - vsAt < 60000)) return;
   vsAt = Date.now();
   rpc('admin_visit_stats', { p_days:14 }).then(d => { VS = d; if (S.mode === 'admin') adminView(); }).catch(() => { VS = { err:true }; if (S.mode === 'admin') adminView(); });
   rpc('admin_funnel', { p_days:7 }).then(d => { FN = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { FN = { err:true }; });
+  rpc('admin_ad_stats', { p_days:14 }).then(d => { AD = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { AD = { err:true }; });
   rpc('admin_flow_check', { p_days:14 }).then(d => { FC = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { FC = { err:true }; });
 }
+/* 관리자: 광고 성과 (구글 광고 비용·설치는 직접 입력 → 가입·견적 요청과 합쳐 단가 계산) */
+function adBox() {
+  if (!AD) return '';
+  const wrap = x => `<div class="mt-6 border-t border-mist pt-5"><h3 class="text-sm font-bold">광고 성과 <span class="font-normal text-sea/50">최근 14일 · 구글 앱 설치 광고</span></h3>${x}</div>`;
+  if (AD.err) return wrap('<p class="mt-3 rounded-xl bg-sun/10 p-3 text-xs">광고 성과를 보려면 Supabase에서 <b>광고성과통계.sql</b>을 실행해 주세요. (채팅으로 받은 SQL)</p>');
+  const ev = AD.events || [], sp = AD.spend || [], W = n => Number(n || 0).toLocaleString('ko-KR');
+  const sum = (arr, k) => arr.reduce((a, x) => a + (+x[k] || 0), 0), per = (a, b) => b > 0 ? W(Math.round(a / b)) + '원' : '-';
+  const cost = sum(sp, 'cost'), inst = sum(sp, 'installs'), imp = sum(sp, 'impressions');
+  const startDay = sp.length ? sp.map(x => String(x.day)).sort()[0] : null;
+  const after = startDay ? ev.filter(x => String(x.day) >= startDay) : [], before = startDay ? ev.filter(x => String(x.day) < startDay) : ev;
+  const avg = (arr, k) => arr.length ? sum(arr, k) / arr.length : 0, f1 = n => (Math.round(n * 10) / 10).toString();
+  const chn = { google_android:'구글 · 안드로이드', google_ios:'구글 · iOS' };
+  const mini = (t, v, sub) => `<div class="rounded-2xl bg-ice p-3"><p class="text-xs text-sea/60">${t}</p><p class="mt-0.5 font-display text-2xl tabular-nums">${v}</p>${sub ? `<p class="text-[11px] text-sea/50">${sub}</p>` : ''}</div>`;
+  const byCh = ['google_android', 'google_ios'].map(c => { const r = sp.filter(x => x.channel === c), co = sum(r, 'cost'), is = sum(r, 'installs'); return `<li class="flex justify-between gap-3 text-sm"><span>${chn[c]}<span class="block text-[11px] text-sea/50">비용 ${W(co)}원 · 노출 ${W(sum(r, 'impressions'))} · 설치 ${W(is)}</span></span><b class="tabular-nums">${per(co, is)}<span class="text-[11px] font-normal text-sea/50"> /설치</span></b></li>`; }).join('');
+  const cmp = (t, k) => `<li class="flex justify-between gap-3 text-sm"><span>${t}</span><b class="tabular-nums">${f1(avg(before, k))} → ${startDay ? f1(avg(after, k)) : '-'}<span class="text-[11px] font-normal text-sea/50"> 명/일</span></b></li>`;
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const rows = sp.slice().sort((a, b) => String(b.day).localeCompare(String(a.day)) || String(a.channel).localeCompare(String(b.channel))).slice(0, 10).map(x => `<li class="flex justify-between gap-3 text-xs text-sea/70"><span>${esc(String(x.day).slice(5))} · ${chn[x.channel] || esc(x.channel)}</span><span class="tabular-nums">${W(x.cost)}원 · 노출 ${W(x.impressions)} · 설치 ${W(x.installs)}</span></li>`).join('');
+  const inp = 'w-full rounded-xl bg-ice px-3 py-2 text-sm';
+  return wrap(`<div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">${mini('광고비 합계', W(cost) + '원', `노출 ${W(imp)}회`)}${mini('앱 설치', W(inst) + '건', '입력한 값 기준')}${mini('설치당 비용', per(cost, inst))}${mini('견적 요청 (14일)', W(sum(ev, 'quotes')) + '명', `가입 ${W(sum(ev, 'signups'))}명`)}</div>
+    <ul class="mt-4 space-y-2">${byCh}</ul>
+    <h4 class="mt-5 text-xs font-bold text-sea/70">광고 시작 전 → 후 하루 평균 ${startDay ? '(' + esc(startDay.slice(5)) + ' 시작)' : '(광고비를 입력하면 비교돼요)'}</h4>
+    <ul class="mt-2 space-y-2">${cmp('사이트 방문', 'visitors')}${cmp('스토어 버튼 클릭', 'store_click')}${cmp('회원가입', 'signups')}${cmp('견적 요청', 'quotes')}</ul>
+    <p class="mt-2 text-[11px] leading-relaxed text-sea/50">앱 설치 광고는 설치한 사람과 가입한 사람을 1:1로 이어 볼 수 없어요. 그래서 광고 시작 전후의 하루 평균 변화로 효과를 봐요.</p>
+    <h4 class="mt-5 text-xs font-bold text-sea/70">광고 숫자 입력 (구글 광고 화면의 하루 값)</h4>
+    <div class="mt-2 grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <input id="ad-day" type="date" value="${today}" class="${inp}" aria-label="날짜">
+      <select id="ad-ch" class="${inp}" aria-label="채널"><option value="google_android">안드로이드</option><option value="google_ios">iOS</option></select>
+      <input id="ad-cost" type="number" min="0" inputmode="numeric" placeholder="광고비(원)" class="${inp}" aria-label="광고비">
+      <input id="ad-imp" type="number" min="0" inputmode="numeric" placeholder="노출수" class="${inp}" aria-label="노출수">
+      <input id="ad-inst" type="number" min="0" inputmode="numeric" placeholder="설치 수" class="${inp}" aria-label="설치 수"></div>
+    <button type="button" id="ad-save" class="mt-2 rounded-xl bg-sea px-4 py-2 text-sm font-bold text-white">저장 (같은 날짜·채널은 덮어써요)</button>
+    <ul class="mt-3 space-y-1">${rows}</ul>`);
+}
+document.addEventListener('click', async e => {
+  const b = e.target && e.target.closest && e.target.closest('#ad-save'); if (!b || !S.admin) return;
+  const g = id => document.getElementById(id), n = id => Math.max(0, Math.round(+g(id).value || 0)), day = g('ad-day').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return toast('날짜를 선택해 주세요.');
+  b.disabled = true;
+  try { await rpc('admin_ad_save', { p_day:day, p_channel:g('ad-ch').value, p_cost:n('ad-cost'), p_imp:n('ad-imp'), p_inst:n('ad-inst') }); toast('저장했어요.'); AD = await rpc('admin_ad_stats', { p_days:14 }); adminView(); }
+  catch (err) { toast('저장하지 못했어요. 광고성과통계.sql을 실행했는지 확인해 주세요.'); b.disabled = false; }
+});
 function flowBox() {
   if (!FC) return '';
   const wrap = b => `<div class="mt-6 border-t border-mist pt-5"><h3 class="text-sm font-bold">요청 간편화 점검 <span class="font-normal text-sea/50">최근 14일 · 사람 수</span></h3>${b}</div>`;
@@ -2255,7 +2297,7 @@ function visitCard() {
     <div class="mt-5 grid gap-4 sm:grid-cols-2">
       <div><h3 class="text-sm font-bold">어디서 왔나요 (7일)</h3><ul class="mt-2 space-y-1 text-sm">${refs.length ? refs.map(r => `<li class="flex justify-between gap-3"><span class="truncate">${esc(r.ref)}</span><b class="tabular-nums">${r.n}명</b></li>`).join('') : '<li class="text-sea/50">아직 기록이 없어요</li>'}</ul><p class="mt-2 text-[11px] leading-relaxed text-sea/50">홍보 링크 끝에 <b>?from=이름</b>을 붙이면 여기에 따로 보여요. 예) hanyeoreum.co.kr/?from=당근</p></div>
       <div><h3 class="text-sm font-bold">최근 7일 실제 행동</h3><ul class="mt-2 space-y-1 text-sm"><li class="flex justify-between"><span>견적 요청</span><b class="tabular-nums">${VS.week_quote || 0}건</b></li><li class="flex justify-between"><span>회원가입</span><b class="tabular-nums">${VS.week_signup || 0}명</b></li><li class="flex justify-between"><span>판매글 등록</span><b class="tabular-nums">${VS.week_listing || 0}건</b></li><li class="flex justify-between text-sea/60"><span>장터 · 기사찾기 화면 조회</span><b class="tabular-nums">${pg.market || 0} · ${pg.pros || 0}회</b></li></ul></div>
-    </div>${funnelBox()}${flowBox()}`);
+    </div>${funnelBox()}${flowBox()}${adBox()}`);
 }
 /* 관리자: 고객 견적 요청 한눈에 보기 */
 let RF = 'wait';
