@@ -997,7 +997,7 @@ function bkDraw() {
 }
 function bkAdd(n) { n = String(n || '').trim().slice(0, 30); if (!n) return; const f = bk.find(x => x.n === n); if (f) f.q = Math.min(f.q + 1, 99); else if (bk.length < 20) bk.push({ n, q:1 }); else return toast('종목은 20개까지 담을 수 있어요.'); bkDraw(); }
 function sellModal(kind) {
-  if (needLogin('판매글은 로그인 후 올릴 수 있어요.')) return;
+  if (!S.user) { toast('가입하면 바로 판매글을 올릴 수 있어요. 1분이면 돼요.'); return authModal('signup', 'customer'); }
   if (kind === 'stock' && !approved()) return toast('승인된 기사·업체만 재고 판매글을 올릴 수 있어요.');
   sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false; sellCat = MK.cat || 'cold';
   const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
