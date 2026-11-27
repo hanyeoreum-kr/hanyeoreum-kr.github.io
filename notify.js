@@ -22,17 +22,26 @@
     step3.insertAdjacentHTML('beforeend', `
       <div id="qm-phonebox" class="mt-6 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4">
         <p class="text-base font-black leading-snug">💬 견적이 오면 <span class="text-brand">카톡으로</span> 알려드려요</p>
+        <div id="qm-phone-in" class="mt-1">
         <ul class="mt-2 space-y-1 text-xs font-bold text-sea/70"><li>🔒 번호는 기사님께 <span class="text-sun">절대 공개되지 않아요</span></li><li>💬 기사님과는 한여름 안심채팅으로만 대화해요</li><li>📵 광고·스팸 문자는 보내지 않아요</li><li>💸 견적 요청·비교는 끝까지 무료예요</li></ul>
         <label for="qm-phone" class="mt-3 block text-sm font-bold">📱 휴대폰 번호</label>
         <input id="qm-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-2 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
         <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="qm-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand">
           <span>견적 도착 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <b class="text-sun">(필수)</b>
           <details class="mt-1"><summary class="cursor-pointer text-xs font-bold text-cool">내용 보기</summary><span class="mt-1 block rounded-lg bg-white p-2 text-xs leading-relaxed">항목: 휴대폰 번호<br>목적: 견적 도착 등 견적·계약 진행 알림 발송<br>보유 기간: 회원 탈퇴 또는 동의 철회 시까지<br>발송 대행: 솔라피(SOLAPI) · 카카오<br>번호는 기사님께 제공하지 않아요. 동의하지 않으면 견적 요청을 보낼 수 없어요. 자세한 내용은 <a href="privacy.html" target="_blank" rel="noopener" class="underline">개인정보처리방침</a>을 확인해 주세요.</span></details></span></label>
+        </div>
       </div>`);
+    const tg = document.getElementById('qm-phone-tg');
+    if (tg) tg.addEventListener('click', () => phoneOpen(document.getElementById('qm-phone-in').classList.contains('hidden')));
     const inp = document.getElementById('qm-phone');
     inp.addEventListener('input', () => { inp.value = phFmt(phDigits(inp.value)); });
   }
 
+  function phoneOpen(on) {
+    const bx = document.getElementById('qm-phone-in'), tg = document.getElementById('qm-phone-tg'), ar = document.getElementById('qm-phone-ar');
+    if (!bx) return; bx.classList.toggle('hidden', !on); if (tg) tg.setAttribute('aria-expanded', on ? 'true' : 'false'); if (ar) ar.textContent = on ? '▴' : '▾';
+    if (on) { const i = document.getElementById('qm-phone'); if (i && !i.value) setTimeout(() => { try { i.focus(); } catch (_) {} }, 50); }
+  }
   async function fillPhone() {
     const inp = document.getElementById('qm-phone'), ag = document.getElementById('qm-agree');
     if (!inp || !S.user || !sb) return;
@@ -42,7 +51,7 @@
         NP.saved = { uid:me(), phone:data ? data.phone : '', notify_ok:!!(data && data.notify_ok) };
       } catch (_) { NP.saved = { uid:me(), phone:'', notify_ok:false }; }
     }
-    if (!inp.value && NP.saved.phone) { inp.value = phFmt(NP.saved.phone); if (NP.saved.notify_ok && ag) ag.checked = true; }
+    if (!inp.value && NP.saved.phone) { inp.value = phFmt(NP.saved.phone); if (NP.saved.notify_ok && ag) ag.checked = true; phoneOpen(true); }
   }
   async function savePhone(d) {
     if (!S.user || !sb) return;
@@ -60,13 +69,41 @@
     if (!inp) return;
     const d = phDigits(inp.value);
     const msg = !phOk(d) ? '알림 받을 휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)' : !(ag && ag.checked) ? '견적 도착 알림 수신에 동의해 주세요.' : '';
-    if (msg) { e.stopPropagation(); e.preventDefault(); qErr(msg); (phOk(d) ? ag : inp).focus(); return; }
-    NP.pending = d;
+    if (msg) { e.stopPropagation(); e.preventDefault(); phoneOpen(true); qErr(msg); (phOk(d) ? ag : inp).focus(); return; }
+    NP.pending = d; try { track('qphone3'); } catch (_) {}
   }, true);
 
   /* 단계 화면이 바뀔 때: 3단계면 저장된 번호 채우기, 4단계(접수 완료)면 번호 저장 */
   const _qShow = qShow;
+  function laterPhone() {
+    try {
+      const old = document.getElementById('qm-phone-later'); if (old) old.remove();
+      const sum = document.getElementById('qm-summary'); if (!sum) return;
+      if (NP.saved && NP.saved.phone && NP.saved.notify_ok) return;
+      sum.insertAdjacentHTML('beforebegin', `<div id="qm-phone-later" class="mt-5 rounded-2xl border-2 border-brand-200 bg-brand-50 p-4 text-left">
+        <p class="font-black">💬 견적이 오면 카톡으로 알려 드릴까요? <span class="text-sm font-bold text-sea/60">(선택)</span></p>
+        <p class="mt-1 text-xs leading-relaxed text-sea/70">번호는 기사님께 공개되지 않아요. 안 받아도 '내 요청'에서 견적을 볼 수 있어요.</p>
+        <input id="pl-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-1234-5678" class="mt-3 w-full rounded-xl bg-white px-4 py-3.5 font-medium">
+        <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="pl-agree" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand"><span>견적 도착 알림(카카오톡) 수신과 이를 위한 휴대폰 번호 수집·이용에 동의해요 <a href="privacy.html" target="_blank" rel="noopener" class="text-xs font-bold text-cool underline">내용 보기</a></span></label>
+        <p id="pl-err" role="alert" class="mt-2 text-sm font-bold text-red-600"></p>
+        <button type="button" id="pl-save" class="mt-2 w-full rounded-xl bg-sea py-3 font-bold text-white">카톡으로 받기</button></div>`);
+      const i = document.getElementById('pl-phone'); if (i) i.addEventListener('input', () => { i.value = phFmt(phDigits(i.value)); });
+    } catch (_) {}
+  }
+  document.addEventListener('click', async e => {
+    const b = e.target.closest && e.target.closest('#pl-save'); if (!b) return;
+    const i = document.getElementById('pl-phone'), ag = document.getElementById('pl-agree'), er = document.getElementById('pl-err'), say = m => { if (er) er.textContent = m; };
+    const d = phDigits(i && i.value);
+    if (!phOk(d)) return say('휴대폰 번호를 정확히 입력해 주세요. (예: 010-1234-5678)');
+    if (!(ag && ag.checked)) return say('알림 수신에 동의해 주세요.');
+    b.disabled = true; b.textContent = '저장하는 중...';
+    await savePhone(d);
+    if (!(NP.saved && NP.saved.phone === d)) { b.disabled = false; b.textContent = '카톡으로 받기'; return say('저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.'); }
+    try { track('qphone_late'); } catch (_) {}
+    const box = document.getElementById('qm-phone-later'); if (box) box.innerHTML = `<p class="font-bold text-emerald-700">✅ 카톡 알림을 켰어요 <span class="font-normal text-sea/60">· ${esc(phMask(d))}</span></p>`;
+  });
   qShow = function (n) {
+    const gave = !!NP.pending;
     _qShow(n);
     if (n === 3) fillPhone();
     if (n === 4 && NP.pending) {
@@ -914,7 +951,7 @@
       pkBusy = false;
       const list = made.map(m => `<div class="flex justify-between gap-3 rounded-xl bg-ice px-3 py-2.5 text-sm"><span class="font-bold">${m.buy ? '중고 업소용 구매' : esc(SVC[m.svc] || m.svc)}</span><span class="text-sea/70">${esc(reqCode(m.id))} · ${esc(m.date)}</span></div>`).join('');
       const warn = bad.length ? `<p class="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800">${bad.map(b => esc(SVC[b.svc] || b.svc)).join(', ')} 요청은 보내지 못했어요. 아래 [닫기] 후 일반 견적 요청으로 다시 보내 주세요.</p>` : '';
-      const guest = isGuest() ? `<div class="mt-4 rounded-2xl border-2 border-brand/30 bg-brand-50 p-4 text-left"><p class="font-bold">📩 가입하면 견적을 한곳에서 비교해요</p><p class="mt-1 text-sm text-sea/75">기사님 견적 비교 · 채팅 · 작업 후 보증 신청까지 한곳에서 볼 수 있어요. 가입 안 해도 카톡으로는 계속 알려 드려요. 지금 보낸 요청은 그대로 이어져요.</p><div class="mt-3 grid gap-2"><button type="button" data-act="guestjoin" data-id="kakao" class="rounded-xl bg-[#FEE500] py-3 font-bold text-black">💬 카카오로 3초 가입</button><button type="button" data-act="guestjoin" data-id="email" class="rounded-xl border-2 border-mist bg-white py-3 font-bold">이메일로 가입</button></div></div>` : '';
+      const guest = isGuest() ? `<div class="mt-4 rounded-2xl border-2 border-brand/30 bg-brand-50 p-4 text-left"><p class="font-bold">📩 견적이 도착하면 확인할 수 있게 가입해 주세요</p><p class="mt-1 text-sm text-sea/75">요청 내용은 그대로 이어져요. 가입은 1분이면 끝나요.</p><div class="mt-3 grid gap-2"><button type="button" data-act="guestjoin" data-id="kakao" class="rounded-xl bg-[#FEE500] py-3 font-bold text-black">💬 카카오로 3초 가입</button><button type="button" data-act="guestjoin" data-id="email" class="rounded-xl border-2 border-mist bg-white py-3 font-bold">이메일로 가입</button></div></div>` : '';
       $('#mm-body').innerHTML = `<div class="text-center"><p class="text-4xl" aria-hidden="true">✅</p><h2 class="mt-2 font-display text-2xl">${made.length}개 분야 견적 요청이 접수됐어요</h2>
         <p class="mt-2 text-sm leading-relaxed text-sea/75">분야별 기사님들께 알림이 갔어요. 견적이 도착하면 카톡(${esc(phMask(d))})으로 알려 드려요.</p></div>
         <div class="mt-4 space-y-2">${list}</div>${warn}${guest}
@@ -930,7 +967,7 @@
     const s2 = qmEl.querySelector('[data-step="2"]'), s3 = qmEl.querySelector('[data-step="3"]'), scroller = qmEl.querySelector('.overflow-y-auto');
     if (!s2 || !s3 || !scroller) return;
     const st = document.createElement('style');
-    st.textContent = '#qm .qp-off{display:none!important}#qm-bar,#qm-label{display:none!important}#qm-gu-l,#qm label[for="qm-date"]{display:none}#qm-phonebox{border:0;background:transparent;padding:0;margin-top:1rem}#qm-phonebox>p:first-child{display:none}#qm-gu,#qm-to,#qm-ton{min-height:3.5rem;font-size:1rem}#qp-fill{transition:width .3s ease}#qm-jump,#qm-allcat{display:none!important}#qm-date{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:left}';
+    st.textContent = '#qm .qp-off{display:none!important}#qm-bar,#qm-label{display:none!important}#qm-gu-l,#qm label[for="qm-date"]{display:none}#qm-phonebox{margin-top:1.25rem}#qm-gu,#qm-to,#qm-ton{min-height:3.5rem;font-size:1rem}#qp-fill{transition:width .3s ease}#qm-jump,#qm-allcat{display:none!important}#qm-date{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:left}';
     document.head.appendChild(st);
 
     const bar = document.getElementById('qm-bar');
@@ -967,12 +1004,12 @@
         }
       }
       t(s2.querySelector('h3'), 'none'); t(s3.querySelector('h3'), 'none'); t(s3.querySelector('p'), 'none');
-      [...s3.children].forEach(el => { if (!el.dataset.qp) el.dataset.qp = el.id === 'qm-phonebox' ? 'phone' : 'details'; });
+      [...s3.children].forEach(el => { if (!el.dataset.qp) el.dataset.qp = 'details'; });
     }
     function pagesOf(n) {
       if (n === 1) return ['cat', 'svc'];
       if (n === 2) { const p = ['where', 'when']; if (vis($q('qm-truck'))) p.push('truck'); if (vis($q('qm-site'))) p.push('site'); const dv = $q('qm-dev'); if (dv && dv.innerHTML.trim()) p.push('dev'); return p; }
-      if (n === 3) return (qform.etc ? ['where', 'when'] : []).concat(['details', 'phone']);
+      if (n === 3) return (qform.etc ? ['where', 'when'] : []).concat(['details']);
       return [n === 1 ? 'svc' : 'done'];
     }
     function allPages() {
@@ -999,7 +1036,7 @@
       const pb = box.querySelector('[role="progressbar"]'); if (pb) pb.setAttribute('aria-valuenow', p);
       const tg = $q('qp-tgt'); tg.textContent = qform.targetName ? '지정 기사님: ' + qform.targetName : ''; tg.classList.toggle('hidden', !qform.targetName || n === 4);
       const nx = $q('qm-next'); if (n === 1) nx.style.display = QP.k === 'cat' ? 'none' : '';
-      if (n === 2 || n === 3) nx.textContent = (n === 3 && QP.k === 'phone') ? '견적 요청 보내기' : '다음';
+      if (n === 2 || n === 3) nx.textContent = (n === 3 && QP.k === 'details') ? '견적 요청 보내기' : '다음';
       qErr(''); scroller.scrollTop = 0;
     }
     const _qShow24 = qShow;
@@ -1864,11 +1901,10 @@
       try {
         if (qm.classList.contains('hidden') || typeof qstep === 'undefined' || qstep !== 3) return;
         if (on('details')) mark('qdetails');
-        if (on('phone')) mark('qphone');
       } catch (_) {}
     };
     new MutationObserver(() => { if (rq) return; rq = requestAnimationFrame(() => { rq = 0; scan(); }); }).observe(qm, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
-    qm.addEventListener('click', e => { try { if (e.target.closest('#qm-next') && typeof qstep !== 'undefined' && qstep === 3 && on('phone')) mark('qsubmit'); } catch (_) {} }, true);
+    qm.addEventListener('click', e => { try { if (e.target.closest('#qm-next') && typeof qstep !== 'undefined' && qstep === 3 && on('details')) mark('qsubmit'); } catch (_) {} }, true);
   })();
 
 
@@ -1889,8 +1925,8 @@
         if (!LATE) { if (!asked) { asked = true; sb.rpc('admin_funnel_late', { p_days: 7 }).then(r => { LATE = r && r.data && !r.error ? r.data : {}; apply(); }, () => { LATE = {}; }); } return; }
         if (!('qdetails' in LATE) && !('qphone' in LATE) && !('qsubmit' in LATE)) return;
         const l3 = find(ul, '3단계로'), done = find(ul, '견적 요청 완료'), top = num(ul.children[0]); if (!l3 || !done) return;
-        const a = LATE.qdetails || 0, b = LATE.qphone || 0, c = LATE.qsubmit || 0, v3 = num(l3);
-        done.insertAdjacentHTML('beforebegin', row('사진·요청 입력 화면', a, v3, top) + row('전화번호 입력 화면', b, a, top) + row('보내기 누름', c, b, top));
+        const a = LATE.qdetails || 0, c = LATE.qsubmit || 0, v3 = num(l3);
+        done.insertAdjacentHTML('beforebegin', row('사진·요청 입력 화면', a, v3, top) + row('보내기 누름', c, a, top));
         const dn = num(done), d = c ? Math.round((1 - dn / c) * 100) : 0, bb = done.querySelector('b');
         if (bb) bb.innerHTML = dn + '명' + (d > 0 ? ' <span class="text-xs font-normal text-sun">(-' + d + '%)</span>' : '');
         const lg = find(ul, '로그인 요구'); if (lg && num(lg) === 0) lg.remove();
@@ -1919,7 +1955,7 @@
           box.classList.add('hy-gj');
           p.className = 'hy-gt'; p.textContent = '내 견적, 잃어버리지 않게 가입해 두세요';
           p.insertAdjacentHTML('beforebegin', '<span class="hy-gb">1분이면 끝</span><br>');
-          const s = p.nextElementSibling; if (s && s.tagName === 'P') { s.className = 'hy-gs'; s.innerHTML = '가입하면 <b>폰·컴퓨터 어디서든</b> 받은 견적과 채팅을 볼 수 있어요.<br>방금 보낸 요청은 그대로 이어져요.'; }
+          const s = p.nextElementSibling; if (s && s.tagName === 'P') { s.className = 'hy-gs'; s.innerHTML = '가입하면 <b>폰·컴퓨터 어디서든</b> 견적 비교 · 채팅 · 작업 후 보증 신청까지 볼 수 있어요.<br>방금 보낸 요청은 그대로 이어져요.'; }
         });
       } catch (_) {}
     };

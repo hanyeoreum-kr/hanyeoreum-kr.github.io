@@ -644,7 +644,11 @@ async function resetConfirm(el) {
 async function guestJoin(k) {   // 손님 → 정식 회원 (카카오 또는 이메일)
   if (k === 'kakao') {
     try { const { error } = await sb.auth.linkIdentity({ provider:'kakao', options:{ redirectTo:C.SITE_URL || location.href.split('#')[0] } }); if (error) throw error; return; }
-    catch (_) { toast('카카오 연결이 아직 준비되지 않았어요. 이메일로 가입해 주세요.'); }
+    catch (e) {
+      const m = String((e && e.message) || e || '');
+      if (/already|exists|registered|linked/i.test(m)) { toast('이미 가입된 카카오 계정이에요. 로그인해 주세요. (지금 보낸 요청은 새 로그인 계정으로 옮겨지지 않아요)'); if (!qm.classList.contains('hidden')) closeQuote(); return authModal('login'); }
+      toast('카카오 연결에 문제가 있어요. 이메일로 가입해 주세요.');
+    }
   }
   if (!qm.classList.contains('hidden')) closeQuote();
   authModal('signup', 'customer');
@@ -1321,6 +1325,8 @@ function qShow(n) {
     const tips = qform.buy ? ['4도어 업소용 냉장고', '45박스 냉동고', '쇼케이스'] : qform.etc ? ['에어컨 배관 연장', '줄눈 시공', '실외기 앵글 교체'] : (qExOf(qform.service) ? qExOf(qform.service)[1] : []);
     ch.innerHTML = tips.map(t => `<button type="button" data-chip="${t}" class="rounded-full border border-mist bg-white px-3 py-1.5 text-sm font-bold text-sea hover:bg-ice">+ ${t}</button>`).join('');
     ch.classList.toggle('hidden', !tips.length);
+    let pt = $('#qm-ptip'); if (!pt && pl) { pt = document.createElement('p'); pt.id = 'qm-ptip'; pt.className = 'mt-1 text-xs leading-relaxed text-sea/70'; pl.after(pt); }
+    if (pt) pt.innerHTML = qPhotoTip(qform.service, qform.buy);
   }
   $('#qm-back').classList.toggle('hidden', n === 1 || n === 4);
   $('#qm-next').textContent = n === 3 ? '견적 요청 보내기' : n === 4 ? '닫기' : '다음';
@@ -1367,6 +1373,20 @@ const QEX = {
   interior_full:['예) 20년 된 30평 아파트 전체 리모델링을 생각 중이에요. 예산은 상담 후 정하려고요.',['전체 리모델링','주방·욕실 위주','예산 상담']]
 };
 const qExOf = sv => QEX[sv] || null;
+/* 서비스별 사진 촬영 안내: 요청서 3단계 사진 칸 아래와, 기사님의 '사진 요청하기' 채팅 문구에 같이 써요 */
+const QPH = [
+  [/^aircon_/, '실외기 전체 모습 · 실내기 모델명 라벨 · 문제가 있는 부분'],
+  [/^heat_/, '보일러 본체 · 모델명 라벨 · 에러가 뜬 화면'],
+  [/^(cold_|freezer_)/, '제품 전체 모습 · 모델명 라벨 · 설치된 자리'],
+  [/^kitchen_/, '설비 전체 모습 · 후드·덕트 상태 · 문제가 있는 부분'],
+  [/^clean_/, '방 전체가 보이는 사진 1~2장 · 특히 신경 쓸 곳'],
+  [/^home_/, '제품 전체 모습 · 모델명 라벨 · 에러가 뜬 화면'],
+  [/^plumb_/, '막히거나 샌 곳 가까이 · 주변 전체 모습'],
+  [/^interior_/, '공사할 공간 전체 모습 · 신경 쓰이는 부위'],
+  [/^truck$/, '옮길 짐 전체 · 출발지 입구나 계단']
+];
+const qPhotoList = sv => { const m = QPH.find(([re]) => re.test(sv || '')); return m ? m[1] : '문제가 있는 곳 가까이 · 주변 전체 모습'; };
+const qPhotoTip = (sv, buy) => buy ? '제품 사진이 있으면 올려 주세요. 없어도 괜찮아요.' : `이렇게 찍어 주세요: ${qPhotoList(sv)}<br>안 찍어도 괜찮아요. 필요하면 기사님이 채팅으로 요청해요.`;
 const qPrefix = () => [qform.etc ? (qform.buy ? BUY_TAG : ETC_TAG) : '', qform.site ? `${SITE_TAG} ${qform.site}` : '', qform.tbd ? '[희망일 미정 · 상담 후 조율]' : ''].filter(Boolean).join(' ');
 /* 날짜 빠른 선택: 오늘 · 내일 · 이번 주말 · 날짜 미정 (한 번 눌러서 끝) */
 const qIso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
@@ -1453,7 +1473,7 @@ async function qNext() {
     if (truck) Object.assign(row, { to_gu:qform.to, ton:qform.ton, lift:qform.lift });
     if (qform.target) row.target_pro = qform.target;
     const { data, error } = await sb.from('requests').insert(row).select('id').single();
-    if (!error) track('quote');
+    if (!error) { track('quote'); if (photos && photos.length) track('qphoto'); }
     if (error) throw error;
     const rows = [['요청 번호', reqCode(data.id)], ['서비스', qform.etc ? KINDS[qform.etc].name + ' · 기타' : SVC[qform.service]], ...(qform.site ? [['현장', qform.site]] : []), truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
@@ -1655,6 +1675,7 @@ async function chatModal(tid, keep) {
   const lastM = [...(S.msgs[tid] || [])].reverse().find(m => m.sender_id === me() && m.kind !== 'sys'), lastMine = lastM ? lastM.id : null;
   const readTag = !hasRead || !lastM ? '' : otherRead && T(otherRead) >= T(lastM.created_at) ? ' · <b>읽음</b>' : ' · 안 읽음';
   const acts = [`<span class="cam-only contents">${qa('qcam', tid, '📷 바로 찍기')}</span>`, qa('qphoto', tid, '🖼️ 앨범 사진'), qa('qsched', tid, '📅 일정 변경 요청')];
+  if (!imCust) acts.unshift(qa('askphoto', tid, '📸 사진 요청하기'));
   if (c) { if (c.status !== 'completed') acts.push(qa('cfin', c.id, c.kind === 'service' ? '✅ 거래 확정' : '✅ 거래 완료')); acts.push(qa('qreport', c.id, '🚨 분쟁/재점검 신고')); }
   const hint = agreeHint(tid, c, imCust), qx = hint.on ? qaHot : qa;
   const guide = (() => {   // 채팅창 위 안내: 고객은 합의 → 보증서, 기사님은 확정 → 계약 확정 건 + 등급(건수) 안내
@@ -1900,11 +1921,13 @@ function quoteModal(rid) {
     <p class="mt-3 rounded-xl bg-cool/10 p-3 text-sm leading-relaxed">견적 제출은 <b>무료</b>예요. 거래가 확정될 때만 수수료(${feeNote(r.service)})가 예치금에서 차감돼요.</p>
     <label for="qp" class="block mt-4 text-sm font-bold">견적 금액(원)</label><input id="qp" type="number" min="1000" step="1000" inputmode="numeric" placeholder="예) 90000" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
     <label for="qd" class="block mt-4 text-sm font-bold">작업 가능일</label><input id="qd" type="date" min="${today()}" value="${esc(r.wish_date >= today() ? r.wish_date : today())}" class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5 font-medium">
-    <label for="qmsg" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="qmsg" maxlength="100" placeholder="예) 자재 포함 가격이고 당일 작업 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">${errBox()}
+    <label for="qmsg" class="block mt-4 text-sm font-bold">한 줄 메시지</label><input id="qmsg" maxlength="100" placeholder="예) 자재 포함 가격이고 당일 작업 가능해요." class="mt-2 w-full rounded-xl bg-ice px-4 py-3.5">
+    <label class="mt-3 flex items-start gap-2 text-sm leading-relaxed"><input id="qrange" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand"><span>사진이 없거나 부족해서 <b>대략적인 견적</b>이에요. 현장 확인 후 금액이 달라질 수 있어요.</span></label>${errBox()}
     <div class="mt-4 flex gap-3"><button type="button" data-mclose class="${B.s}">취소</button>${wbtn('qsend', r.id, '견적 제출하기')}</div>`);
 }
 async function qsend(el, rid) {
-  const price = +$('#qp').value, visit = $('#qd').value, msg = $('#qmsg').value.trim();
+  const price = +$('#qp').value, visit = $('#qd').value; let msg = $('#qmsg').value.trim();
+  if ($('#qrange') && $('#qrange').checked) msg = ('[현장 확인 후 조정 가능] ' + msg).slice(0, 100);
   if (!(price >= 1000)) return setErr('견적 금액을 입력해 주세요.');
   if (!visit || visit < today()) return setErr('오늘 이후의 작업 가능일을 선택해 주세요.');
   await busy(el, async () => {
@@ -2177,12 +2200,26 @@ async function inqDel(el, id) {
 let AF = 'ALL', AIP = 0;
 const slaOver = i => { const t = Date.now(), c = T(i.created_at); return (i.status === 'RECEIVED' && t - c > SLA_START) || ((i.status === 'RECEIVED' || i.status === 'IN_PROGRESS') && t - c > SLA_ANS); };
 /* 관리자: 방문 통계 카드 */
-let VS = null, vsAt = 0, FN = null;
+let VS = null, vsAt = 0, FN = null, FC = null;
 function loadVisits(force) {
   if (!S.admin || (!force && Date.now() - vsAt < 60000)) return;
   vsAt = Date.now();
   rpc('admin_visit_stats', { p_days:14 }).then(d => { VS = d; if (S.mode === 'admin') adminView(); }).catch(() => { VS = { err:true }; if (S.mode === 'admin') adminView(); });
   rpc('admin_funnel', { p_days:7 }).then(d => { FN = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { FN = { err:true }; });
+  rpc('admin_flow_check', { p_days:14 }).then(d => { FC = d || {}; if (S.mode === 'admin') adminView(); }).catch(() => { FC = { err:true }; });
+}
+function flowBox() {
+  if (!FC) return '';
+  const wrap = b => `<div class="mt-6 border-t border-mist pt-5"><h3 class="text-sm font-bold">요청 간편화 점검 <span class="font-normal text-sea/50">최근 14일 · 사람 수</span></h3>${b}</div>`;
+  if (FC.err) return wrap('<p class="mt-3 rounded-xl bg-sun/10 p-3 text-xs">이 점검을 보려면 Supabase에서 <b>admin_flow_check</b> SQL을 실행해 주세요. (채팅으로 받은 SQL)</p>');
+  const n = k => FC[k] || 0, pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '-';
+  const row = (t, v, sub) => `<li class="flex justify-between gap-3 text-sm"><span>${t}${sub ? `<span class="block text-[11px] text-sea/50">${sub}</span>` : ''}</span><b class="tabular-nums">${v}</b></li>`;
+  return wrap(`<ul class="mt-3 space-y-2">
+    ${row('3단계 도착 → 요청 완료', `${n('qstep3')}명 → ${n('quote')}명 (${pct(n('quote'), n('qstep3'))})`, '이 비율이 오르면 마지막 입력 화면 개선이 먹힌 거예요')}
+    ${row('사진을 올리고 보낸 요청', `${n('qphoto')}명`, `기간 내 요청 ${n('req_total')}건 중 사진 있는 요청 ${n('req_with_photo')}건`)}
+    ${row('기사님이 사진 요청하기를 누른 사람', `${n('photoreq')}명`)}
+    ${row('요청한 비회원 → 회원 전환', `${n('guests_with_req')}명 중 ${n('guest_converted')}명`, `비회원 계정 총 ${n('guests_total')}개 · 알림 번호 등록 ${n('phones_total')}명`)}
+  </ul>`);
 }
 function funnelBox() {
   if (!FN) return '';
@@ -2208,7 +2245,7 @@ function visitCard() {
     <div class="mt-5 grid gap-4 sm:grid-cols-2">
       <div><h3 class="text-sm font-bold">어디서 왔나요 (7일)</h3><ul class="mt-2 space-y-1 text-sm">${refs.length ? refs.map(r => `<li class="flex justify-between gap-3"><span class="truncate">${esc(r.ref)}</span><b class="tabular-nums">${r.n}명</b></li>`).join('') : '<li class="text-sea/50">아직 기록이 없어요</li>'}</ul><p class="mt-2 text-[11px] leading-relaxed text-sea/50">홍보 링크 끝에 <b>?from=이름</b>을 붙이면 여기에 따로 보여요. 예) hanyeoreum.co.kr/?from=당근</p></div>
       <div><h3 class="text-sm font-bold">최근 7일 실제 행동</h3><ul class="mt-2 space-y-1 text-sm"><li class="flex justify-between"><span>견적 요청</span><b class="tabular-nums">${VS.week_quote || 0}건</b></li><li class="flex justify-between"><span>회원가입</span><b class="tabular-nums">${VS.week_signup || 0}명</b></li><li class="flex justify-between"><span>판매글 등록</span><b class="tabular-nums">${VS.week_listing || 0}건</b></li><li class="flex justify-between text-sea/60"><span>장터 · 기사찾기 화면 조회</span><b class="tabular-nums">${pg.market || 0} · ${pg.pros || 0}회</b></li></ul></div>
-    </div>${funnelBox()}`);
+    </div>${funnelBox()}${flowBox()}`);
 }
 /* 관리자: 고객 견적 요청 한눈에 보기 */
 let RF = 'wait';
@@ -2541,6 +2578,12 @@ const ACT = {
   cmp: id => compare(id), pick: (id, el) => pick(el, id), rclose: (id, el) => rclose(el, id),
   rcpt: id => receipt(id, false), warr: id => warrModal(id, false), chat: id => chatModal(id), chatc: id => chatOfContract(id),
   csend: (id, el) => csend(el, id), qphoto: () => $('#chat-photo').click(), qcam: () => $('#chat-cam').click(),
+  askphoto: id => {
+    const i = $('#chat-in'); if (!i) return;
+    const t = S.thr.find(x => x.id === +id) || {}, rq = ([].concat(S.req || [], S.adminReq || [])).find(x => x && x.id === t.request_id);
+    i.value = `정확한 견적을 드리려고 사진을 부탁드려요. 가능한 만큼만 올려 주세요.\n- ${qPhotoList(rq && rq.service)}`;
+    i.dispatchEvent(new Event('input', { bubbles:true })); i.focus(); try { track('photoreq'); } catch (_) {}
+  },
   qsched: () => { const i = $('#chat-in'); i.value = '일정 변경을 요청드려요. 가능한 날짜와 시간을 알려 주세요.'; i.focus(); },
   qask: () => { const i = $('#chat-in'); i.value = '합의한 금액과 날짜로 “합의 내용으로 예약하기”를 눌러 주세요.'; i.focus(); },
   qdirect: id => directModal(id), dsend: (id, el) => dsend(el, id),
