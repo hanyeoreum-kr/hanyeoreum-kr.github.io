@@ -373,6 +373,7 @@ function welcomeCheck() {
     <button type="button" data-mclose class="mt-3 w-full rounded-xl py-3 text-sm font-bold text-sea/60 hover:bg-ice">나중에 할게요</button>`);
 }
 async function onSession(session) {
+  window.__sessSeen = true;
   const prevId = me();
   S.user = session ? session.user : null;
   S.admin = false; S.pro = null; S.profile = null;
@@ -1411,8 +1412,19 @@ function qReset() {
 function qCat(k) { document.querySelectorAll('#qm-services fieldset').forEach(f => f.classList.toggle('hidden', !!k && f.dataset.cat !== k)); const a = $('#qm-allcat'); if (a) a.classList.toggle('hidden', !k); }
 /* 요청을 보낸 뒤에는 홈 검색창에 남은 이전 분야·검색어를 비워요 (다시 누르면 이전 업종으로 열리던 문제) */
 function hqClear() { try { const q = $('#hq'); if (q) q.value = ''; const k = $('#hkind'); if (k) k.value = ''; hsugShow(false); } catch (_) {} }
+/* 견적 요청은 가입(로그인) 후에만: 안 한 사람이 누르면 가입 창을 띄우고, 가입이 끝나면 고르던 분야로 이어서 열어요 */
+const QI_KEY = 'hy_qintent';
+function qGate(pre, trigger) {
+  if (S.user || !sb) return false;
+  const n = (pre && pre.__n) || 0;
+  if (!window.__sessSeen && n < 12) { setTimeout(() => openQuote(Object.assign({}, pre, { __n:n + 1 }), trigger), 300); return true; }   // 로그인 상태 확인이 끝날 때까지 잠깐 기다려요
+  try { localStorage.setItem(QI_KEY, JSON.stringify({ t:Date.now(), pre:{ cat:pre.cat || '', service:pre.service || '', district:pre.district || '', target:pre.target || null, targetName:pre.targetName || '' } })); } catch (_) {}
+  track('qgate'); toast('가입하면 바로 견적 요청을 이어갈 수 있어요. 1분이면 돼요.');
+  authModal('signup', 'customer'); return true;
+}
 function openQuote(pre = {}, trigger) {
   if (pre.service === 'freezer_sale') return sellOpen();
+  if (qGate(pre, trigger)) return;
   if (S.mode !== 'customer') setMode('customer');
   if (qstep === 4) { qReset(); hqClear(); }
   qopener = trigger || document.activeElement;
@@ -1455,13 +1467,7 @@ async function qNext() {
     if (qform.date < today()) return qErr('오늘 이후 날짜를 선택해 주세요.');
   }
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
-  if (!S.user) {   // 가입 없이 보내기: 임시 손님 계정을 만들고, 안 되면 예전처럼 로그인 창을 보여줘요
-    track('qguest'); const b0 = $('#qm-next'); b0.disabled = true; b0.textContent = '준비하는 중...';
-    let ok = false; try { const { data, error } = await sb.auth.signInAnonymously({ options:{ captchaToken: await window.hyCaptcha() } }); ok = !error && !!(data && data.session); } catch (_) {}
-    for (let i = 0; ok && i < 40 && !S.user; i++) await sleepMs(100);
-    b0.disabled = false; b0.textContent = '견적 요청 보내기';
-    if (!ok || !S.user) { track('qlogin'); toast('견적 요청은 로그인 후 보낼 수 있어요. 입력한 내용은 그대로 있어요.'); return authModal('login'); }
-  }
+  if (!S.user) { track('qlogin'); toast('가입하고 견적을 보내 주세요. 입력한 내용은 그대로 있어요.'); return authModal('signup', 'customer'); }
   qform.details = $('#qm-details').value.trim();
   if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
   if (kindOf(qform.service) === 'home' && !qform.etc && /세면대|변기|하수구|배수구|누수|동파|수전|수도꼭지/.test(qform.details || '')) {   // 배관 내용인데 생활가전으로 고른 경우

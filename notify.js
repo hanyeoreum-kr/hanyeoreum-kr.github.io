@@ -804,6 +804,7 @@
   function qdResume() {
     if (qdBusy || !S.user || !sb) return;
     const d = qdGet(); if (!d) return;
+    try { if (qstep === 4 || qsending || (window.__qSentAt && Date.now() - window.__qSentAt < 120000)) { if (qstep === 4 || (window.__qSentAt && Date.now() - window.__qSentAt < 120000)) qdDel(); return; } } catch (_) {}   // 방금 보낸 요청이면 이어 보내지 않아요
     if (mmOpen && mmOpen()) return;                       // 로그인 창이 닫힌 뒤에
     qdBusy = true; qdDel();
     const qmOpen = qmEl && !qmEl.classList.contains('hidden') && qstep === 3;
@@ -1814,8 +1815,8 @@
       HID = data || []; view();
     };
     ACT.hyunhide = (id, el) => busy(el, async () => {
-      const { error } = await sb.from('requests').update({ admin_hidden: false }).eq('id', +id);
-      if (error) return setErr('다시 보이게 하지 못했어요. (' + (error.message || '권한') + ')');
+      const { error } = await sb.rpc('admin_unhide_request', { p_id: +id });
+      if (error) return setErr('다시 보이게 하지 못했어요. 서버에 관리자용 함수(admin_unhide_request)가 있는지 확인해 주세요. (' + (error.message || '권한') + ')');
       HID = HID.filter(r => r.id !== +id); try { await load('adminReq'); } catch (_) {} view(); toast('목록에 다시 보이게 했어요.');
     });
     const inject = () => {
@@ -2072,6 +2073,23 @@
     let has = false; try { has = !!localStorage.getItem(KEY); } catch (_) {}
     if (!has) return;
     let tries = 0; const iv = setInterval(() => { tries++; if (S.user || tries > 14) { clearInterval(iv); setTimeout(restore, 1800); } }, 400);
+  })();
+
+  /* =====================================================================
+     56) 가입 후 고르던 분야로 견적 창 이어서 열기 (qGate가 저장해 둔 것)
+     ===================================================================== */
+  (function () {
+    const K = 'hy_qintent', MAX = 2 * 60 * 60 * 1000;
+    const iv = setInterval(() => {
+      try {
+        const raw = localStorage.getItem(K); if (!raw) { return; }
+        if (!S.user || S.user.is_anonymous) return;
+        let d = null; try { d = JSON.parse(raw); } catch (_) {}
+        localStorage.removeItem(K);
+        if (!d || !d.pre || Date.now() - d.t > MAX) return;
+        setTimeout(() => { try { if (typeof mmOpen === 'function' && mmOpen()) closeM(); openQuote(d.pre); } catch (_) {} }, 400);
+      } catch (_) {}
+    }, 300);
   })();
 
 })();
