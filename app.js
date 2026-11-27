@@ -1416,7 +1416,8 @@ function openQuote(pre = {}, trigger) {
   if (S.mode !== 'customer') setMode('customer');
   if (qstep === 4) { qReset(); hqClear(); }
   qopener = trigger || document.activeElement;
-  if (pre.service) { qform.etc = null; qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
+  if (!pre.service && qstep !== 4) { qform.service = ''; qform.etc = null; qform.buy = false; document.querySelectorAll('input[name="qm-svc"]').forEach(r => r.checked = false); }   // 분야를 안 정하고 열면 1단계(분야 선택)부터. 이전에 고른 분야가 남아 있지 않게
+  if (pre.service) { qform.etc = null; qform.buy = false; qform.service = pre.service; const r = document.querySelector(`input[name="qm-svc"][value="${pre.service}"]`); if (r) r.checked = true; }
   if (pre.district) { qform.district = pre.district; $('#qm-gu').value = pre.district; }
   else if (!$('#qm-gu').value) { const g0 = ($('#hgu') || {}).value || hguGet(); if (g0) { $('#qm-gu').value = g0; if ($('#qm-gu').value) qform.district = g0; } }   // 홈에서 고른 동네를 미리 채워요
   if (pre.target) { qform.target = pre.target; qform.targetName = pre.targetName || ''; }
@@ -1467,6 +1468,7 @@ async function qNext() {
     const d0 = qform.details, pv = /변기/.test(d0) ? 'plumb_toilet' : /하수구|배수구/.test(d0) ? 'plumb_drain' : /누수/.test(d0) ? 'plumb_leak' : /동파/.test(d0) ? 'plumb_thaw' : 'plumb_fixture';
     if (confirm(`적어 주신 내용이 "${SVC[pv]}" 분야에 더 가까워 보여요.\n이 분야로 바꿔서 보낼까요?\n\n[확인] 바꿔서 보내기  /  [취소] 그대로 보내기`)) qform.service = pv;
   }
+  if (window.__qSentAt && Date.now() - window.__qSentAt < 10000) return;   // 방금 보낸 요청이 있으면 두 번째 전송은 막아요
   if (qsending) return; qsending = true;
   const b = $('#qm-next'); b.disabled = true; b.textContent = '보내는 중...';
   try {
@@ -1475,7 +1477,7 @@ async function qNext() {
     if (truck) Object.assign(row, { to_gu:qform.to, ton:qform.ton, lift:qform.lift });
     if (qform.target) row.target_pro = qform.target;
     const { data, error } = await sb.from('requests').insert(row).select('id').single();
-    if (!error) { track('quote'); if (photos && photos.length) track('qphoto'); }
+    if (!error) { window.__qSentAt = Date.now(); try { localStorage.removeItem('hy_quote_draft'); localStorage.removeItem('hy_qdraft'); } catch (_) {} track('quote'); if (photos && photos.length) track('qphoto'); }
     if (error) throw error;
     const rows = [['요청 번호', reqCode(data.id)], ['서비스', qform.etc ? KINDS[qform.etc].name + ' · 기타' : SVC[qform.service]], ...(qform.site ? [['현장', qform.site]] : []), truck ? ['출발 → 도착', `${place(qform.district)} → ${place(qform.to)}`] : ['지역', place(qform.district)], ...(truck ? [['차량', qform.ton + (qform.lift ? ' · 리프트' : '')]] : []), ...(qform.targetName ? [['지정 기사님', qform.targetName]] : []), ['희망일', qform.date], ['사진', photos.length + '장']];
     $('#qm-summary').innerHTML = rows.map(([k, v]) => `<div class="flex justify-between gap-4"><dt class="text-sea/60">${k}</dt><dd class="font-bold text-right">${esc(v)}</dd></div>`).join('');
