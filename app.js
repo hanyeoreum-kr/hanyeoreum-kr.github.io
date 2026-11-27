@@ -997,7 +997,7 @@ function bkDraw() {
 }
 function bkAdd(n) { n = String(n || '').trim().slice(0, 30); if (!n) return; const f = bk.find(x => x.n === n); if (f) f.q = Math.min(f.q + 1, 99); else if (bk.length < 20) bk.push({ n, q:1 }); else return toast('종목은 20개까지 담을 수 있어요.'); bkDraw(); }
 function sellModal(kind) {
-  if (!S.user) { toast('가입하면 바로 판매글을 올릴 수 있어요. 1분이면 돼요.'); return authModal('signup', 'customer'); }
+  if (!S.user || S.user.is_anonymous) { toast('가입하면 바로 판매글을 올릴 수 있어요. 1분이면 돼요.'); return authModal('signup', 'customer'); }
   if (kind === 'stock' && !approved()) return toast('승인된 기사·업체만 재고 판매글을 올릴 수 있어요.');
   sellKind = kind === 'stock' ? 'stock' : 'normal'; sp = []; bk = []; sellBulk = false; sellCat = MK.cat || 'cold';
   const lab = (f, t) => `<label for="${f}" class="block mt-4 text-sm font-bold">${t}</label>`, inp = 'mt-2 w-full rounded-xl bg-ice px-4 py-3.5';
@@ -1415,7 +1415,7 @@ function hqClear() { try { const q = $('#hq'); if (q) q.value = ''; const k = $(
 /* 견적 요청은 가입(로그인) 후에만: 안 한 사람이 누르면 가입 창을 띄우고, 가입이 끝나면 고르던 분야로 이어서 열어요 */
 const QI_KEY = 'hy_qintent';
 function qGate(pre, trigger) {
-  if (S.user || !sb) return false;
+  if ((S.user && !S.user.is_anonymous) || !sb) return false;   // 임시 손님(익명)도 회원이 아니에요
   const n = (pre && pre.__n) || 0;
   if (!window.__sessSeen && n < 12) { setTimeout(() => openQuote(Object.assign({}, pre, { __n:n + 1 }), trigger), 300); return true; }   // 로그인 상태 확인이 끝날 때까지 잠깐 기다려요
   try { localStorage.setItem(QI_KEY, JSON.stringify({ t:Date.now(), pre:{ cat:pre.cat || '', service:pre.service || '', district:pre.district || '', target:pre.target || null, targetName:pre.targetName || '' } })); } catch (_) {}
@@ -1467,7 +1467,7 @@ async function qNext() {
     if (qform.date < today()) return qErr('오늘 이후 날짜를 선택해 주세요.');
   }
   if (!sb) return qErr('사이트 설정이 아직 끝나지 않았어요.');
-  if (!S.user) { track('qlogin'); toast('가입하고 견적을 보내 주세요. 입력한 내용은 그대로 있어요.'); return authModal('signup', 'customer'); }
+  if (!S.user || S.user.is_anonymous) { track('qlogin'); toast('가입하고 견적을 보내 주세요. 입력한 내용은 그대로 있어요.'); return authModal('signup', 'customer'); }
   qform.details = $('#qm-details').value.trim();
   if (qform.etc && qform.details.length < 5) return qErr('기타 요청은 어떤 작업이 필요한지 5자 이상 적어 주세요.');
   if (kindOf(qform.service) === 'home' && !qform.etc && /세면대|변기|하수구|배수구|누수|동파|수전|수도꼭지/.test(qform.details || '')) {   // 배관 내용인데 생활가전으로 고른 경우

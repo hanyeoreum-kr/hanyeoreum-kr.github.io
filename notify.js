@@ -876,6 +876,11 @@
 
   ACT.pkopen = () => {
     if (!sb) return toast('사이트 설정이 아직 끝나지 않았어요.');
+    if (!S.user || S.user.is_anonymous) {   // 가입 후에만: 가입 창을 먼저 띄우고, 끝나면 이 화면으로 이어가요
+      if (!window.__sessSeen) return toast('잠시 뒤 다시 눌러 주세요.');
+      try { localStorage.setItem('hy_qintent', JSON.stringify({ t:Date.now(), pk:true })); } catch (_) {}
+      track('qgate'); toast('가입하면 바로 이어갈 수 있어요. 1분이면 돼요.'); return authModal('signup', 'customer');
+    }
     if (S.mode !== 'customer') setMode('customer');
     openM(pkForm());
     (async () => {   // 저장된 번호가 있으면 채워 줘요
@@ -2086,8 +2091,8 @@
         if (!S.user || S.user.is_anonymous) return;
         let d = null; try { d = JSON.parse(raw); } catch (_) {}
         localStorage.removeItem(K);
-        if (!d || !d.pre || Date.now() - d.t > MAX) return;
-        setTimeout(() => { try { if (typeof mmOpen === 'function' && mmOpen()) closeM(); openQuote(d.pre); } catch (_) {} }, 400);
+        if (!d || Date.now() - d.t > MAX || (!d.pre && !d.pk)) return;
+        setTimeout(() => { try { if (typeof mmOpen === 'function' && mmOpen()) closeM(); if (d.pk && ACT.pkopen) ACT.pkopen(); else openQuote(d.pre); } catch (_) {} }, 400);
       } catch (_) {}
     }, 300);
   })();
