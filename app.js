@@ -1520,11 +1520,27 @@ function conBlock(c) {
     ${v ? `<span class="text-sm w-full">내 후기: ${SL[v.mood]} ${'★'.repeat(v.stars)}${(v.tags || []).length ? ' · ' + v.tags.map(esc).join(', ') : ''}${v.body ? ' — ' + esc(v.body) : ''}</span>` : ''}
     ${svc && client && v && v.mood === 'bad' && !w && c.status === 'completed' ? btn('rew', c.id, '재점검 신청') : ''}${w ? `<span class="text-sm font-bold text-cool w-full">재점검: ${RWL[w.status]}</span>` : ''}`;
 }
+/* 다가오는 일정: 작업일(work_date)이 정해진 진행 중 예약을 MY 맨 위에 D-day 카드로 보여줘요 (고객·기사 공통) */
+function upcomingBox() {
+  try {
+    const t0 = new Date(today() + 'T00:00:00'), list = (S.con || []).filter(c => (c.client_id === me() || c.provider_id === me()) && (c.status === 'confirmed' || c.status === 'pending') && c.work_date && /^\d{4}-\d{2}-\d{2}/.test(String(c.work_date)))
+      .map(c => ({ c, d:Math.round((new Date(String(c.work_date).slice(0, 10) + 'T00:00:00') - t0) / 864e5) })).filter(x => x.d >= 0).sort((a, b) => a.d - b.d || a.c.id - b.c.id);
+    if (!list.length) return '';
+    const dd = n => n === 0 ? 'D-DAY' : 'D-' + n, wk = ['일', '월', '화', '수', '목', '금', '토'];
+    const photoOf = c => { const r = c.request_id ? (S.req || []).find(x => x.id === c.request_id) : null, l = c.listing_id ? (S.lst || []).find(x => x.id === c.listing_id) : null; return [...((r && r.photos) || []), ...((l && l.photos) || [])].find(isPhotoUrl) || ''; };
+    const rows = list.slice(0, 5).map(({ c, d }) => { const dt = new Date(String(c.work_date).slice(0, 10) + 'T00:00:00'), prov = c.provider_id === me(), who = prov ? c.client_name : c.provider_name;
+      return `<li class="mt-3 flex items-start gap-3"><span class="shrink-0 rounded-lg ${d <= 1 ? 'bg-sun/15 text-sun' : 'bg-mist text-sea'} px-2 py-1 text-xs font-bold tabular-nums">${dd(d)}</span>
+        <div class="min-w-0 flex-1"><p class="truncate font-bold">${conTitle(c)}</p><p class="text-sm">${dt.getMonth() + 1}월 ${dt.getDate()}일 (${wk[dt.getDay()]})${wdOf(c) ? ' ' + wdOf(c) + ' 예정' : ''}</p>
+        <p class="text-xs text-sea/60">${esc(place(c.gu))}${who ? ' · ' + esc(who) + (prov ? ' 고객님' : ' 기사님') : ''}${c.status === 'pending' ? ' · 고객 확인 대기' : ''}</p>
+        <div class="mt-2 flex flex-wrap gap-2">${btn('chatc', c.id, '채팅방', 's')}${btn('rcpt', c.id, '내역서', 's')}</div></div>${photoOf(c) ? `<a href="${esc(photoOf(c))}" target="_blank" rel="noopener" class="shrink-0"><img src="${esc(photoOf(c))}" alt="고객이 올린 사진" loading="lazy" class="h-16 w-16 rounded-xl bg-mist object-cover"></a>` : ''}</li>`; }).join('');
+    return `<section class="mb-4 rounded-2xl bg-ice p-4"><h3 class="font-bold">다가오는 일정 <span class="text-sun">${list.length}</span></h3><ul>${rows}</ul>${list.length > 5 ? `<p class="mt-2 text-xs text-sea/60">외 ${list.length - 5}건은 아래 예약 목록에서 볼 수 있어요.</p>` : ''}</section>`;
+  } catch (_) { return ''; }
+}
 function custMenu(keep) {
   if (!S.user) { openM(head('내 요청 관리') + `<p class="leading-relaxed text-sea/80">견적 요청, 예약, 판매글은 로그인 후 볼 수 있어요.</p><div class="mt-4">${btn('auth', '', '로그인 / 회원가입', 'a')}</div>`); return; }
   const my = myReqs(), ml = S.lst.filter(l => l.seller_id === me()), buys = S.con.filter(c => c.client_id === me() && c.kind !== 'service'), pre = S.thr.filter(t => t.contract_id == null && t.u1 === me());
   const nb = notifBtn() && my.length ? `<div class="mb-3 flex items-center justify-between gap-3 rounded-2xl bg-sun/10 p-3 text-sm"><span>견적이 도착하면 바로 알려 드릴까요?</span>${notifBtn()}</div>` : '';
-  openM(head('내 요청 관리') + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
+  openM(head('내 요청 관리') + upcomingBox() + nb + (my.length || ml.length || buys.length || pre.length ? '' : empty('아직 요청이 없어요. 무료 견적을 요청하거나 판매글을 올려 보세요.')) +
     (my.length ? '<h3 class="mt-2 font-bold">견적 요청</h3>' : '') + my.map(r => {
       const qs = S.quo.filter(q => q.request_id === r.id), c = conFor('request_id', r.id);
       return card(`<div class="flex justify-between gap-2"><p class="font-bold">${svcOf(r)} · ${reqWhere(r)}${r.target_pro ? ' · <span class="text-sun">지정 요청</span>' : ''}</p><span class="text-xs rounded-full bg-mist px-2 py-1 h-fit shrink-0 whitespace-nowrap">${r.status === 'open' ? '견적 받는 중' : r.status === 'matched' ? '예약 확정' : '요청 마감'}</span></div>
@@ -2062,7 +2078,7 @@ function proMenu(keep) {
   if (!S.pro) return;
   const qs = S.quo.filter(q => q.pro_id === me()), offs = S.off.filter(o => o.buyer_id === me()), cs = S.con.filter(c => c.provider_id === me() || (c.client_id === me() && c.kind === 'sale'));
   const pre = S.thr.filter(t => t.contract_id == null && t.u2 === me());
-  openM(head('내 견적·예약 관리') + `<p class="font-bold">${esc(S.pro.name)}</p>
+  openM(head('내 견적·예약 관리') + upcomingBox() + `<p class="font-bold">${esc(S.pro.name)}</p>
     ${pre.length ? '<h3 class="mt-4 font-bold">상담 채팅</h3>' + pre.map(t => card(`<div class="flex items-center justify-between gap-2"><p class="text-sm font-bold">${esc(thN(t, 'u1'))} 고객님</p>${btn('chat', t.id, '채팅방 열기', 's')}</div>`)).join('') : ''}
     <h3 class="mt-4 font-bold">진행 중인 예약 · 정산</h3>${cs.length ? cs.map(c => { const w = reworkOf(c.id), v = reviewOf(c.id), prov = c.provider_id === me();
       return card(`<p class="font-bold">${conTitle(c)} · ${esc(c.gu)} · ${won(c.price)}</p>
