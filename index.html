@@ -3,7 +3,7 @@
 <head>
 <meta name="apple-itunes-app" content="app-id=6834314201">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0C2D48">
 <meta name="color-scheme" content="light">
 <meta name="darkreader-lock">
@@ -139,6 +139,8 @@ body{background:var(--paper)}
 .hy-steps b{display:grid;place-items:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--ink);color:#fff;font-size:12px}
 .hy-steps em{font-style:normal;margin-left:4px;color:var(--sun)}
 @media (max-width:1023px){.hy-steps{display:none}}
+html,body{touch-action:manipulation}
+@media (max-width:767px){input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{font-size:16px}}
 .hy-perf{position:relative;margin:16px 0 12px;text-align:center;border-top:2px dashed #E3D9C4;height:0}
 .hy-perf span{position:absolute;left:50%;top:0;transform:translate(-50%,-50%);background:#FFFDF8;padding:0 10px;font-size:12px;font-weight:800;color:var(--sub);white-space:nowrap}
 .hy-field{background:#F5F0E4;border-radius:16px}
@@ -567,8 +569,8 @@ html,body{max-width:100%;overflow-x:clip}
 <!-- 홈 화면에 추가(앱 설치) 안내 -->
 <div id="inst" style="display:none" class="md:hidden fixed left-3 right-3 z-30 rounded-2xl bg-sea text-white shadow-2xl p-3.5 flex items-center gap-3" role="dialog" aria-label="앱 설치 안내">
   <img src="logo-han.png" alt="" class="h-11 w-11 rounded-xl shrink-0">
-  <div class="min-w-0 flex-1 text-sm leading-snug"><b>한여름을 앱처럼 쓰세요</b><br><span id="inst-sub" class="text-white/75 text-xs">홈 화면에 추가하면 바로 열려요</span></div>
-  <button type="button" data-act="install" class="shrink-0 rounded-xl bg-sun px-3.5 py-2.5 text-sm font-bold">추가</button>
+  <div class="min-w-0 flex-1 text-sm leading-snug"><b id="inst-title">한여름을 앱처럼 쓰세요</b><br><span id="inst-sub" class="text-white/75 text-xs">홈 화면에 추가하면 바로 열려요</span></div>
+  <button type="button" data-act="install" class="shrink-0 whitespace-nowrap rounded-xl bg-sun px-3.5 py-2.5 text-sm font-black">추가</button>
   <button type="button" data-act="instclose" aria-label="닫기" class="shrink-0 px-1 text-xl text-white/60">×</button>
 </div>
 
@@ -592,7 +594,7 @@ html,body{max-width:100%;overflow-x:clip}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js?v=20"></script>
-<script src="app.js?v=128"></script>
+<script src="app.js?v=129"></script>
 <script src="notify.js?v=2611281"></script>
 <script>
 (function(){

@@ -2900,8 +2900,12 @@ function instPlace() { const bar = $('#mbar'), h = bar && bar.style.display !== 
 function instShow() {
   if (standalone() || isHyApp() || innerWidth >= 768) return;
   const until = +lsGet('hy_inst_hide2') || 0; if (Date.now() < until) return;
-  $('#inst-sub').textContent = isAndroid() ? '구글 플레이에서 한여름 앱을 받을 수 있어요' : PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : inApp() ? '크롬·사파리로 열면 추가할 수 있어요' : isIOS() ? '앱스토어에서 한여름 앱을 받을 수 있어요' : '메뉴 → 홈 화면에 추가';
-  const ib = document.querySelector('#inst [data-act="install"]'); if (ib) ib.textContent = isIOS() || isAndroid() ? '받기' : '추가';
+  const store = isIOS() ? 'ios' : isAndroid() ? 'android' : '';
+  $('#inst-title').textContent = store ? '앱으로 쓰면 더 편해요' : '한여름을 앱처럼 쓰세요';
+  $('#inst-sub').textContent = store === 'ios' ? '앱스토어에서 한여름 앱을 받고 견적 알림을 바로 받으세요'
+    : store === 'android' ? '구글 플레이에서 한여름 앱을 받고 견적 알림을 바로 받으세요'
+    : PWA.prompt ? '홈 화면에 추가하면 바로 열려요' : inApp() ? '크롬·사파리로 열면 추가할 수 있어요' : '메뉴 → 홈 화면에 추가';
+  const ib = document.querySelector('#inst [data-act="install"]'); if (ib) ib.textContent = store === 'ios' ? 'App Store' : store === 'android' ? 'Google Play' : '추가';
   instPlace(); $('#inst').style.display = '';
 }
 function instHide(days) { $('#inst').style.display = 'none'; if (days) lsSet('hy_inst_hide2', Date.now() + days * 864e5); }
@@ -3002,7 +3006,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   <p class="mt-3 rounded-2xl bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-500 lg:text-xs">한여름은 통신판매중개자로서 통신판매의 당사자가 아닙니다. 기사·판매 회원이 등록한 서비스·상품 정보와 거래에 대한 책임은 각 회원에게 있으며, 한여름은 회원 간 분쟁 해결을 위해 14일 재점검 안심 보장제와 고객센터를 운영합니다.</p>
   <p class="mt-3">&copy; ${new Date().getFullYear()} 한여름. All rights reserved.</p>`;
   qShow(1); qm.classList.add('hidden');
-  netState(); setTimeout(instShow, 4000);
+  netState(); setTimeout(instShow, 1500);
   if (!standalone() && !isHyApp()) { const hi = $('#hero-inst'); hi.textContent = isIOS() ? '앱스토어에서 한여름 앱 받기' : isAndroid() ? '구글 플레이에서 한여름 앱 받기' : '홈 화면에 한여름 앱 추가하기'; hi.classList.remove('hidden'); }
   /* 앱 바로가기(아이콘 길게 누르기): ?go=quote / market / pros */
   try { const q0 = new URLSearchParams(location.search), rp = q0.get('pro'); if (rp && UUID_RE.test(rp)) { if (!refGet() || refGet().pro !== rp) refSet(rp); refFromUrl = true; q0.delete('pro'); history.replaceState(null, '', location.pathname + (q0.toString() ? '?' + q0 : '') + location.hash); } } catch (_) {}
@@ -3031,3 +3035,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     if (ev === 'INITIAL_SESSION' || id !== (me() || null)) setTimeout(() => onSession(session), 0);
   });
 })();
+
+/* 화면 확대 막기: 핀치·더블탭 확대를 막아요 (아이폰은 viewport 설정만으로는 안 막혀서 제스처도 함께 막아요) */
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
