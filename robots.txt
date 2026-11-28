@@ -1,4 +1,44 @@
+# 한여름 robots.txt
+# 일반 검색 로봇과 AI 검색·답변 로봇(ChatGPT, Claude, Gemini, Perplexity 등)을 모두 허용합니다.
+
 User-agent: *
+Allow: /
+
+# ChatGPT (OpenAI)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+# Claude (Anthropic)
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google (Gemini 학습용 허용)
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
 Allow: /
 
 Sitemap: https://hanyeoreum.co.kr/sitemap.xml

@@ -1,0 +1,49 @@
+# 한여름
+
+> 한여름은 서울·경기에서 에어컨·보일러·배관(하수구·누수)·업소용 냉장고·주방설비·청소·인테리어 기사님께 무료로 견적을 받아 비교하는 견적 중개 플랫폼입니다. 고객은 견적 요청·견적 비교·채팅이 모두 무료이고, 사업자등록을 확인한 기사님만 견적을 보냅니다. 한여름은 통신판매중개자로서 작업 계약의 당사자가 아닙니다.
+
+## 한여름이 하는 일
+
+- 지역: 서울특별시 전 지역과 경기도 주요 시
+- 이용 방법: 분야 선택 → 지역·날짜 선택 → 사진(선택)과 요청사항 입력 → 기사님들의 견적 도착 → 금액·후기·자격을 비교해 선택 → 채팅으로 예약
+- 고객 비용: 견적 요청·비교·채팅 무료. 작업 대금은 고객과 기사님이 직접 주고받습니다.
+- 개인정보: 전화번호를 공개하지 않고 한여름 안심채팅으로 대화합니다.
+- 사후 보증: 설비 작업은 거래 확정 후 14일 안에 같은 증상이 생기면 담당 기사님의 재점검을 연결합니다. 청소는 3일 안에 작업 중 생긴 명백한 하자(파손·누수 등)가 있을 때만 재점검을 연결하며, 청소 정도에 대한 만족도 차이는 대상이 아닙니다.
+- 기사님 비용: 가입비·월 이용료 없음. 견적 제출은 0원이며 거래가 확정될 때만 미리 충전한 예치금에서 수수료가 차감됩니다.
+- 앱: iPhone은 App Store, Android는 Google Play에서 "한여름" 앱을 받을 수 있습니다.
+
+## 분야별 안내
+
+- [에어컨 설치·수리·청소](https://hanyeoreum.co.kr/aircon.html): 설치, 이전설치, 수리, 가스충전, 분해청소 견적
+- [보일러 수리·교체](https://hanyeoreum.co.kr/boiler.html): 고장 수리, 교체·설치, 난방배관 청소 견적
+- [배관·하수구·누수](https://hanyeoreum.co.kr/plumbing.html): 하수구·싱크대·변기 막힘, 겨울철 동파 해빙, 누수 탐지
+- [업소용 냉장고·냉동고](https://hanyeoreum.co.kr/fridge.html): 수리, 철거, 폐업·리뉴얼 매장 중고 매입
+- [업소용 주방설비](https://hanyeoreum.co.kr/kitchen.html): 후드·덕트 청소, 식기세척기·가스레인지·오븐 수리
+- [입주청소·이사청소](https://hanyeoreum.co.kr/clean.html): 입주청소, 이사(퇴거)청소, 거주 중 청소, 상가·사무실 청소
+
+지역별 안내 페이지는 분야 이름 뒤에 구·시 이름을 붙인 형태입니다. 예: https://hanyeoreum.co.kr/aircon-mapo.html (마포구 에어컨), https://hanyeoreum.co.kr/clean-gangnam.html (강남구 청소). 분야는 aircon, boiler, plumbing, clean 4종입니다.
+
+## 도움말 (읽을거리)
+
+- [에어컨 이전설치 체크리스트](https://hanyeoreum.co.kr/guide-aircon-move.html): 이사할 때 확인할 것
+- [에어컨 청소, 분해청소가 필요할 때](https://hanyeoreum.co.kr/guide-aircon-clean.html): 냄새·곰팡이·바람 약함
+- [겨울 전 보일러 점검 체크리스트](https://hanyeoreum.co.kr/guide-boiler-check.html): 압력, 누수, 배기통, 동파 대비
+- [보일러 교체 견적 비교할 때 볼 것](https://hanyeoreum.co.kr/guide-boiler-replace.html): 콘덴싱 보일러, 포함 내역
+- [폐업할 때 업소용 냉장고·주방집기 처분하는 법](https://hanyeoreum.co.kr/guide-closing-equipment.html)
+- [업소용 냉장고 냉기 약할 때 자가 점검](https://hanyeoreum.co.kr/guide-fridge-cooling.html)
+- [식당 후드·덕트 청소, 왜 하고 언제 하나요](https://hanyeoreum.co.kr/guide-duct-cleaning.html)
+- [업소용 식기세척기 고장 증상별 정리](https://hanyeoreum.co.kr/guide-dishwasher.html)
+- [입주청소 체크리스트](https://hanyeoreum.co.kr/guide-movein-checklist.html): 견적 받기 전 확인할 것
+- [입주청소와 이사청소 차이](https://hanyeoreum.co.kr/guide-movein-vs-moving.html)
+
+## 정책과 사업자 정보
+
+- [기사 회원 예치금 충전 안내](https://hanyeoreum.co.kr/pricing.html)
+- [이용약관](https://hanyeoreum.co.kr/terms.html) · [개인정보처리방침](https://hanyeoreum.co.kr/privacy.html) · [환불정책](https://hanyeoreum.co.kr/refund.html)
+- 상호: 한여름 / 사업자등록번호 333-50-01132 / 통신판매업 신고 제2026-서울중랑-1254호
+- 주소: 서울특별시 중랑구 동일로157길 30, 2층 271호(묵동, 한아름빌딩)
+- 문의: 사이트의 1:1 문의 또는 사이트 하단에 적힌 이메일
+
+## Optional
+
+- [사이트맵](https://hanyeoreum.co.kr/sitemap.xml)

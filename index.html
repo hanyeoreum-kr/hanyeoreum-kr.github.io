@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="darkreader-lock">
 <meta name="supported-color-schemes" content="light dark">
-<style>:root{color-scheme:light dark}</style>
+<style>:root{color-scheme:light dark}body,body *{color-scheme:light}@media (prefers-color-scheme:dark){html{background:var(--paper,#FBF8F1)}}</style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="favicon-han.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -34,7 +34,164 @@
 <meta name="robots" content="index,follow">
 <!-- 검색엔진 소유확인 태그는 이 아래에 붙여 넣어요 (네이버 서치어드바이저 · 구글 서치콘솔) -->
 <meta name="naver-site-verification" content="40d61bc135e547c7e9c84179c4bd01be86b5d338" />
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"한여름","slogan":"시원하고 따뜻함의 모든 것","alternateName":["한여름 시원하고 따뜻함","한여름 설비","Hanyeoreum"],"url":"https://hanyeoreum.co.kr/","logo":"https://hanyeoreum.co.kr/icon-512.png","email":"l87482305@gmail.com","address":{"@type":"PostalAddress","addressCountry":"KR","addressRegion":"서울특별시","addressLocality":"중랑구","streetAddress":"동일로157길 30, 2층 271호"},"areaServed":["서울특별시","경기도"],"description":"업소용 냉장고·냉동고 매입·철거, 에어컨·보일러·주방설비 수리 기사 매칭 플랫폼"}</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://hanyeoreum.co.kr/#org",
+   "name": "한여름",
+   "alternateName": [
+    "한여름 시원하고 따뜻함",
+    "한여름 설비",
+    "Hanyeoreum"
+   ],
+   "url": "https://hanyeoreum.co.kr/",
+   "logo": "https://hanyeoreum.co.kr/icon-512.png",
+   "email": "l87482305@gmail.com",
+   "slogan": "설비·청소·인테리어, 견적은 한 번에",
+   "description": "서울·경기 에어컨·보일러·배관·하수구·업소용 냉장고·주방설비·청소·인테리어 기사님께 무료로 견적을 받아 비교하는 견적 중개 플랫폼. 고객은 견적 요청·비교·채팅이 무료이고, 사업자등록을 확인한 기사님만 견적을 보냅니다.",
+   "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "KR",
+    "addressRegion": "서울특별시",
+    "addressLocality": "중랑구",
+    "streetAddress": "동일로157길 30, 2층 271호"
+   },
+   "areaServed": [
+    {
+     "@type": "AdministrativeArea",
+     "name": "서울특별시"
+    },
+    {
+     "@type": "AdministrativeArea",
+     "name": "경기도"
+    }
+   ],
+   "knowsAbout": [
+    "에어컨 설치·청소·수리",
+    "보일러 수리·교체",
+    "하수구·배관·누수",
+    "업소용 냉장고·냉동고 수리·철거·중고 매입",
+    "업소용 주방설비·후드·덕트 청소",
+    "입주청소·이사청소",
+    "인테리어"
+   ],
+   "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "한여름 견적 요청 분야",
+    "itemListElement": [
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "에어컨 설치·수리·청소 견적",
+       "url": "https://hanyeoreum.co.kr/aircon.html"
+      }
+     },
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "보일러 수리·교체·난방배관 청소 견적",
+       "url": "https://hanyeoreum.co.kr/boiler.html"
+      }
+     },
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "하수구 막힘·동파 해빙·누수 탐지 견적",
+       "url": "https://hanyeoreum.co.kr/plumbing.html"
+      }
+     },
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "업소용 냉장고·냉동고 수리·철거·중고 매입",
+       "url": "https://hanyeoreum.co.kr/fridge.html"
+      }
+     },
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "후드·덕트 청소, 식기세척기 등 주방설비 견적",
+       "url": "https://hanyeoreum.co.kr/kitchen.html"
+      }
+     },
+     {
+      "@type": "Offer",
+      "itemOffered": {
+       "@type": "Service",
+       "name": "입주청소·이사청소 견적",
+       "url": "https://hanyeoreum.co.kr/clean.html"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://hanyeoreum.co.kr/#site",
+   "url": "https://hanyeoreum.co.kr/",
+   "name": "한여름",
+   "inLanguage": "ko-KR",
+   "publisher": {
+    "@id": "https://hanyeoreum.co.kr/#org"
+   }
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://hanyeoreum.co.kr/#faq",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "에어컨 청소·수리 견적은 무료인가요?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "고객은 견적 요청·비교·채팅이 모두 무료예요. 벽걸이·스탠드·시스템 에어컨 청소, 수리, 설치, 냉난방 점검 견적을 여러 기사님께 한 번에 받아 비교할 수 있어요."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "보일러·업소용 주방설비도 되나요?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "보일러 수리·교체·난방배관 청소와 식기세척기, 후드·덕트 청소, 가스레인지·오븐 등 업소용 주방설비 수리도 요청할 수 있어요."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "작업 후 문제가 생기면요?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "설비 작업은 14일 안에 같은 증상이 생기면 담당 기사님의 재점검을, 청소는 3일 안에 작업 중 생긴 명백한 하자(파손·누수 등)가 있을 때만 재점검을 연결해 드려요. 청소 정도에 대한 만족도 차이는 해당되지 않아요."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "업소용 냉장고·냉동고 철거만 맡길 수도 있나요?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "네. 견적 요청에서 ‘냉장·냉동고 철거’를 고르고 지역과 날짜를 적으면, 철거가 가능한 기사님들이 견적을 보내요. 엘리베이터·사다리차 여부를 적으면 더 정확해요."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "폐업·리뉴얼 매장 업소용 냉장고도 매입해 주나요?",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "네. 중고마켓에 사진과 희망가를 올리면 서울·경기 매입 업체가 매입가와 철거·수거 날짜를 제안해요. 4도어 냉장고, 냉동고, 테이블 냉장고, 쇼케이스, 제빙기 등 여러 대를 ‘일괄 판매’로 한 번에 올릴 수 있어요."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -181,100 +338,6 @@ html,body{max-width:100%;overflow-x:clip}
 #hy-feed .hy-fh{border-bottom-color:#EFE8D8;color:#5D6B78}#hy-feed .hy-fh b,#hy-feed .hy-ft .a{color:#0C2D48}
 #hy-feed .hy-ft .b.q{color:#0B6E8E}#hy-feed .hy-fx{color:#A89F8B}
 .tab[aria-current="page"]{color:var(--teal)}
-</style>
-<style id="hy-dark">
-/* ===== 어두운 모드 전용 색 (갤럭시·아이폰 다크 모드에서 사이트가 직접 꾸민 어두운 화면으로 보여요) ===== */
-@media (prefers-color-scheme: dark){
-:root{color-scheme:dark;--paper:#0A1A2A;--line:#28425C;--sub:#9DB0C2}
-html,body{background:#0A1A2A!important}
-body{color:#EAF1F7}
-/* 바탕 */
-.bg-paper{background-color:#0A1A2A!important}
-.bg-white,.hover\:bg-white:hover{background-color:#112437!important}
-.bg-white\/95,.bg-white\/90{background-color:rgba(17,36,55,.94)!important}
-.bg-white\/60{background-color:rgba(17,36,55,.6)!important}
-.bg-ice,.hover\:bg-ice:hover,.bg-slate-50,.bg-slate-100,.hover\:bg-slate-50:hover{background-color:#183048!important}
-.bg-mist,.hover\:bg-mist:hover,.peer-checked\:bg-mist,.peer:checked~.peer-checked\:bg-mist{background-color:#25405A!important}
-.bg-brand-50,.peer:checked~.peer-checked\:bg-brand-50,.hover\:bg-brand-50:hover,.from-brand-50,.bg-cool\/5,.bg-cool\/10,.bg-cool\/15{background-color:rgba(26,167,199,.16)!important}
-.hover\:bg-brand-100:hover{background-color:rgba(26,167,199,.25)!important}
-.bg-emerald-50{background-color:rgba(16,185,129,.16)!important}
-.bg-amber-50,.bg-orange-50,.from-amber-50{background-color:rgba(245,158,11,.16)!important}
-.bg-sky-50,.bg-cyan-50,.to-sky-50,.to-cyan-50{background-color:rgba(56,189,248,.15)!important}
-.bg-red-50,.bg-rose-50{background-color:rgba(239,68,68,.16)!important}
-.bg-pink-50{background-color:rgba(236,72,153,.15)!important}
-.bg-violet-50{background-color:rgba(139,92,246,.18)!important}
-.bg-gradient-to-b,.bg-gradient-to-br,.bg-gradient-to-r{background-image:none!important}
-/* 남색 버튼·띠는 어두운 바탕에서 보이도록 한 단계 밝게 */
-.bg-sea{background-color:#1F5E8C!important}
-.hover\:bg-slate-700:hover{background-color:#2B6F9F!important}
-.bg-cool,.bg-brand{background-color:#0E86AA!important}
-.hover\:bg-brand-700:hover{background-color:#0B6E8E!important}
-/* 글자 */
-.text-sea,.hover\:text-sea:hover{color:#EAF1F7!important}
-.text-sea\/80{color:rgba(234,241,247,.88)!important}
-.text-sea\/75,.text-sea\/70{color:rgba(234,241,247,.8)!important}
-.text-sea\/60{color:rgba(234,241,247,.7)!important}
-.text-sea\/50,.text-sea\/45{color:rgba(234,241,247,.58)!important}
-.text-sea\/40,.text-sea\/30{color:rgba(234,241,247,.42)!important}
-.text-sub,.text-slate-500,.text-slate-600{color:#9DB0C2!important}
-.text-slate-400,.text-slate-300,.text-gray-300{color:#7F94A8!important}
-.text-cool,.text-brand,.peer:checked~.peer-checked\:text-brand,.text-cyan-600,.text-cyan-700,.text-brand-200{color:#5BC0D9!important}
-.text-red-600,.text-red-700,.text-rose-600{color:#FF8F8F!important}
-.text-emerald-700,.text-emerald-600{color:#5EE0A8!important}
-.text-amber-700,.text-amber-800,.text-orange-700,.text-lime-700{color:#F7C86E!important}
-.text-sky-700{color:#7CC8F0!important}
-.text-pink-700{color:#F59ABF!important}
-.text-violet-700{color:#C0A8FB!important}
-.text-black,.text-black\/70{color:#EAF1F7!important}
-/* 흰 글자를 쓰는 색 배경(버튼) 위에서는 그대로 흰색 유지 */
-/* 테두리 */
-.border-mist,.divide-mist>:not([hidden])~:not([hidden]){border-color:#2A455F!important}
-.border-sea\/15,.border-sea\/30{border-color:rgba(234,241,247,.22)!important}
-.border-cool,.border-brand,.peer:checked~.peer-checked\:border-cool,.peer:checked~.peer-checked\:border-brand,.hover\:border-brand:hover,.border-cool\/60,.border-cool\/50,.border-cool\/40,.border-cool\/30,.border-brand\/30,.border-brand-200,.border-sky-300{border-color:#2FA9C8!important}
-.border-amber-300,.border-amber-200{border-color:rgba(245,158,11,.5)!important}
-.border-emerald-300{border-color:rgba(16,185,129,.5)!important}
-.border-pink-300{border-color:rgba(236,72,153,.5)!important}
-.ring-white{--tw-ring-color:#112437!important}
-#cview .shadow-card{border-color:#223C55!important;box-shadow:0 1px 0 rgba(0,0,0,.2),0 14px 30px -16px rgba(0,0,0,.6)!important}
-.shadow-2xl,.shadow-lg,.shadow-xl{box-shadow:0 20px 40px -12px rgba(0,0,0,.6)!important}
-/* 입력칸 */
-input,select,textarea{color:#EAF1F7;border-color:#2A455F;color-scheme:dark}
-input::placeholder,textarea::placeholder{color:#7F94A8!important}
-input:-webkit-autofill{-webkit-box-shadow:0 0 0 40px #183048 inset!important;-webkit-text-fill-color:#EAF1F7!important}
-/* 흰 배경이었던 인라인 상자 */
-[style*="background:#fff" i]:not([style*="#fff6d6" i]){background:#112437!important}
-[style*="#FFF6D6" i]{background:#FFF1C2!important}
-[style*="#FFF6D6" i],[style*="#FFF6D6" i] *:not([class*="bg-"]){color:#0C2D48!important}
-[style*="#FFF6D6" i] [class*="text-white"]{color:#fff!important}
-/* 메뉴·알림창 */
-header{background-color:rgba(10,26,42,.92)!important;border-color:#223C55!important}
-#mbar{background-color:rgba(10,26,42,.96)!important;border-color:#223C55!important}
-#mm-body,#qm-box{background-color:#112437!important}
-#inst{background-color:#1F5E8C!important}
-.dnav[aria-current="page"]{color:#fff!important}
-
-/* 한여름 새 디자인 전용 부품 */
-:root{--ink:#EAF1F7}
-#cview h1,#cview h2,#cview h3,#cview h4,#cview main>section:not(#pro) h2{color:#EAF1F7!important}
-.hy-ticket{background:#112437!important;color:#EAF1F7!important;border-color:#223C55!important;box-shadow:0 30px 60px -22px rgba(0,0,0,.7)!important}
-.hy-stamp{background:#112437!important}
-.hy-field,.hy-open{background:#183048!important;border-color:#2A455F!important}
-.hy-go,.hy-n{background:#1F5E8C!important;color:#fff!important}
-.hy-n{box-shadow:0 0 0 4px #25405A!important}
-.hy-ico{background:rgba(249,115,22,.18)!important}
-.text-\[\#0C2D48\]{color:#EAF1F7!important}
-.text-\[\#8B5A2B\]{color:#F7C86E!important}
-.text-\[\#191919\]{color:#191919!important}
-
-.hy-perf{border-top-color:#2A455F!important}.hy-perf span{background:#112437!important}
-.hy-steps{border-top-color:#2A455F!important}.hy-steps b{background:#1F5E8C!important}.hy-steps li+li::before{background:#2A455F!important}
-#cats>button{background:#112437!important;border-color:#223C55!important}
-.kp{background:linear-gradient(180deg,#183048,#112437)!important;border-color:#2A455F!important;box-shadow:0 4px 0 #0A1A2A,0 8px 14px rgba(0,0,0,.35)!important}
-.kp[aria-pressed=true]{background:linear-gradient(180deg,#14465C,#0F3A4D)!important;border-color:#2FA9C8!important;box-shadow:0 1px 0 #08566F,0 0 0 2px #2FA9C8!important}
-.kp b{text-shadow:none!important}.kp .ki{box-shadow:none!important}
-#faq details{border-color:#223C55!important}#faq summary::after{background:#183048!important}
-#hy-feed{background:#112437!important;border-color:#223C55!important}#hy-feed .hy-fh{border-bottom-color:#223C55!important;color:#9DB0C2!important}#hy-feed .hy-fh b,#hy-feed .hy-ft .a{color:#EAF1F7!important}
-}
 </style>
 </head>
 <body class="bg-paper text-sea font-sans antialiased">
