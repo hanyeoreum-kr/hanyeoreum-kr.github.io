@@ -8,7 +8,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="darkreader-lock">
 <meta name="supported-color-schemes" content="light dark">
-<style>:root{color-scheme:light dark}body,body *{color-scheme:light}@media (prefers-color-scheme:dark){html{background:var(--paper,#FBF8F1)}}</style>
+<style>:root{color-scheme:light dark}</style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="favicon-han.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -181,6 +181,100 @@ html,body{max-width:100%;overflow-x:clip}
 #hy-feed .hy-fh{border-bottom-color:#EFE8D8;color:#5D6B78}#hy-feed .hy-fh b,#hy-feed .hy-ft .a{color:#0C2D48}
 #hy-feed .hy-ft .b.q{color:#0B6E8E}#hy-feed .hy-fx{color:#A89F8B}
 .tab[aria-current="page"]{color:var(--teal)}
+</style>
+<style id="hy-dark">
+/* ===== 어두운 모드 전용 색 (갤럭시·아이폰 다크 모드에서 사이트가 직접 꾸민 어두운 화면으로 보여요) ===== */
+@media (prefers-color-scheme: dark){
+:root{color-scheme:dark;--paper:#0A1A2A;--line:#28425C;--sub:#9DB0C2}
+html,body{background:#0A1A2A!important}
+body{color:#EAF1F7}
+/* 바탕 */
+.bg-paper{background-color:#0A1A2A!important}
+.bg-white,.hover\:bg-white:hover{background-color:#112437!important}
+.bg-white\/95,.bg-white\/90{background-color:rgba(17,36,55,.94)!important}
+.bg-white\/60{background-color:rgba(17,36,55,.6)!important}
+.bg-ice,.hover\:bg-ice:hover,.bg-slate-50,.bg-slate-100,.hover\:bg-slate-50:hover{background-color:#183048!important}
+.bg-mist,.hover\:bg-mist:hover,.peer-checked\:bg-mist,.peer:checked~.peer-checked\:bg-mist{background-color:#25405A!important}
+.bg-brand-50,.peer:checked~.peer-checked\:bg-brand-50,.hover\:bg-brand-50:hover,.from-brand-50,.bg-cool\/5,.bg-cool\/10,.bg-cool\/15{background-color:rgba(26,167,199,.16)!important}
+.hover\:bg-brand-100:hover{background-color:rgba(26,167,199,.25)!important}
+.bg-emerald-50{background-color:rgba(16,185,129,.16)!important}
+.bg-amber-50,.bg-orange-50,.from-amber-50{background-color:rgba(245,158,11,.16)!important}
+.bg-sky-50,.bg-cyan-50,.to-sky-50,.to-cyan-50{background-color:rgba(56,189,248,.15)!important}
+.bg-red-50,.bg-rose-50{background-color:rgba(239,68,68,.16)!important}
+.bg-pink-50{background-color:rgba(236,72,153,.15)!important}
+.bg-violet-50{background-color:rgba(139,92,246,.18)!important}
+.bg-gradient-to-b,.bg-gradient-to-br,.bg-gradient-to-r{background-image:none!important}
+/* 남색 버튼·띠는 어두운 바탕에서 보이도록 한 단계 밝게 */
+.bg-sea{background-color:#1F5E8C!important}
+.hover\:bg-slate-700:hover{background-color:#2B6F9F!important}
+.bg-cool,.bg-brand{background-color:#0E86AA!important}
+.hover\:bg-brand-700:hover{background-color:#0B6E8E!important}
+/* 글자 */
+.text-sea,.hover\:text-sea:hover{color:#EAF1F7!important}
+.text-sea\/80{color:rgba(234,241,247,.88)!important}
+.text-sea\/75,.text-sea\/70{color:rgba(234,241,247,.8)!important}
+.text-sea\/60{color:rgba(234,241,247,.7)!important}
+.text-sea\/50,.text-sea\/45{color:rgba(234,241,247,.58)!important}
+.text-sea\/40,.text-sea\/30{color:rgba(234,241,247,.42)!important}
+.text-sub,.text-slate-500,.text-slate-600{color:#9DB0C2!important}
+.text-slate-400,.text-slate-300,.text-gray-300{color:#7F94A8!important}
+.text-cool,.text-brand,.peer:checked~.peer-checked\:text-brand,.text-cyan-600,.text-cyan-700,.text-brand-200{color:#5BC0D9!important}
+.text-red-600,.text-red-700,.text-rose-600{color:#FF8F8F!important}
+.text-emerald-700,.text-emerald-600{color:#5EE0A8!important}
+.text-amber-700,.text-amber-800,.text-orange-700,.text-lime-700{color:#F7C86E!important}
+.text-sky-700{color:#7CC8F0!important}
+.text-pink-700{color:#F59ABF!important}
+.text-violet-700{color:#C0A8FB!important}
+.text-black,.text-black\/70{color:#EAF1F7!important}
+/* 흰 글자를 쓰는 색 배경(버튼) 위에서는 그대로 흰색 유지 */
+/* 테두리 */
+.border-mist,.divide-mist>:not([hidden])~:not([hidden]){border-color:#2A455F!important}
+.border-sea\/15,.border-sea\/30{border-color:rgba(234,241,247,.22)!important}
+.border-cool,.border-brand,.peer:checked~.peer-checked\:border-cool,.peer:checked~.peer-checked\:border-brand,.hover\:border-brand:hover,.border-cool\/60,.border-cool\/50,.border-cool\/40,.border-cool\/30,.border-brand\/30,.border-brand-200,.border-sky-300{border-color:#2FA9C8!important}
+.border-amber-300,.border-amber-200{border-color:rgba(245,158,11,.5)!important}
+.border-emerald-300{border-color:rgba(16,185,129,.5)!important}
+.border-pink-300{border-color:rgba(236,72,153,.5)!important}
+.ring-white{--tw-ring-color:#112437!important}
+#cview .shadow-card{border-color:#223C55!important;box-shadow:0 1px 0 rgba(0,0,0,.2),0 14px 30px -16px rgba(0,0,0,.6)!important}
+.shadow-2xl,.shadow-lg,.shadow-xl{box-shadow:0 20px 40px -12px rgba(0,0,0,.6)!important}
+/* 입력칸 */
+input,select,textarea{color:#EAF1F7;border-color:#2A455F;color-scheme:dark}
+input::placeholder,textarea::placeholder{color:#7F94A8!important}
+input:-webkit-autofill{-webkit-box-shadow:0 0 0 40px #183048 inset!important;-webkit-text-fill-color:#EAF1F7!important}
+/* 흰 배경이었던 인라인 상자 */
+[style*="background:#fff" i]:not([style*="#fff6d6" i]){background:#112437!important}
+[style*="#FFF6D6" i]{background:#FFF1C2!important}
+[style*="#FFF6D6" i],[style*="#FFF6D6" i] *:not([class*="bg-"]){color:#0C2D48!important}
+[style*="#FFF6D6" i] [class*="text-white"]{color:#fff!important}
+/* 메뉴·알림창 */
+header{background-color:rgba(10,26,42,.92)!important;border-color:#223C55!important}
+#mbar{background-color:rgba(10,26,42,.96)!important;border-color:#223C55!important}
+#mm-body,#qm-box{background-color:#112437!important}
+#inst{background-color:#1F5E8C!important}
+.dnav[aria-current="page"]{color:#fff!important}
+
+/* 한여름 새 디자인 전용 부품 */
+:root{--ink:#EAF1F7}
+#cview h1,#cview h2,#cview h3,#cview h4,#cview main>section:not(#pro) h2{color:#EAF1F7!important}
+.hy-ticket{background:#112437!important;color:#EAF1F7!important;border-color:#223C55!important;box-shadow:0 30px 60px -22px rgba(0,0,0,.7)!important}
+.hy-stamp{background:#112437!important}
+.hy-field,.hy-open{background:#183048!important;border-color:#2A455F!important}
+.hy-go,.hy-n{background:#1F5E8C!important;color:#fff!important}
+.hy-n{box-shadow:0 0 0 4px #25405A!important}
+.hy-ico{background:rgba(249,115,22,.18)!important}
+.text-\[\#0C2D48\]{color:#EAF1F7!important}
+.text-\[\#8B5A2B\]{color:#F7C86E!important}
+.text-\[\#191919\]{color:#191919!important}
+
+.hy-perf{border-top-color:#2A455F!important}.hy-perf span{background:#112437!important}
+.hy-steps{border-top-color:#2A455F!important}.hy-steps b{background:#1F5E8C!important}.hy-steps li+li::before{background:#2A455F!important}
+#cats>button{background:#112437!important;border-color:#223C55!important}
+.kp{background:linear-gradient(180deg,#183048,#112437)!important;border-color:#2A455F!important;box-shadow:0 4px 0 #0A1A2A,0 8px 14px rgba(0,0,0,.35)!important}
+.kp[aria-pressed=true]{background:linear-gradient(180deg,#14465C,#0F3A4D)!important;border-color:#2FA9C8!important;box-shadow:0 1px 0 #08566F,0 0 0 2px #2FA9C8!important}
+.kp b{text-shadow:none!important}.kp .ki{box-shadow:none!important}
+#faq details{border-color:#223C55!important}#faq summary::after{background:#183048!important}
+#hy-feed{background:#112437!important;border-color:#223C55!important}#hy-feed .hy-fh{border-bottom-color:#223C55!important;color:#9DB0C2!important}#hy-feed .hy-fh b,#hy-feed .hy-ft .a{color:#EAF1F7!important}
+}
 </style>
 </head>
 <body class="bg-paper text-sea font-sans antialiased">
